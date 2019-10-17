@@ -41,6 +41,8 @@ class Rcb4BaseLib:
         self.IcsDeviceDataSize = 20
         self.CounterSingleDataCount = 1	
         self.CounterCount = 10
+        self.AdcCount = 11
+        self.AdcDataCount = 22
 
         self.__isSynchronize = False
         self.__configData = 0
@@ -118,6 +120,7 @@ class Rcb4BaseLib:
         ProgramCounterRamAddress = 0x0002
         UserParameterRamAddress = 0x0462
         CounterRamAddress        = 0x0457
+        AdcRamAddress            = 0x0022
 
     class RomAddr:
         StartupCmdRomAddress = 0x0444
@@ -510,7 +513,13 @@ class Rcb4BaseLib:
                 for i in range(dataSize):
                     destData.append (rxbuf[i+2])                    
                                        
-            return True, bytes(destData) 
+            return True, bytes(destData)
+
+    def adDataAddr(self, adPort):
+        if adPort >= 0 and adPort < 11:
+            return self.RamAddr.AdcRamAddress + adPort * 2
+        else:
+            return  -1 
         
 
     #runs uploaded motion
@@ -595,6 +604,7 @@ class Rcb4BaseLib:
     #moves single servo
     def setSingleServo(self, id, sio, pos, frame):
         if not Rcb4BaseLib.checkSio(sio):
+            print('Wrong Sio. 1 / 2 for left / right side')
             return False
         rxSize,txbuf = self.runSingleServoCmd(id, sio, pos, frame)
         if len(txbuf) == 0:
@@ -627,6 +637,26 @@ class Rcb4BaseLib:
         
         else:
             return False, -1
+
+
+    # get analog port data
+    def getAdData(self,adPort):
+        if adPort >= 0 and adPort < 11:
+            retf,rxbuf = self.moveRamToComCmdSynchronize(self.adDataAddr(adPort), 2 )
+            if (retf == True) and (len(rxbuf) == 2):
+                return rxbuf[1] * 256 + rxbuf[0]
+               
+        return 0xffff
+
+    # get analog  data from all ports
+    def getAllAdData(self):
+        retf,retbuf = self.moveRamToComCmdSynchronize(Rcb4BaseLib.RamAddr.AdcRamAddress  ,self.AdcDataCount)
+        redate = []
+        if (retf == True) and (len(retbuf) == (self.AdcCount * 2)):
+            for i in range(self.AdcCount):
+                redate.append( retbuf[1+ i*2] * 256 + retbuf[0+ i*2])
+        return retf,redate
+
     
     #sets potitions of several servos using ServoData class
     def setServoPos (self,servoDatas,frame):
@@ -643,8 +673,8 @@ if __name__ == "__main__":
     kondo.open(uart)
     #kondo.com.read(buf)
     #buf = kondo.com.write()
-    #kondo.motionPlay(51)
-    kondo.checkAcknowledge()
+    kondo.motionPlay(51)
+    #kondo.checkAcknowledge()
 
 
 
