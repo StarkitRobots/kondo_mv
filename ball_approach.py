@@ -1,6 +1,6 @@
 import math
 
-class test_class:
+class ball_approach:
 
 	def get_data(self, xr, yr, xb, yb, yaw):
 		self.xr = xr
