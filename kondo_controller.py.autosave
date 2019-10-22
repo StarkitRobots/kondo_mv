@@ -1,12 +1,8 @@
-# UART Control for Kondo Rcb4 controller
+# OPENMV UART Control for Kondo Rcb4 controller
 #
-openmv = True
 
 import time
-if openmv:
-    from pyb import UART
-else: 
-    import serial 
+from pyb import UART
 import struct
 
 
@@ -57,10 +53,7 @@ class Rcb4BaseLib:
 
     def open(self, uart):
         if self.comOpen == False:
-            if openmv:
-                self.com = Serial(uart)
-            else:
-                self.com = serial.Serial('/dev/ttyACM0', 115200, parity='E', stopbits=1, timeout=1000)
+            self.com = Serial(uart)
             self.com.flushInput()
             if self.checkAcknowledge() == True:
                 confData = self.getConfig()
@@ -691,9 +684,9 @@ class Rcb4BaseLib:
 
 
     # get analog port data
-    def getAdData(self,adPort):
-        if adPort >= 0 and adPort < 11:
-            retf,rxbuf = self.moveRamToComCmdSynchronize(self.adDataAddr(adPort), 2 )
+    def getAdData(self,adPort):sefsefsef sef
+    if adPort >= 0 and adPort < 11:
+        retf,rxbuf = self.moveRamToComCmdSynchronize(self.adDataAddr(adPort), 2 )
             if (retf == True) and (len(rxbuf) == 2):
                 return rxbuf[1] * 256 + rxbuf[0]
 
