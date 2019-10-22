@@ -84,6 +84,20 @@ class Vision:
 
         return result
 
+class Model:
+    def __init__(self):
+        self.transformMatrix = 0
+    
+    def update(self):
+        self.transformMatrix = calcTransformMatrix()
+
+    def cameraToSelf(self, cameraData):
+        self.update()
+        selfData = {}
+        for observation in cameraData:
+            selfData[observation] = cameraData[observation] * self.transformMatrix
+        
+
 
 vision = Vision()
 loc = Localization()
@@ -97,7 +111,7 @@ while(True):
 
     #camera means in image coords
     cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
-    
+
     #self means in robots coords
     selfData = model.cameraToSelf(cameraData)
 
