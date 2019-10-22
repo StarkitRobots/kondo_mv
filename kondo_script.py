@@ -36,9 +36,9 @@ class Azer_ball_detector (Detector):
         self.blobs = []
 
     def detect(self, img)
-     self.blobs = []
+        self.blobs = []
 
-      detected_blobs = img.find_blobs([thresholds[threshold_index]],
+        detected_blobs = img.find_blobs([thresholds[threshold_index]],
                                        pixels_threshold=200, area_threshold=200, merge=True)
 
        for blob in detected_blobs:
@@ -89,13 +89,17 @@ vision = Vision()
 loc = Localization()
 strat = Strategy()
 motion = Motion()
-
+model = Model()
 # main loop
 while(True):
     clock.tick()
     img = sensor.snapshot()
 
-    data = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
+    #camera means in image coords
+    cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
+    
+    #self means in robots coords
+    selfData = model.cameraToSelf(cameraData)
 
     loc.update(data)
 
