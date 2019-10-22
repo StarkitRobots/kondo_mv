@@ -39,7 +39,7 @@ class Rcb4BaseLib:
         self.UserParameterCount = 20
         self.IcsDeviceSize = 35
         self.IcsDeviceDataSize = 20
-        self.CounterSingleDataCount = 1	
+        self.CounterSingleDataCount = 1
         self.CounterCount = 10
         self.AdcCount = 11
         self.AdcDataCount = 22
@@ -153,17 +153,17 @@ class Rcb4BaseLib:
 
         def __lt__(self, other):
             return (self.Id * 2 + (self.Sio - 1)) < (other.Id * 2 + (other.Sio - 1))
-            
+
     class DeviceAddrOffset:
         CategoryAddressOffset      = 0x00
-        IDAddressOffset            = 0x01		
-        TrimAddressOffset          = 0x02		
-        MotorPositionAddressOffset = 0x04		
-        PositionAddressOffset      = 0x06		
-        FrameAddressOffset         = 0x08		
-        Mixing1AddressOffset       = 0x0E		
-        Mixing1RatioAddressOffset  = 0x10		
-        Mixing2AddressOffset       = 0x11		
+        IDAddressOffset            = 0x01
+        TrimAddressOffset          = 0x02
+        MotorPositionAddressOffset = 0x04
+        PositionAddressOffset      = 0x06
+        FrameAddressOffset         = 0x08
+        Mixing1AddressOffset       = 0x0E
+        Mixing1RatioAddressOffset  = 0x10
+        Mixing2AddressOffset       = 0x11
         Mixing2RatioAddressOffset  = 0x13
 
 
@@ -263,7 +263,7 @@ class Rcb4BaseLib:
         txbuf = [0x04, Rcb4BaseLib.CommandTypes.AckCheck, Rcb4BaseLib.AckType.Ack, 0]
         txbuf[3] = Rcb4BaseLib.CheckSum(txbuf)
 
-        returnDataSize = 4 
+        returnDataSize = 4
 
         return returnDataSize, txbuf
 
@@ -392,32 +392,32 @@ class Rcb4BaseLib:
     @staticmethod
     def setServoNo (servoDatas):
       ret = 0
-      
+
       for idat in servoDatas:
         no = Rcb4BaseLib.icsNum2id(idat.Id, idat.Sio)
         sf = 0x1
         ret |=  (sf << no)
       return ret << 24
-      
+
     def userCounterAddr(self, counterNum):
         if (0 < counterNum <= self.CounterCount):
-            return self.RamAddr.CounterRamAddress + ((counterNum - 1) * self.CounterSingleDataCount) 
+            return self.RamAddr.CounterRamAddress + ((counterNum - 1) * self.CounterSingleDataCount)
         else:
             return -1
-            
+
     @staticmethod
     def runConstFrameServoCmd (servoDatas,frame):
         buf =[]
-        
-        sDatas = []	
+
+        sDatas = []
         if type(servoDatas) == Rcb4BaseLib.ServoData:
             sDatas.append(servoDatas)
         else:
             sDatas = servoDatas
-        
+
         if Rcb4BaseLib().checkServoDatas(sDatas) == False:
             return -1,buf
-        
+
         wk = Rcb4BaseLib.setServoNo (sDatas) >> 24
         buf.append (len(sDatas) * 2 + 9)
         buf.append ( Rcb4BaseLib.CommandTypes.ConstFrameServo)
@@ -433,24 +433,24 @@ class Rcb4BaseLib:
           buf.append((idat.Data >> 8)& 0xff)
         buf.append(Rcb4BaseLib.CheckSum(buf))
         return 4,buf
-        
+
 
     def checkServoDatas(self, servoDatas):
         checkData = []
-            
+
         for sData in servoDatas:
-            if not (type(sData) is Rcb4BaseLib.ServoData):                
+            if not (type(sData) is Rcb4BaseLib.ServoData):
                 return False
             cData = sData.icsNum2id()
-            if not (0 <= cData  <= self.IcsDeviceSize):                
+            if not (0 <= cData  <= self.IcsDeviceSize):
                 return False
-            
+
             checkData.append(cData)
-            
+
         if len(servoDatas) == len(set(checkData)):
             return True
-        else:    
-            return False    
+        else:
+            return False
 
     @staticmethod
     def checkSio(sio):
@@ -475,10 +475,10 @@ class Rcb4BaseLib:
 
     def moveDeviceToComCmd(self, icsNum, offset, dataSize):
         buf =[]
-        
+
         if((icsNum < 0)or(self.IcsDeviceSize < icsNum)or (offset < 0) or(self.IcsDeviceDataSize  <(offset+dataSize))):
             return -1,buf
-        
+
         buf.append (0x0a)
         buf.append ( self.CommandTypes.Move)
         buf.append ( self.SubMoveCmd.DeviceToCom)
@@ -489,56 +489,56 @@ class Rcb4BaseLib:
         buf.append ( icsNum)
         buf.append (dataSize)
         buf.append (Rcb4BaseLib.CheckSum(buf))
-        
+
         returnDataSize = dataSize+3
-        
+
         return returnDataSize,buf
 
     def moveDeviceToComCmdSynchronize(self,icsNum, offset, dataSize):
 
         readSize, sendData  = self.moveDeviceToComCmd(icsNum, offset, dataSize)
-         
+
         if readSize > 0:
             rxbuf = self.synchronize(sendData, readSize)
-            
+
             if len(rxbuf)< readSize:
                 rxbuf = []
                 return False,rxbuf
-            
+
             destData = []
-            if dataSize == 1:                
+            if dataSize == 1:
                 destData.append (rxbuf[2])
-            
-            else:                
+
+            else:
                 for i in range(dataSize):
-                    destData.append (rxbuf[i+2])                    
-                                       
+                    destData.append (rxbuf[i+2])
+
             return True, bytes(destData)
 
     def adDataAddr(self, adPort):
         if adPort >= 0 and adPort < 11:
             return self.RamAddr.AdcRamAddress + adPort * 2
         else:
-            return  -1 
-        
+            return  -1
+
 
     #runs uploaded motion
     def motionPlay(self, motionNum):
-    
+
         if (motionNum <= 0) or (self.maxMotionCount < motionNum):
             return False
-    
+
         if self.suspend() == False:
             return False
-    
+
         if self.resetProgramCounter() == False:
             return False
-    
+
         if self.setMotionNum(motionNum) == False:
             return False
-    
+
         return self.resume()
-        
+
 
     #sets U constants
     def setUserParameter(self, ParameterNum, data):
@@ -547,7 +547,7 @@ class Rcb4BaseLib:
             buf = struct.pack('<h', data)
         except:
             return False
-    
+
         if not (addr < 0):
             return self.moveComToRamCmdSynchronize(addr, buf)
         else:
@@ -571,29 +571,29 @@ class Rcb4BaseLib:
     def __del__(self):
         self.close()
 
-    
+
     #sets C user counter
     def setUserCounter(self,counterNum,data):
-     
+
         addr = self.userCounterAddr(counterNum)
         if (addr < 0):
-            return False        
-        
+            return False
+
         try:
             sendData = struct.pack('B',data)
         except:
             return False
-        
+
         return self.moveComToRamCmdSynchronize(addr, sendData)
 
     #gets C user counter
     def getUserCounter(self,counterNum):
         addr = self.userCounterAddr(counterNum)
-        if(addr < 0): 
+        if(addr < 0):
             return False,-1
         else:
             retf, retbuf = self.moveRamToComCmdSynchronize(addr , 1 )
-            
+
             if(retf == False) or (len(retbuf) != 1):
                 return False,-1
             else:
@@ -610,33 +610,43 @@ class Rcb4BaseLib:
         if len(txbuf) == 0:
             return False
         return self.synchronizeAck(txbuf)
-        
 
-    #gets position of single servo    
+
+    #gets position of single servo
     def getSinglePos(self,id,sio):
         if not Rcb4BaseLib.checkSio(sio):
             return False
         retf,retbuf = self.moveDeviceToComCmdSynchronize(self.icsNum2id(id, sio), Rcb4BaseLib.DeviceAddrOffset.MotorPositionAddressOffset, 2)
-    
+
         if(retf == True) and (len(retbuf) ==2):
             posData  =  struct.unpack('<h',retbuf)[0]
             return  True, posData
-        
+
         else:
             return False, -1
-            
-    #gets trim of single servo    
+
+    #gets trim of single servo
     def getSingleTrim(self,id,sio):
         if not Rcb4BaseLib.checkSio(sio):
             return False
         retf,retbuf = self.moveDeviceToComCmdSynchronize(self.icsNum2id(id, sio), Rcb4BaseLib.DeviceAddrOffset.TrimAddressOffset, 2)
-    
+
         if(retf == True) and (len(retbuf) ==2):
             trimData  =  struct.unpack('<h',retbuf)[0]
             return  True, trimData
-        
+
         else:
             return False, -1
+
+    #test Ram trim offset
+    def setSingleTrim(self,id ,sio, trim):
+        buf =[trim]
+        offset = Rcb4BaseLib.DeviceAddrOffset.TrimAddressOffset
+        retf, retbuf=  self.moveComToDeviceCmdSynchronize(self.icsNum2id(id, sio), offset, buf)
+        if retbuf[2] == 0x06:
+            return True
+        else:
+            return False
 
 
     # get analog port data
@@ -645,7 +655,7 @@ class Rcb4BaseLib:
             retf,rxbuf = self.moveRamToComCmdSynchronize(self.adDataAddr(adPort), 2 )
             if (retf == True) and (len(rxbuf) == 2):
                 return rxbuf[1] * 256 + rxbuf[0]
-               
+
         return 0xffff
 
     # get analog  data from all ports
@@ -657,14 +667,14 @@ class Rcb4BaseLib:
                 redate.append( retbuf[1+ i*2] * 256 + retbuf[0+ i*2])
         return retf,redate
 
-    
+
     #sets potitions of several servos using ServoData class
     def setServoPos (self,servoDatas,frame):
         rxSize,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
         return  self.synchronizeAck(txbuf)
-        
-    
-    
+
+
+
 
 
 if __name__ == "__main__":
@@ -673,8 +683,9 @@ if __name__ == "__main__":
     kondo.open(uart)
     #kondo.com.read(buf)
     #buf = kondo.com.write()
-    kondo.motionPlay(51)
-    #kondo.checkAcknowledge()
+    #kondo.motionPlay(51)
+    print(kondo.checkAcknowledge())
+    #kondo.setSingleTrim(11,0, 1000)
 
 
 
