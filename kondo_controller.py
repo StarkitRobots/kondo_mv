@@ -1,6 +1,6 @@
 # UART Control for Kondo Rcb4 controller
 #
-openmv = True
+openmv = False
 
 import time
 if openmv:
@@ -14,24 +14,38 @@ import struct
 
 class Serial:
     def __init__(self, uart):
-        self.uart = uart
+        if openmv:
+            self.uart = uart
+        else:
+            self.uart = serial.Serial('/dev/ttyACM0', 115200, parity='E', stopbits=1, timeout=1.3)
 
     def flushInput(self):
-        pass
+        if openmv:
+            pass
+        else:
+            self.uart.flushInput()
 
     def read(self, rxLen):
-        msg = []
-        for i in range(rxLen):
-            msg.append(self.uart.readchar())
-        #print("read ",msg)
-        return bytes(bytearray(msg))
+        if openmv:
+            msg = []
+            for i in range(rxLen):
+                msg.append(self.uart.readchar())
+            #print("read ",msg)
+            return bytes(bytearray(msg))
+        else:
+            #print("read ",msg)
+            return self.uart.read(rxLen)
 
     def write(self, buf):
-        tmp = bytes(bytearray(buf))
-        #print("written ",buf)
-        for b in tmp:
-            self.uart.writechar(b)
-            # time.sleep(1)
+        if openmv:
+            tmp = bytes(bytearray(buf))
+            #print("written ",buf)
+            for b in tmp:
+                self.uart.writechar(b)
+                # time.sleep(1)
+        else:
+            #print("written ",buf)
+            self.uart.write(buf)
 
 
 class Rcb4BaseLib:
@@ -55,12 +69,9 @@ class Rcb4BaseLib:
 
 
 
-    def open(self, uart):
+    def open(self, uart=''):
         if self.comOpen == False:
-            if openmv:
-                self.com = Serial(uart)
-            else:
-                self.com = serial.Serial('/dev/ttyACM0', 115200, parity='E', stopbits=1, timeout=1000)
+            self.com = Serial(uart)
             self.com.flushInput()
             if self.checkAcknowledge() == True:
                 confData = self.getConfig()
@@ -656,7 +667,7 @@ class Rcb4BaseLib:
     #gets position of single servo
     def getSinglePos(self,id,sio):
         if not Rcb4BaseLib.checkSio(sio):
-            return False
+            return False, -1
         retf,retbuf = self.moveDeviceToComCmdSynchronize(self.icsNum2id(id, sio), Rcb4BaseLib.DeviceAddrOffset.MotorPositionAddressOffset, 2)
 
         if(retf == True) and (len(retbuf) ==2):
@@ -669,7 +680,8 @@ class Rcb4BaseLib:
     #gets trim of single servo
     def getSingleTrim(self,id,sio):
         if not Rcb4BaseLib.checkSio(sio):
-            return False
+            print('Wrong Sio. 1 for left, 2 for right side')
+            return False, -1
         retf,retbuf = self.moveDeviceToComCmdSynchronize(self.icsNum2id(id, sio), Rcb4BaseLib.DeviceAddrOffset.TrimAddressOffset, 2)
 
         if(retf == True) and (len(retbuf) ==2):
@@ -681,13 +693,13 @@ class Rcb4BaseLib:
 
     #test Ram trim offset
     def setSingleTrim(self,id ,sio, trim):
+        if not Rcb4BaseLib.checkSio(sio):
+            print('Wrong Sio. 1 for left, 2 for right side')
+            return False, -1
         buf =[trim]
         offset = Rcb4BaseLib.DeviceAddrOffset.TrimAddressOffset
-        retf, retbuf=  self.moveComToDeviceCmdSynchronize(self.icsNum2id(id, sio), offset, buf)
-        if retbuf[2] == 0x06:
-            return True
-        else:
-            return False
+        reFlag = self.moveComToDeviceCmdSynchronize(self.icsNum2id(id, sio), offset, buf)
+        return reFlag
 
 
     # get analog port data
@@ -720,13 +732,13 @@ class Rcb4BaseLib:
 
 if __name__ == "__main__":
     kondo = Rcb4BaseLib()
-    uart = UART(3, 1250000, timeout=1000, parity=0)
-    kondo.open(uart)
+    #uart = UART(3, 1250000, timeout=1000, parity=0)
+    kondo.open()
     #kondo.com.read(buf)
     #buf = kondo.com.write()
     #kondo.motionPlay(51)
     print(kondo.checkAcknowledge())
-    #kondo.setSingleTrim(11,0, 1000)
+    #kondo.setSingleTrim(11,1, 1000)
 
 
 
