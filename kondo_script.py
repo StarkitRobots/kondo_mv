@@ -21,7 +21,7 @@ class Detector:
         return (5, 6)
 
     def draw(self, img):
-        #print ("Detector of (5, 6) has detected (5, 6)")
+        # print ("Detector of (5, 6) has detected (5, 6)")
         pass
 
 
@@ -109,10 +109,10 @@ while(True):
     clock.tick()
     img = sensor.snapshot()
 
-    #camera means in image coords
+    # camera means in image coords
     cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
 
-    #self means in robots coords
+    # self means in robots coords
     selfData = model.cameraToSelf(cameraData)
 
     loc.update(data)
