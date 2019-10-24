@@ -1,0 +1,3 @@
+[submodule "detectors"]
+	path = detectors
+	url = https://github.com/StarkitRobots/detectors

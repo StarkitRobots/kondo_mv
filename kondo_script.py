@@ -145,10 +145,10 @@ while(True):
     clock.tick()
     img = sensor.snapshot()
 
-    #camera means in image coords
+    # camera means in image coords
     cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
 
-    #self means in robots coords
+    # self means in robots coords
     selfData = model.cameraToSelf(cameraData)
 
     loc.update(selfData)
