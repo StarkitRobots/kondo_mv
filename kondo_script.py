@@ -15,33 +15,55 @@ clock = time.clock()
 
 class Detector:
     def __init__(self):
-        pass
+        self.blobs = []
 
     def detect(self, img):
         return (5, 6)
 
     def draw(self, img):
-        #print ("Detector of (5, 6) has detected (5, 6)")
-        pass
+        for blob in self.blobs:
+            print (blob.rect())
+            img.draw_edges(blob.min_corners(), color=(255, 0, 0))
+            img.draw_line(blob.major_axis_line(), color=(0, 255, 0))
+            img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
 
+class colored_object_detector (Detector):
+    def __init__(self):
+        self.threshold_index = 0
+
+        self.thresholds = [(0, 30, -20, 40, -60, 0),
+                           (30, 100, -64, -8, -32, 32),
+                           (0, 30, 0, 64, -128, 0)]
+
+    def detect(self, img):
+        self.blobs = []
+
+        detected_blobs = img.find_blobs([self.thresholds[self.threshold_index]],
+                                       pixels_threshold=300, area_threshold=300, merge=False)
+
+        for blob in detected_blobs:
+            if blob.roundness() > 0.09:
+                self.blobs.append(blob)
+
+        return self.blobs
 
 class Azer_ball_detector (Detector):
     def __init__(self):
         self.threshold_index = 0
 
-        self.thresholds = [(45, 75, 24, 85, 1, 70),
+        self.thresholds = [(30, 80, 0, 40, -10, 20),
                            (30, 100, -64, -8, -32, 32),
                            (0, 30, 0, 64, -128, 0)]
 
         self.blobs = []
 
-    def detect(self, img)
+    def detect(self, img):
         self.blobs = []
 
-        detected_blobs = img.find_blobs([thresholds[threshold_index]],
+        detected_blobs = img.find_blobs([self.thresholds[self.threshold_index]],
                                        pixels_threshold=200, area_threshold=200, merge=True)
 
-       for blob in detected_blobs:
+        for blob in detected_blobs:
             # These values depend on the blob not being circular - otherwise they will be shaky.
             if blob.roundness() > 0.9:
                 print(blob.rect())
@@ -61,49 +83,63 @@ class Azer_ball_detector (Detector):
 
         return self.blobs
 
-        def draw(self, blobs):
-            for blob in self.blobs:
-                img.draw_edges(blob.min_corners(), color=(255, 0, 0))
-                img.draw_line(blob.major_axis_line(), color=(0, 255, 0))
-                img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
-
-
 class Vision:
-    __init__(self, detectors_):
+    def __init__(self, detectors_):
         self.detectors = detectors_
 
     def get(self, img, objects_list, drawing_list=[]):
         result = {}
 
-        for object in objects_list:
-            detection_result = self.detectors[object].detect(img)
-            result.update({object: detection_result})
+        for obj in objects_list:
+            detection_result = self.detectors[obj].detect(img)
+            result.update({obj: detection_result})
 
-            if (object in drawing_list):
-                self.detectors[object].draw(img)
+            if (obj in drawing_list):
+                self.detectors[obj].draw(img)
 
         return result
 
 class Model:
     def __init__(self):
         self.transformMatrix = 0
-    
+
     def update(self):
-        self.transformMatrix = calcTransformMatrix()
+        #self.transformMatrix = calcTransformMatrix()
+        pass
 
     def cameraToSelf(self, cameraData):
         self.update()
         selfData = {}
         for observation in cameraData:
             selfData[observation] = cameraData[observation] * self.transformMatrix
-        
 
+class Localization:
+    def __init__(self):
+        pass
 
-vision = Vision()
+    def update(self, data):
+        return 0
+
+class Strategy:
+    def __init__(self):
+        pass
+
+    def generate_action(self, loc):
+        return 0
+
+class Motion:
+    def __init__(self):
+        pass
+
+    def apply(self, action):
+        return 0
+
+vision = Vision({"ball" : colored_object_detector()})
 loc = Localization()
 strat = Strategy()
 motion = Motion()
 model = Model()
+
 # main loop
 while(True):
     clock.tick()
@@ -115,8 +151,8 @@ while(True):
     #self means in robots coords
     selfData = model.cameraToSelf(cameraData)
 
-    loc.update(data)
+    loc.update(selfData)
 
-    action = strategy.generate_action(loc)
+    action = strat.generate_action(loc)
 
     motion.apply(action)
