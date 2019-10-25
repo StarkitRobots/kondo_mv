@@ -1,12 +1,9 @@
 # UART Control for Kondo Rcb4 controller
 #
-openmv = False
+openmv = True
 
 import time
-if openmv:
-    from pyb import UART
-else: 
-    import serial 
+from pyb import UART
 import struct
 
 
@@ -14,10 +11,7 @@ import struct
 
 class Serial:
     def __init__(self, uart):
-        if openmv:
-            self.uart = uart
-        else:
-            self.uart = serial.Serial('/dev/ttyACM0', 115200, parity='E', stopbits=1, timeout=1.3)
+        self.uart = uart
 
     def flushInput(self):
         if openmv:
@@ -732,8 +726,11 @@ class Rcb4BaseLib:
 
 if __name__ == "__main__":
     kondo = Rcb4BaseLib()
-    #uart = UART(3, 1250000, timeout=1000, parity=0)
-    kondo.open()
+    if openmv:
+        uart = UART(3, 1250000, timeout=1000, parity=0)
+        kondo.open(uart)
+    else:
+        kondo.open()
     #kondo.com.read(buf)
     #buf = kondo.com.write()
     #kondo.motionPlay(51)
