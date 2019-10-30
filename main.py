@@ -5,7 +5,7 @@ import math
 import json
 from Model import Model
 
-robotHeight = 100
+robotHeight = 0.28 #[m]
 # init code
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -128,18 +128,23 @@ model = Model()
 
 with open("cam_col.json") as f:
     calib = json.load(f)
+
+#setting model parametrs
+model.setParams(calib["cam_col"], robotHeight)
+model.updateCameraPanTilt(0, -3.1415/6)
+
 # main loop
 while(True):
     clock.tick()
     img = sensor.snapshot()
-    model.setParams(calib["cam_col"], robotHeight)
+    
     # camera means in image coords
-    cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
+    cameraData = vision.get(img, objects_list=["goal"], drawing_list= ["goal"])
 
     # self means in robots coords
     selfData = []
-    for el in cameraData:
-        selfData.append(model.pic2r(el[0], el[1]))
+    for el in cameraData["goal"]:
+        selfData.append(model.pic2r(el.x() - el.w()/2, el.y() - el.h())) # (el[0] - el[3]/2, el[1] - el[4])
         print(el, selfData[-1])
         
     loc.update(selfData)

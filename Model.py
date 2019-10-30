@@ -7,7 +7,7 @@ class Model:
 	def updateCameraPanTilt(self, cameraPan, cameraTilt):
 		self.cameraPan = cameraPan
 		self.cameraTilt = cameraTilt
-	
+
 	def setParams(self, A, h):
 		self.A = A
 		self.h = h
@@ -41,5 +41,5 @@ class Model:
 		xb = self.h / math.tan(balp) * math.cos(bbet)
 		yb = self.h / math.tan(balp) * math.sin(bbet)
 
-		return (xb, yb)
+		return (yb, -xb)
 		
