@@ -2,6 +2,7 @@ import sensor
 import image
 import time
 import math
+from Model import Model
 
 # init code
 sensor.reset()
@@ -95,19 +96,6 @@ class Vision:
 
         return result
 
-class Model:
-    def __init__(self):
-        self.transformMatrix = 0
-
-    def update(self):
-        #self.transformMatrix = calcTransformMatrix()
-        pass
-
-    def cameraToSelf(self, cameraData):
-        self.update()
-        selfData = {}
-        for observation in cameraData:
-            selfData[observation] = cameraData[observation] * self.transformMatrix
 
 class Localization:
     def __init__(self):
@@ -145,8 +133,11 @@ while(True):
     cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
 
     # self means in robots coords
-    selfData = model.cameraToSelf(cameraData)
-
+    selfData = []
+    for el in cameraData:
+        selfData.append(model.pic2r(el[0], el[1]))
+        print(el, selfData[-1])
+        
     loc.update(selfData)
 
     action = strat.generate_action(loc)
