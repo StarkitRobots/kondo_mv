@@ -2,8 +2,10 @@ import sensor
 import image
 import time
 import math
+import json
 from Model import Model
 
+robotHeight = 100
 # init code
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -29,7 +31,7 @@ class Detector:
 
 class colored_object_detector (Detector):
     def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False):
-        self.th       = th
+        self.th       = th_
         self.pixel_th = pixel_th_
         self.area_th  = area_th_
         self.merge    = merge_
@@ -124,11 +126,13 @@ strat = Strategy()
 motion = Motion()
 model = Model()
 
+with open("cam_col.json") as f:
+    calib = json.load(f)
 # main loop
 while(True):
     clock.tick()
     img = sensor.snapshot()
-
+    model.setParams(calib["cam_col"], robotHeight)
     # camera means in image coords
     cameraData = vision.get(img, objects_list=["ball"], drawing_list= ["ball"])
 

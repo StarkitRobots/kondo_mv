@@ -7,7 +7,7 @@ class Model:
 	def updateCameraPanTilt(self, cameraPan, cameraTilt):
 		self.cameraPan = cameraPan
 		self.cameraTilt = cameraTilt
-
+	
 	def setParams(self, A, h):
 		self.A = A
 		self.h = h
