@@ -12,7 +12,6 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
-
 class Detector:
     def __init__(self):
         self.blobs = []
@@ -28,26 +27,23 @@ class Detector:
             img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
 
 class colored_object_detector (Detector):
-    def __init__(self):
-        self.threshold_index = 0
+    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False):
+        self.th       = th
+        self.pixel_th = pixel_th_
+        self.area_th  = area_th_
+        self.merge    = merge_
 
-        self.thresholds = [(0, 30, -20, 40, -60, 0),
-                           (30, 100, -64, -8, -32, 32),
-                           (0, 30, 0, 64, -128, 0)]
+    def _detect(self, img):
+        detected_blobs = img.find_blobs([self.th], pixels_threshold=300, area_threshold=300, merge=False)
+
+        return detected_blobs
 
     def detect(self, img):
-        self.blobs = []
-
-        detected_blobs = img.find_blobs([self.thresholds[self.threshold_index]],
-                                       pixels_threshold=300, area_threshold=300, merge=False)
-
-        for blob in detected_blobs:
-            if blob.roundness() > 0.09:
-                self.blobs.append(blob)
-
+        self.blobs = self._detect (img)
+        
         return self.blobs
 
-class Azer_ball_detector (Detector):
+class Azer_ball_detector (colored_object_detector):
     def __init__(self):
         self.threshold_index = 0
 
