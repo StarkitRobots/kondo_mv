@@ -48,12 +48,12 @@ class Field:
         self.field = figures
         self.w_width = self.field['main_rectangle'][0][0]
         self.w_length = self.field['main_rectangle'][0][1]
-
-    def __init(self, path):
-        with open(path, "r") as f:
-            self.field = json.loads(f.read())
-        self.w_width = self.field['main_rectangle'][0][0]
-        self.w_length = self.field['main_rectangle'][0][1]
+    
+    #def __init(self, path):
+    #    with open(path, "r") as f:
+    #        self.field = json.loads(f.read())
+    #    self.w_width = self.field['main_rectangle'][0][0]
+    #    self.w_length = self.field['main_rectangle'][0][1]
 
 
 class Robot(Field):
@@ -178,7 +178,7 @@ class ParticleFilter():
         for i in range(n_steps):
             self.step()
 
-    def resampling(self):
+    def resampling(self, measurement):
         p_tmp = []
         w = []
         S = 0
@@ -226,23 +226,20 @@ figures = {
         [0, 0]
     ],
     "main_rectangle": [
-        [6, 9]
+        [1, 1]
     ],
     "rectangles": [
         [[-1, -4.5], 2, 1], [[-1, 3.5], 2, 1]
     ]
 }
-path = "untitled.json"
-field = Field(path)
-measurement = [[3.8809736656992513, 2.44685437739309], [2.8061306051321995, 1.9513027039072615]]
-landmarks = [[-1, 4.5], [1, 4.5]]
+#path = "untitled.json"
+#measurement = [[3.8809736656992513, 2.44685437739309], [2.8061306051321995, 1.9513027039072615]]
+landmarks = [[0.4, 0], [0.6, 0]]
 
-robot = Robot()
-robot.set_coord(-3.0, 0.0, 0.0)
-pf = ParticleFilter(robot, field, sense_noise=1.0)
-p = pf.p
-w, pre = pf.resampling()
-while (True):
-    clock.tick()
-    img = sensor.snapshot()
-    print(robot.return_coord())
+def updatePF(measurement):
+    field = Field(figures)
+    robot = Robot()
+    robot.set_coord(0.0, 0.0, 0.0)
+    pf = ParticleFilter(robot, field, sense_noise=1.0)
+    pf.resampling(measurement)
+    return robot.return_coord()

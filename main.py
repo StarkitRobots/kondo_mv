@@ -147,7 +147,7 @@ while(True):
         selfData.append(model.pic2r(el.x() - el.w()/2, el.y() - el.h())) # (el[0] - el[3]/2, el[1] - el[4])
         print(el, selfData[-1])
         
-    loc.update(selfData)
+    loc.updatePF(selfData)
 
     action = strat.generate_action(loc)
 
