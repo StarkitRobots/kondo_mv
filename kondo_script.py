@@ -130,7 +130,7 @@ class Motion:
     def apply(self, action):
         return 0
 
-vision = Vision({"ball" : colored_object_detector()})
+vision = Vision({"ball" : colored_object_detector((30, 80, 0, 40, -10, 20))})
 loc = Localization()
 strat = Strategy()
 motion = Motion()
