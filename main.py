@@ -169,7 +169,7 @@ while(True):
 
     loc.ballPositionWorld = selfData["ball"]
     loc.robotPosision = updatePF(selfData)
-
+    
     action=strat.generate_action(loc)
 
     motion.apply(action)
