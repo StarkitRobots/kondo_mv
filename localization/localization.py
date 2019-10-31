@@ -44,16 +44,11 @@ import json
 
 
 class Field:
-    def __init__(self, field):
-        self.field = figures
+    def __init__(self, path):
+        with open(path, "r") as f:
+        self.field = json.loads(f.read())
         self.w_width = self.field['main_rectangle'][0][0]
         self.w_length = self.field['main_rectangle'][0][1]
-    
-    #def __init(self, path):
-    #    with open(path, "r") as f:
-    #        self.field = json.loads(f.read())
-    #    self.w_width = self.field['main_rectangle'][0][0]
-    #    self.w_length = self.field['main_rectangle'][0][1]
 
 
 class Robot(Field):
@@ -62,9 +57,6 @@ class Robot(Field):
         self.x = x  # robot's x coordinate
         self.y = y  # robot's y coordinate
         self.orientation = yaw  # robot's orientation
-
-        self.x_pred = 0.0
-        self.y_pred = 0.0
         self.forward_noise = 0.05  # noise of the forward movement
         self.turn_noise = 0.1  # noise of the turn
         self.sense_noise = 0.3  # noise of the sensing
@@ -119,9 +111,7 @@ class Robot(Field):
         for i in range(len(landmarks)):
             dist = math.sqrt((self.x - landmarks[i][0]) ** 2 + (self.y - landmarks[i][1]) ** 2)
             # dist = landmarks[i][0]
-            # print("distVSmeas = ", dist - measurement[i])
-            # print(self.gaussian(dist, self.sense_noise, measurement[i]))
-            prob *= self.gaussian(dist, self.sense_noise, measurement[i][0])
+            prob *= self.gaussian(dist, self.sense_noise, measurement[i])
             # print("prob ", prob)
         return prob
 
@@ -131,10 +121,7 @@ class Robot(Field):
         for i in range(len(particles)):
             x += particles[i][0].x * particles[i][1]
             y += particles[i][0].y * particles[i][1]
-            # x += particles[i][0]*math.cos(particles[i][1]) * particles[i][1]
-            # y += particles[i][0]*math.sin(particles[i][1]) * particles[i][1]
-        # self.x_pred = float(x/len(particles))
-        # self.y_pred = float(y/len(particles))
+           
 
         self.x = x
         self.y = y
@@ -163,9 +150,7 @@ class ParticleFilter():
 
         self.myrobot = self.myrobot.move(0, 0.02)
         z = self.myrobot.sense()
-
-        # now we simulate a robot motion for each of
-        # these particles
+        # now we simulate a robot motion for each of these particles
         p_tmp = []
         p = self.p
         for i in range(self.n):
@@ -184,18 +169,14 @@ class ParticleFilter():
         S = 0
         for i in range(self.n):
             z = self.myrobot.sense((landmarks))
-            # z = get_measurements(landmarks)
             w.append(self.p[i][0].measurement_prob(measurement))
             S += (w[i])
-        print("px =  ", p[i][0].x)
-        # print("w ", w )
         for i in range(self.n):
             w[i] = w[i] / S
             S += w[i]
         index = int(rand() * self.n)
         beta = 0.0
         mw = max(w)
-        # pd.Series(w).hist(bins=20)
         # print(mw)
         for i in range(self.n):
             beta += rand() * 2.0 * mw
@@ -215,29 +196,12 @@ class ParticleFilter():
         return w, p_tmp
 
 
-figures = {
-    "circles": [
-        [0, 0, 1]
-    ],
-    "lines": [
-        [[-4.5, 4.5], [0, 0]]
-    ],
-    "points": [
-        [0, 0]
-    ],
-    "main_rectangle": [
-        [1, 1]
-    ],
-    "rectangles": [
-        [[-1, -4.5], 2, 1], [[-1, 3.5], 2, 1]
-    ]
-}
-#path = "untitled.json"
 #measurement = [[3.8809736656992513, 2.44685437739309], [2.8061306051321995, 1.9513027039072615]]
-landmarks = [[0.4, 0], [0.6, 0]]
+with open("landmarks.json", "r") as f:
+        landmarks = json.loads(f.read())['landmarks']
 
 def updatePF(measurement):
-    field = Field(figures)
+    field = Field("parfield.json")
     robot = Robot()
     robot.set_coord(0.0, 0.0, 0.0)
     pf = ParticleFilter(robot, field, sense_noise=1.0)
