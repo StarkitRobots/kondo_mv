@@ -2,14 +2,12 @@ import sys
 import sensor, image
 import time, math, json
 
-sys.path.append('model')
-from model import Model
+from model.model import Model
+from localization.localization import Localization
+from motion.motion import Motion
+from strategy.strategy import Strategy
+from vision.vision import Vision, Detector, ColoredObjectDetector, BallDetector
 
-sys.path.append('localization')
-from localization import Localization
-
-sys.path.append('vision')
-from vision import Vision, Detector, ColoredObjectDetector, BallDetector
 
 robotHeight = 0.41 #[m]
 # init code
@@ -22,24 +20,9 @@ sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
 
-class Strategy:
-    def __init__(self):
-        pass
-
-    def generate_action(self, loc):
-        return 0
-
-
-class Motion:
-    def __init__(self):
-        pass
-
-    def apply(self, action):
-        return 0
-
 vision = Vision({"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     "blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
-    "red_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
+    "yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
 
 loc=Localization()
 strat=Strategy()
@@ -60,7 +43,8 @@ while(True):
 
     # camera means in image coords
     cameraData=vision.get(
-        img, objects_list=["ball", "blue_posts", "red_posts"], drawing_list=["ball", "blue_posts", "red_posts"])
+        img, objects_list=["ball", "blue_posts", "yellow_posts"], 
+        drawing_list=["ball", "blue_posts", "yellow_posts"])
 
     # self means in robots coords
     selfData={}
