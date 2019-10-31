@@ -2,12 +2,11 @@ import sys
 import sensor, image
 import time, math, json
 
-#sys.path.append('model')
+sys.path.append('model')
 from model import Model
 
-#sys.path.append('localisation')
-#from localisation import Localisation
-from PatFilter4MicroPython import updatePF
+sys.path.append('localization')
+from localization import Localization
 
 sys.path.append('vision')
 from vision import Vision, Detector, ColoredObjectDetector, BallDetector
@@ -21,14 +20,6 @@ sensor.skip_frames(time=2000)
 sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
-
-
-class Localization:
-    def __init__(self):
-        pass
-
-    def update(self, data):
-        return 0
 
 
 class Strategy:
@@ -46,10 +37,9 @@ class Motion:
     def apply(self, action):
         return 0
 
-vision = Vision( \
-    {"ball": colored_object_detector((30, 80, 0, 40, -10, 20)), \ 
-     "blue_posts": colored_object_detector((20, 55, 40, 80, 30, 70)), \
-     "red_posts": colored_object_detector((20, 55, 40, 80, 30, 70))})
+vision = Vision({"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
+    "blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
+    "red_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
 
 loc=Localization()
 strat=Strategy()
@@ -77,13 +67,14 @@ while(True):
     for observationType in cameraData:
         selfPoints = []
         for observation in cameraData["observationType"]:
-            selfPoints.append(model.pic2r(el[0] - el[2]/2, el[1] - el[3])
+            selfPoints.append(
+                model.pic2r(observation[0] - observation[2]/2, 
+                observation[1] - observation[3]))
         selfData[observationType] = selfPoints
 
-    loc.ballPositionWorld = selfData["ball"]
-    loc.robotPosision = updatePF(selfData)
+    loc.update(selfData)
     
-    action=strat.generate_action(loc)
+    action = strat.generate_action(loc)
 
     motion.apply(action)
 
