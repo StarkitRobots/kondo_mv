@@ -42,4 +42,3 @@ class Model:
 		yb = self.h / math.tan(balp) * math.sin(bbet)
 
 		return (yb, -xb)
-		
