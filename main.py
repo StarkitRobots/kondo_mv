@@ -3,9 +3,10 @@ import image
 import time
 import math
 import json
-from Model import Model
+from model import Model
+from PatFilter4MicroPython import updatePF
 
-robotHeight = 0.28  # [m]
+robotHeight = 0.41 #[m]
 # init code
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -25,27 +26,26 @@ class Detector:
 
     def draw(self, img):
         for blob in self.blobs:
-            print(blob.rect())
+            print (blob.rect())
             img.draw_edges(blob.min_corners(), color=(255, 0, 0))
             img.draw_line(blob.major_axis_line(), color=(0, 255, 0))
             img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
 
 
 class colored_object_detector (Detector):
-    def __init__(self, th_, pixel_th_=300, area_th_=300, merge_=False):
-        self.th = th_
+    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False):
+        self.th       = th_
         self.pixel_th = pixel_th_
-        self.area_th = area_th_
-        self.merge = merge_
+        self.area_th  = area_th_
+        self.merge    = merge_
 
     def _detect(self, img):
-        detected_blobs = img.find_blobs(
-            [self.th], pixels_threshold=300, area_threshold=300, merge=False)
+        detected_blobs = img.find_blobs([self.th], pixels_threshold=300, area_threshold=300, merge=False)
 
         return detected_blobs
 
     def detect(self, img):
-        self.blobs = self._detect(img)
+        self.blobs = self._detect (img)
 
         return self.blobs
 
@@ -78,10 +78,10 @@ class Azer_ball_detector (colored_object_detector):
                 d = image.rgb_to_lab(img.get_pixel(
                     blob.x(), blob.y()+blob.h()-1))
 
-                if (all(thresholds[1][2*i] < a[i] < thresholds[1][2*i+1] for i in range(len(a)-1)) or
-                    all(thresholds[1][2*i] < b[i] < thresholds[1][2*i+1] for i in range(len(b)-1)) or
-                    all(thresholds[1][2*i] < c[i] < thresholds[1][2*i+1] for i in range(len(c)-1)) or
-                        all(thresholds[1][2*i] < d[i] < thresholds[1][2*i+1] for i in range(len(d)-1))):
+                if (all(self.thresholds[1][2*i] < a[i] < self.thresholds[1][2*i+1] for i in range(len(a)-1)) or
+                    all(self.thresholds[1][2*i] < b[i] < self.thresholds[1][2*i+1] for i in range(len(b)-1)) or
+                    all(self.thresholds[1][2*i] < c[i] < self.thresholds[1][2*i+1] for i in range(len(c)-1)) or
+                        all(self.thresholds[1][2*i] < d[i] < self.thresholds[1][2*i+1] for i in range(len(d)-1))):
                     self.blobs.append(blob)
 
         return self.blobs
@@ -105,11 +105,6 @@ class Vision:
 
 
 class Localization:
-    robotPosision = (0, 0)  # ([m], [m])
-    robotYaw = 0  # [<deg/rad>]
-    ballPositionWorld = 0
-    ballPositionSelf = 0
-
     def __init__(self):
         pass
 
@@ -132,44 +127,35 @@ class Motion:
     def apply(self, action):
         return 0
 
-
-vision = Vision( \
-    {"ball": colored_object_detector((30, 80, 0, 40, -10, 20)), \ 
-     "blue_posts": colored_object_detector((20, 55, 40, 80, 30, 70), \
-     "red_posts": colored_object_detector((20, 55, 40, 80, 30, 70)})
-
-loc=Localization()
-strat=Strategy()
-motion=Motion()
-model=Model()
+vision = Vision({"goal" : colored_object_detector((20, 55, 40, 80, 30, 70))})
+loc = Localization()
+strat = Strategy()
+motion = Motion()
+model = Model()
 
 with open("cam_col.json") as f:
-    calib=json.load(f)
+    calib = json.load(f)
 
-# setting model parametrs
+#setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
 # main loop
 while(True):
     clock.tick()
-    img=sensor.snapshot()
+    img = sensor.snapshot()
 
     # camera means in image coords
-    cameraData=vision.get(
-        img, objects_list=["ball", "blue_posts", "red_posts"], drawing_list=["ball", "blue_posts", "red_posts"])
+    cameraData = vision.get(img, objects_list=["goal"], drawing_list= ["goal"])
 
     # self means in robots coords
-    selfData={}
-    for observationType in cameraData:
-        selfPoints = []
-        for observation in cameraData["observationType"]:
-            selfPoints.append(model.pic2r(el[0] - el[2]/2, el[1] - el[3])
-        selfData[observationType] = selfPoints
+    selfData = []
+    for el in cameraData["goal"]:
+        selfData.append(model.pic2r(el[0] - el[3]/2, el[1] - el[4])) # (el[0] - el[3]/2, el[1] - el[4])
+        print("data = ", selfData[-1])
 
-    loc.ballPositionWorld = selfData["ball"]
-    loc.robotPosision = updatePF(selfData)
+    print(updatePF(selfData))
 
-    action=strat.generate_action(loc)
+    action = strat.generate_action(loc)
 
     motion.apply(action)
