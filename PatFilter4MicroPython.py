@@ -241,5 +241,5 @@ def updatePF(measurement):
     robot = Robot()
     robot.set_coord(0.0, 0.0, 0.0)
     pf = ParticleFilter(robot, field, sense_noise=1.0)
-    pf.resampling(measurement)
+    pf.resampling(measurement["red_posts"])
     return robot.return_coord()

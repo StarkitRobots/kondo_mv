@@ -133,10 +133,10 @@ class Motion:
         return 0
 
 
-vision = Vision(
-    {"ball": colored_object_detector((30, 80, 0, 40, -10, 20)),
-     "blue_posts": colored_object_detector((30, 80, 0, 40, -10, 20),
-     "red_posts": colored_object_detector((30, 80, 0, 40, -10, 20)})
+vision = Vision( \
+    {"ball": colored_object_detector((30, 80, 0, 40, -10, 20)), \ 
+     "blue_posts": colored_object_detector((20, 55, 40, 80, 30, 70), \
+     "red_posts": colored_object_detector((20, 55, 40, 80, 30, 70)})
 
 loc=Localization()
 strat=Strategy()
