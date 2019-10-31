@@ -46,32 +46,39 @@ class Motion:
     def apply(self, action):
         return 0
 
-vis = Vision({"goal" : ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
-loc = Localization()
-strat = Strategy()
-motion = Motion()
-model = Model()
+vision = Vision( \
+    {"ball": colored_object_detector((30, 80, 0, 40, -10, 20)), \ 
+     "blue_posts": colored_object_detector((20, 55, 40, 80, 30, 70)), \
+     "red_posts": colored_object_detector((20, 55, 40, 80, 30, 70))})
+
+loc=Localization()
+strat=Strategy()
+motion=Motion()
+model=Model()
 
 with open("cam_col.json") as f:
-    calib = json.load(f)
+    calib=json.load(f)
 
-#setting model parametrs
+# setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
 # main loop
 while(True):
     clock.tick()
-    img = sensor.snapshot()
+    img=sensor.snapshot()
 
     # camera means in image coords
-    cameraData = vis.get(img, objects_list=["goal"], drawing_list= ["goal"])
+    cameraData=vision.get(
+        img, objects_list=["ball", "blue_posts", "red_posts"], drawing_list=["ball", "blue_posts", "red_posts"])
 
     # self means in robots coords
-    selfData = []
-    for el in cameraData["goal"]:
-        selfData.append(model.pic2r(el[0] - el[3]/2, el[1] - el[4])) # (el[0] - el[3]/2, el[1] - el[4])
-        print("data = ", selfData[-1])
+    selfData={}
+    for observationType in cameraData:
+        selfPoints = []
+        for observation in cameraData["observationType"]:
+            selfPoints.append(model.pic2r(el[0] - el[2]/2, el[1] - el[3])
+        selfData[observationType] = selfPoints
 
     loc.ballPositionWorld = selfData["ball"]
     loc.robotPosision = updatePF(selfData)
@@ -79,3 +86,4 @@ while(True):
     action=strat.generate_action(loc)
 
     motion.apply(action)
+
