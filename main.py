@@ -6,6 +6,7 @@ from model.model import Model
 from localization.localization import Localization
 from motion.motion import Motion
 from strategy.strategy import Strategy
+from lowlevel import *
 from vision.vision import Vision, Detector, ColoredObjectDetector, BallDetector
 
 
@@ -19,7 +20,7 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
-
+    
 vision = Vision({"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     "blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
     "yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
@@ -39,22 +40,30 @@ model.updateCameraPanTilt(0, -3.1415/6)
 # main loop
 while(True):
     clock.tick()
-    img=sensor.snapshot()
 
-    # camera means in image coords
-    cameraData=vision.get(
-        img, objects_list=["ball", "blue_posts", "yellow_posts"], 
-        drawing_list=["ball", "blue_posts", "yellow_posts"])
+    for i in range(5):
+        
+        # motion part. Head movement.
+        #motion.move_head()
 
-    # self means in robots coords
-    selfData={}
-    for observationType in cameraData:
-        selfPoints = []
-        for observation in cameraData["observationType"]:
-            selfPoints.append(
-                model.pic2r(observation[0] - observation[2]/2, 
-                observation[1] - observation[3]))
-        selfData[observationType] = selfPoints
+        # vision part. Taking picture.
+        img=sensor.snapshot()
+        cameraData=vision.get(
+            img, objects_list=["ball", "blue_posts", "yellow_posts"], 
+            drawing_list=["ball", "blue_posts", "yellow_posts"])
+
+        # model part. Mapping to world coords.
+
+        # self means in robots coords
+        selfData={}
+        for observationType in cameraData:
+            selfPoints = []
+            for observation in cameraData["observationType"]:
+                selfPoints.append(
+                    model.pic2r(observation[0] - observation[2]/2, 
+                    observation[1] - observation[3]))
+            selfData[observationType] = selfPoints
+
 
     loc.update(selfData)
     
