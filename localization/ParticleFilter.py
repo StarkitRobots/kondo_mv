@@ -1,16 +1,10 @@
-import sensor, image, time, math
+import sensor
+import image
+import time
+import math
+import json
+import os
 from urandom import *
-
-p_tmp = []
-sensor.reset()  # Reset and initialize the sensor.
-sensor.set_pixformat(sensor.RGB565)  # Set pixel format to RGB565 (or GRAYSCALE)
-sensor.set_framesize(sensor.QVGA)  # Set frame size to QVGA (320x240)
-sensor.skip_frames(time=2000)  # Wait for settings take effect.
-clock = time.clock()  # Create a clock object to track the FPS.
-
-
-# Note: OpenMV Cam runs about half as fast when connected
-# to the IDE. The FPS should increase once disconnected.
 
 def randrange(start, stop=None):
     if stop is None:
@@ -40,37 +34,29 @@ def gauss(mu, sigma):
     return mu + z * sigma
 
 
-import json
-
-
 class Field:
     def __init__(self, path):
         with open(path, "r") as f:
-        self.field = json.loads(f.read())
-        self.w_width = self.field['main_rectangle'][0][0]
-        self.w_length = self.field['main_rectangle'][0][1]
+            self.field = json.loads(f.read())
+            self.w_width = self.field['main_rectangle'][0][0]
+            self.w_length = self.field['main_rectangle'][0][1]
 
 
 class Robot(Field):
-    def __init__(self, x=1, y=0.5, yaw=0):
-
-        self.x = x  # robot's x coordinate
-        self.y = y  # robot's y coordinate
-        self.orientation = yaw  # robot's orientation
-        self.forward_noise = 0.05  # noise of the forward movement
-        self.turn_noise = 0.1  # noise of the turn
-        self.sense_noise = 0.3  # noise of the sensing
+    def __init__(self, x = 1, y = 0.5, yaw = 0):
+        self.x = x          # robot's x coordinate
+        self.y = y          # robot's y coordinate
+        self.yaw = yaw  # robot's orientation
+        self.forward_noise = 0.05   # noise of the forward movement
+        self.turn_noise = 0.1      # noise of the turn
+        self.sense_noise = 1   # noise of the sensing
 
     def set_coord(self, new_x, new_y, new_orientation):
-        # if new_orientation < 0 or new_orientation >= 2 * pi:
-        #   raise ValueError('Orientation must be in [0..2pi]')
-
         self.x = float(new_x)
         self.y = float(new_y)
-        self.orientation = float(new_orientation)
+        self.yaw = float(new_orientation)
 
     def set_noise(self, new_forward_noise, new_turn_noise, new_sense_noise):
-
         self.forward_noise = float(new_forward_noise)
         self.turn_noise = float(new_turn_noise)
         self.sense_noise = float(new_sense_noise)
@@ -82,126 +68,160 @@ class Robot(Field):
                              + (self.y - landmarks[i][1]) ** 2)
             dist += gauss(0.0, self.sense_noise)
             z.append(dist)
-        # print("z = ", z)
         return z
 
-    def move(self, turn, forward):
+
+    def move(self, x, y, yaw):
         # turn, and add randomness to the turning command
-        orientation = self.orientation + float(turn) + gauss(0.0, self.turn_noise)
+        orientation = self.yaw + float(yaw) + gauss(0.0, self.turn_noise)
         orientation %= 2 * math.pi
-
         # move, and add randomness to the motion command
-        dist = float(forward) + gauss(0.0, self.forward_noise)
-        x = self.x + (math.cos(orientation) * dist)
-        y = self.y + (math.sin(orientation) * dist)
+        x = self.x + x + gauss(0, self.forward_noise)
+        y = self.y + y + gauss(0, self.forward_noise)
+        if math.fabs(x) >= field.w_width:
+            x = math.copysign(field.w_width/2.0, x)
+        if math.fabs(y) >= field.w_length:
+            y = math.copysign(field.w_length/2.0, y)
+        self.x = x
+        self.y = y
+        self.yaw = orientation
 
-        # set particle
-        res = Robot()
-        res.set_coord(x, y, orientation)
-        # res.set_noise(self.forward_noise, self.turn_noise, self.sense_noise)
-
-        return res
-
-    def gaussian(self, mu, sigma, x):
+    def gaussian(self, x, sigma):
         # calculates the probability of x for 1-dim Gaussian with mean mu and var. sigma
-        return math.exp(-((mu - x) ** 2) / (sigma ** 2)) / math.sqrt(2.0 * math.pi * (sigma ** 2))
+        return math.exp(-(x ** 2) / 2*(sigma ** 2)) / math.sqrt(2.0 * math.pi * (sigma ** 2))
 
-    def measurement_prob(self, measurement):
+    def observation_score(self, observations, landmarks): #particle weight calculation
         prob = 1.0
-        for i in range(len(landmarks)):
-            dist = math.sqrt((self.x - landmarks[i][0]) ** 2 + (self.y - landmarks[i][1]) ** 2)
-            # dist = landmarks[i][0]
-            prob *= self.gaussian(dist, self.sense_noise, measurement[i])
-            # print("prob ", prob)
+        matrix_means_land = []
+        for landmark in landmarks:
+            dists = []
+            for observation in observations:
+                #calc posts coords in field for every mesurement
+                x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
+                dists.append(dist)
+            prob *= self.gaussian(min(dists), self.sense_noise)
+
         return prob
 
     def update_coord(self, particles):
         x = 0.0
         y = 0.0
-        for i in range(len(particles)):
-            x += particles[i][0].x * particles[i][1]
-            y += particles[i][0].y * particles[i][1]
-           
-
+        orientation = 0.0
+        for particle in particles:
+            x += particle[0].x * particle[1]
+            y += particle[0].y * particle[1]
+            orientation += particle[0].yaw * particle[1]
         self.x = x
         self.y = y
+        self.yaw = orientation
 
     def return_coord(self):
-        return self.x, self.y
+        return self.x, self.y, self.orientation
 
 
 class ParticleFilter():
     def __init__(self, myrobot, field,
-                 n=100, forward_noise=0.025,
-                 turn_noise=0.1, sense_noise=0.3):
+                 n = 200, forward_noise = 0.025,
+                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4):
         self.forward_noise = forward_noise
         self.turn_noise = turn_noise
         self.sense_noise = sense_noise
+        self.gauss_noise = gauss_noise
         self.n = n  # number of particles
         self.myrobot = myrobot
         self.p = []
+        self.yaw_noise = 0.05
+        self.gen_particles()
 
+    def custom_reset(self):
+        self.p=[]
         for i in range(self.n):
-            x = Robot((rand() - 0.5) * field.w_width, (rand() - 0.5) * field.w_length, rand() * math.pi * 2)
-            # x.set_noise(forward_noise, turn_noise, 0)
-            self.p.append([x, 0])
+            x = Robot((rand()-0.5)*field.w_width, (rand()-0.5)*field.w_length, rand()*math.pi*2)
+            #x.set_noise(forward_noise, turn_noise, 0)
+            self.p.append([x,0])
+        self.myrobot.update_coord(self.p)
 
-    def step(self):
-
-        self.myrobot = self.myrobot.move(0, 0.02)
-        z = self.myrobot.sense()
-        # now we simulate a robot motion for each of these particles
-        p_tmp = []
-        p = self.p
+    def gen_particles(self):
+        self.p = []
         for i in range(self.n):
-            p_tmp.append(p[i][0].move(0, 0.02))
-        self.p = p_tmp
+            x_coord = self.myrobot.x + gauss(0, self.sense_noise)
+            y_coord = self.myrobot.y + gauss(0, self.sense_noise)
+            yaw = self.myrobot.yaw + gauss(0, self.yaw_noise)*math.pi
+            yaw %= 2 * math.pi
+            self.p.append([Robot(x_coord, y_coord, yaw), 0])
 
-        return p_tmp
+    def move(self, x, y, yaw):
+
+        self.myrobot.move(x, y, yaw)
+        for partic in self.p:
+            partic[0].move(x, y, yaw)
 
     def do_n_steps(self, n_steps):
         for i in range(n_steps):
             self.step()
 
-    def resampling(self, measurement):
+    def gen_n_particles_robot(self, n):
+        p = []
+        for i in range(n):
+            x_coord = self.myrobot.x + gauss(0, self.sense_noise*3)
+            y_coord = self.myrobot.y + gauss(0, self.sense_noise*3)
+            yaw = self.myrobot.yaw + gauss(0, self.yaw_noise*3)*math.pi
+            yaw %= 2 * math.pi
+            p.append([Robot(x_coord, y_coord, yaw), 0])
+        return p
+
+    def gen_n_particles(self, n):
+        tmp = []
+        for i in range(n):
+            x = Robot((rand()-0.5)*field.w_width, (rand()-0.5)*field.w_length, rand()*math.pi*2)
+            #x.set_noise(forward_noise, turn_noise, 0)
+            tmp.append([x,0])
+        return tmp
+
+    def resampling(self, measurement, landmarks):
         p_tmp = []
         w = []
         S = 0
         for i in range(self.n):
-            z = self.myrobot.sense((landmarks))
             w.append(self.p[i][0].measurement_prob(measurement))
             S += (w[i])
         for i in range(self.n):
-            w[i] = w[i] / S
-            S += w[i]
+            w[i] = w[i]/S
         index = int(rand() * self.n)
         beta = 0.0
         mw = max(w)
-        # print(mw)
+        new_particles = {}
         for i in range(self.n):
             beta += rand() * 2.0 * mw
             while beta > w[index]:
                 beta -= w[index]
                 index = (index + 1) % self.n
-            p_tmp.append([self.p[index][0], w[index]])
-        # print(p_tmp)
+            if index in new_particles.keys():
+                new_particles[index] += 1
+            else:
+                new_particles[index] = 1
+        for el in new_particles:
+            p_tmp.append([self.p[el][0],w[el]*new_particles[el]])
+
         S = 0
         for i in range(len(p_tmp)):
             S += p_tmp[i][1]
         for i in range(len(p_tmp)):
             p_tmp[i][1] /= S
-
-        self.p = p_tmp
         self.myrobot.update_coord(p_tmp)
-        return w, p_tmp
+        new_particles = self.gen_n_particles_robot(self.n - len(p_tmp))
+        p_tmp.extend(new_particles)
+        self.p = p_tmp
 
 
-#measurement = [[3.8809736656992513, 2.44685437739309], [2.8061306051321995, 1.9513027039072615]]
-with open("landmarks.json", "r") as f:
+
+with open("localization/landmarks.json", "r") as f:
         landmarks = json.loads(f.read())['landmarks']
 
 def updatePF(measurement):
-    field = Field("parfield.json")
+    field = Field("localization/parfield.json")
     robot = Robot()
     robot.set_coord(0.0, 0.0, 0.0)
     pf = ParticleFilter(robot, field, sense_noise=1.0)
