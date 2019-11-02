@@ -105,6 +105,15 @@ class Robot(Field):
 
         return prob
 
+    def observation_to_predict(self, observations, landmarks):
+        predicts = []
+        for color_landmarks in landmarks:
+            for landmark in landmarks[color_landmarks]:
+                x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                predicts.append([x_posts, y_posts])
+        return predicts
+
     def update_coord(self, particles):
         x = 0.0
         y = 0.0
@@ -122,20 +131,31 @@ class Robot(Field):
 
 
 class ParticleFilter():
-    def __init__(self, myrobot, field,
-                 n = 200, forward_noise = 0.025,
-                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4):
+    def __init__(self, myrobot, field, landmarks,
+                 n = 200, forward_noise = 0.025, 
+                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4, 
+                 consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
+                 badObsCost = 0.1, stepCost = 0.1 ):
         self.forward_noise = forward_noise
         self.turn_noise = turn_noise
         self.sense_noise = sense_noise
         self.gauss_noise = gauss_noise
+        self.logs = open('localization/logs/logs.txt','w')
         self.n = n  # number of particles
+        self.count = 0
         self.myrobot = myrobot
-        self.p = []
+        self.p = [] 
         self.yaw_noise = 0.05
-        self.gen_particles()
+        self.gen_particles() 
+        self.landmarks = landmarks
+        sys.stdout = self.logs
+        self.consistency = consistency
+        self.goodObsGain = goodObsGain
+        self.badObsCost = badObsCost
+        self.stepCost = stepCost
+        self.dist_threshold = dist_threshold
 
-    def custom_reset(self):
+    def uniform_reset(self):
         self.p=[]
         for i in range(self.n):
             x = Robot((rand()-0.5)*field.w_width, (rand()-0.5)*field.w_length, rand()*math.pi*2)
@@ -143,7 +163,35 @@ class ParticleFilter():
             self.p.append([x,0])
         self.myrobot.update_coord(self.p)
 
+    def update_consistency(self, obseravations):
+        #prob = self.myrobot.observation_score(observations)
+        stepConsistency = 0
+        for color_landmarks in self.landmarks:
+            for landmark in self.landmarks[color_landmarks]:
+                dists = []
+                if len(observations[color_landmarks]) != 0:
+                    for observation in observations[color_landmarks]:
+                #calc posts coords in field for every mesurement
+                        x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw) 
+                                   + observation[1]*math.cos(-self.myrobot.yaw))
+                        y_posts = (self.myrobot.y + observation[0]*math.cos(-self.myrobot.yaw) 
+                                   - observation[1]*math.sin(-self.myrobot.yaw))
+                        dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
+                        dists.append(dist)
+                    if min(dists) < self.dist_threshold:
+                        stepConsistency += self.goodObsGain
+                    else:
+                        stepConsistency -= self.badObsCost
+                else:
+                    stepConsistency -= self.stepCost
+        print(stepConsistency)
+        self.consistency += stepConsistency
+
     def gen_particles(self):
+        print('initial,step ', self.count, file=self.logs)
+        print('$$', file=self.logs)
+        print("position ", self.myrobot.x, ' ', 
+              self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         self.p = []
         for i in range(self.n):
             x_coord = self.myrobot.x + gauss(0, self.sense_noise)
@@ -151,12 +199,24 @@ class ParticleFilter():
             yaw = self.myrobot.yaw + gauss(0, self.yaw_noise)*math.pi
             yaw %= 2 * math.pi
             self.p.append([Robot(x_coord, y_coord, yaw), 0])
+            print(x_coord, ' ', y_coord, ' ', yaw, file=self.logs)
+        #print('|', file = self.logs)
+        self.count += 1
 
     def move(self, x, y, yaw):
-
         self.myrobot.move(x, y, yaw)
+        print('|moving,step ', self.count, file=self.logs)
+        print('$$', file=self.logs)
+        print("position ", self.myrobot.x, ' ', 
+              self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
+        # now we simulate a robot motion for each of
+        # these particles
         for partic in self.p:
             partic[0].move(x, y, yaw)
+            print(partic[0].x, ' ', 
+              partic[0].y, ' ', partic[0].yaw, file=self.logs) 
+        #print('|', file = self.logs)  
+        self.count += 1
 
     def do_n_steps(self, n_steps):
         for i in range(n_steps):
@@ -180,18 +240,22 @@ class ParticleFilter():
             tmp.append([x,0])
         return tmp
 
-    def resampling(self, measurement, landmarks):
+    def resampling(self, observations):
+        print('|resempling,step ', self.count, file=self.logs)
+        print('$', self.observation_to_predict(observations), '$', file=self.logs)
         p_tmp = []
         w = []
         S = 0
         for i in range(self.n):
-            w.append(self.p[i][0].measurement_prob(measurement))
+            w.append(self.p[i][0].observation_score(observations, self.landmarks))
             S += (w[i])
         for i in range(self.n):
             w[i] = w[i]/S
+            #S += w[i]
         index = int(rand() * self.n)
         beta = 0.0
         mw = max(w)
+        #print(mw)
         new_particles = {}
         for i in range(self.n):
             beta += rand() * 2.0 * mw
@@ -202,18 +266,40 @@ class ParticleFilter():
                 new_particles[index] += 1
             else:
                 new_particles[index] = 1
+            #p_tmp.append([self.p[index][0],w[index]])
         for el in new_particles:
             p_tmp.append([self.p[el][0],w[el]*new_particles[el]])
-
         S = 0
         for i in range(len(p_tmp)):
             S += p_tmp[i][1]
         for i in range(len(p_tmp)):
             p_tmp[i][1] /= S
         self.myrobot.update_coord(p_tmp)
+        self.update_consistency(observations)
+        print("position ", self.myrobot.x, ' ', 
+              self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         new_particles = self.gen_n_particles_robot(self.n - len(p_tmp))
         p_tmp.extend(new_particles)
         self.p = p_tmp
+        for particle in p_tmp:
+            print(particle[0].x, ' ', 
+              particle[0].y, ' ', particle[0].yaw, file=self.logs) 
+        #print('|', file = self.logs)
+        self.count += 1
+        self.update_consistency(observations)
+
+    def custom_reset(self, x, y, yaw):
+        self.myrobot.x = x
+        self.myrobot.y = y
+        self.myrobot.yaw = yaw
+        self.p = gen_n_particles_robot(self.n)
+        
+    def fall_reset(self, observations):
+        self.update_consistency(observations)
+        self.custom_reset(self.myrobot.x + gauss(0, self.sense_noise),
+                         self.myrobot.y + gauss(0, self.sense_noise),
+                         self.myrobot.y  + gauss(0, self.sense_noise))
+        self.resampling(observations)
 
 
 
