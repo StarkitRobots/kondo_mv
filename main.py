@@ -49,11 +49,9 @@ t = 0
 while(True):
     clock.tick()
 
-    curr_t = pyb.millis()
-    print (curr_t - t)
-    t = curr_t
+  
 
-    for i in range(1):
+    for i in range(5):
 
         # motion part. Head movement.
         #motion.move_head()
