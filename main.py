@@ -2,6 +2,7 @@ import sys
 import sensor, image
 import time, math, json
 import os
+import pyb
 
 from model.model import Model
 sys.path.append('localization')
@@ -43,11 +44,16 @@ with open("calibration/cam_col.json") as f:
 model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
+t = 0
 # main loop
 while(True):
     clock.tick()
 
-    for i in range(5):
+    curr_t = pyb.millis()
+    print (curr_t - t)
+    t = curr_t
+
+    for i in range(1):
 
         # motion part. Head movement.
         #motion.move_head()
@@ -71,7 +77,7 @@ while(True):
             selfData[observationType] = selfPoints
 
 
-    loc.update(selfData)
+    #loc.update(selfData)
 
     action = strat.generate_action(loc)
 
