@@ -17,7 +17,7 @@ sys.path.append('vision')
 from vision import Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
 
 
-robotHeight = 0.41 #[m]
+robotHeight = 0.37 #[m]
 # init code
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -35,9 +35,11 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     #pixel_th_ = 300, area_th_ = 300, merge_ = False,
     #points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1):
 
-    "blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
-                                           (40, 60, -60, -10, 0, 45),
-                                           sector_rad_ = 30,
+    #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
+    #                                   (40, 60, -60, -10, 0, 45),
+    "blue_posts": SurroundedObjectDetector((7, 25, 10, 50, -50, -10),
+                                          (40, 70, -45, -10, -5, 45),
+                                       sector_rad_ = 30,
                                            min_ang_ = 0,
                                            max_ang_ = 3.14,
                                            points_num_ = 7,
@@ -59,19 +61,20 @@ model.updateCameraPanTilt(0, -3.1415/6)
 
 t = 0
 # main loop
-for i in range(10):
-#while(True):
+while(True):
     clock.tick()
 
+    curr_t = pyb.millis()
+    #print (curr_t - t)
+    t = curr_t
 
-    for i in range(5):
+    for i in range(1):
 
         # motion part. Head movement.
         #motion.move_head()
 
         # vision part. Taking picture.
         img=sensor.snapshot()
-        #img = rgb_to_lab (img)
 
         cameraData=vision.get(
             img, objects_list=["blue_posts"],#, "yellow_posts"],
@@ -88,12 +91,12 @@ for i in range(10):
                     model.pic2r(observation[0] - observation[2]/2,
                     observation[1] - observation[3]))
             selfData[observationType] = selfPoints
+        print(selfData)
 
 
-    loc.update(selfData)
+    #loc.update(selfData)
+
     action = strat.generate_action(loc)
 
     motion.apply(action)
 
-loc.end_of_loc()
-print("end")

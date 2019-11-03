@@ -94,7 +94,10 @@ class Robot(Field):
 
     def observation_score(self, observations, landmarks): #particle weight calculation
         prob = 1.0
-        for color_landmarks in landmarks:
+        for color_landmarks in observations:
+            if (color_landmarks not in landmarks):
+                continue
+
             for landmark in landmarks[color_landmarks]:
                 dists = []
                 if observations[color_landmarks]:
@@ -110,6 +113,9 @@ class Robot(Field):
     def observation_to_predict(self, observations, landmarks):
         predicts = []
         for color_landmarks in landmarks:
+            if (color_landmarks not in landmarks):
+                continue
+
             for landmark in landmarks[color_landmarks]:
                 x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
                 y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
@@ -167,14 +173,17 @@ class ParticleFilter():
             self.p.append([x,0])
         self.myrobot.update_coord(self.p)
 
-    def update_consistency(self, obseravations):
+    def update_consistency(self, observations):
         #prob = self.myrobot.observation_score(observations)
         stepConsistency = 0
-        for color_landmarks in self.landmarks:
+        for color_landmarks in observations:
+            if (color_landmarks not in landmarks):
+                continue
+
             for landmark in self.landmarks[color_landmarks]:
                 dists = []
-                if len(obseravations[color_landmarks]) != 0:
-                    for observation in obseravations[color_landmarks]:
+                if len(observations[color_landmarks]) != 0:
+                    for observation in observations[color_landmarks]:
                 #calc posts coords in field for every mesurement
                         x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw)
                                    + observation[1]*math.cos(-self.myrobot.yaw))
@@ -246,7 +255,10 @@ class ParticleFilter():
 
     def observation_to_predict(self, observations):
         predicts = []
-        for color_landmarks in self.landmarks:
+        for color_landmarks in observations:
+            if (color_landmarks not in landmarks):
+                continue
+
             for landmark in self.landmarks[color_landmarks]:
                 if len(observations[color_landmarks]) != 0:
                     for obs in observations[color_landmarks]:
