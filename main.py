@@ -46,10 +46,11 @@ model.updateCameraPanTilt(0, -3.1415/6)
 
 t = 0
 # main loop
-while(True):
+for i in range(10):
+#while(True):
     clock.tick()
 
-  
+
 
     for i in range(5):
 
@@ -75,9 +76,10 @@ while(True):
             selfData[observationType] = selfPoints
 
 
-    #loc.update(selfData)
-
+    loc.update(selfData)
     action = strat.generate_action(loc)
 
     motion.apply(action)
 
+loc.end_of_loc()
+print("end")

@@ -4,6 +4,8 @@ import time
 import math
 import json
 import os
+import sys
+import uio
 from urandom import *
 
 def randrange(start, stop=None):
@@ -127,28 +129,31 @@ class Robot(Field):
         self.yaw = orientation
 
     def return_coord(self):
-        return self.x, self.y, self.orientation
+        return self.x, self.y, self.yaw
 
 
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,
-                 n = 200, forward_noise = 0.025, 
-                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4, 
+                 n = 200, forward_noise = 0.025,
+                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4,
                  consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
                  badObsCost = 0.1, stepCost = 0.1 ):
         self.forward_noise = forward_noise
         self.turn_noise = turn_noise
         self.sense_noise = sense_noise
         self.gauss_noise = gauss_noise
-        self.logs = open('localization/logs/logs.txt','w')
+        self.logs = open('localization/logs/logs.txt',"w")
         self.n = n  # number of particles
         self.count = 0
         self.myrobot = myrobot
-        self.p = [] 
+        self.p = []
         self.yaw_noise = 0.05
-        self.gen_particles() 
+        self.gen_particles()
         self.landmarks = landmarks
-        sys.stdout = self.logs
+        #logs = uio.open('localization/logs/logs.txt',"w")
+        #sys.stdout = self.logs
+        print(str(sys.stdout))
+
         self.consistency = consistency
         self.goodObsGain = goodObsGain
         self.badObsCost = badObsCost
@@ -172,9 +177,9 @@ class ParticleFilter():
                 if len(observations[color_landmarks]) != 0:
                     for observation in observations[color_landmarks]:
                 #calc posts coords in field for every mesurement
-                        x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw) 
+                        x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw)
                                    + observation[1]*math.cos(-self.myrobot.yaw))
-                        y_posts = (self.myrobot.y + observation[0]*math.cos(-self.myrobot.yaw) 
+                        y_posts = (self.myrobot.y + observation[0]*math.cos(-self.myrobot.yaw)
                                    - observation[1]*math.sin(-self.myrobot.yaw))
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
@@ -189,8 +194,8 @@ class ParticleFilter():
 
     def gen_particles(self):
         print('initial,step ', self.count, file=self.logs)
-        print('$$', file=self.logs)
-        print("position ", self.myrobot.x, ' ', 
+        self.logs.write("$$")
+        print("position ", self.myrobot.x, ' ',
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         self.p = []
         for i in range(self.n):
@@ -207,15 +212,15 @@ class ParticleFilter():
         self.myrobot.move(x, y, yaw)
         print('|moving,step ', self.count, file=self.logs)
         print('$$', file=self.logs)
-        print("position ", self.myrobot.x, ' ', 
+        print("position ", self.myrobot.x, ' ',
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         # now we simulate a robot motion for each of
         # these particles
         for partic in self.p:
             partic[0].move(x, y, yaw)
-            print(partic[0].x, ' ', 
-              partic[0].y, ' ', partic[0].yaw, file=self.logs) 
-        #print('|', file = self.logs)  
+            print(partic[0].x, ' ',
+              partic[0].y, ' ', partic[0].yaw, file=self.logs)
+        #print('|', file = self.logs)
         self.count += 1
 
     def do_n_steps(self, n_steps):
@@ -239,6 +244,15 @@ class ParticleFilter():
             #x.set_noise(forward_noise, turn_noise, 0)
             tmp.append([x,0])
         return tmp
+
+    def observation_to_predict(self, observations):
+        predicts = []
+        for color_landmarks in self.landmarks:
+            for obs in observations[color_landmarks]:
+                x_posts = self.myrobot.x + obs[0]*math.sin(-self.myrobot.yaw) + obs[1]*math.cos(-self.myrobot.yaw)
+                y_posts = self.myrobot.y + obs[0]*math.cos(-self.myrobot.yaw) - obs[1]*math.sin(-self.myrobot.yaw)
+                predicts.append([x_posts, y_posts])
+        return predicts
 
     def resampling(self, observations):
         print('|resempling,step ', self.count, file=self.logs)
@@ -276,14 +290,14 @@ class ParticleFilter():
             p_tmp[i][1] /= S
         self.myrobot.update_coord(p_tmp)
         self.update_consistency(observations)
-        print("position ", self.myrobot.x, ' ', 
+        print("position ", self.myrobot.x, ' ',
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         new_particles = self.gen_n_particles_robot(self.n - len(p_tmp))
         p_tmp.extend(new_particles)
         self.p = p_tmp
         for particle in p_tmp:
-            print(particle[0].x, ' ', 
-              particle[0].y, ' ', particle[0].yaw, file=self.logs) 
+            print(particle[0].x, ' ',
+              particle[0].y, ' ', particle[0].yaw, file=self.logs)
         #print('|', file = self.logs)
         self.count += 1
         self.update_consistency(observations)
@@ -293,7 +307,7 @@ class ParticleFilter():
         self.myrobot.y = y
         self.myrobot.yaw = yaw
         self.p = gen_n_particles_robot(self.n)
-        
+
     def fall_reset(self, observations):
         self.update_consistency(observations)
         self.custom_reset(self.myrobot.x + gauss(0, self.sense_noise),
@@ -303,13 +317,7 @@ class ParticleFilter():
 
 
 
-with open("localization/landmarks.json", "r") as f:
-        landmarks = json.loads(f.read())['landmarks']
+def updatePF(robot, measurement):
 
-def updatePF(measurement):
-    field = Field("localization/parfield.json")
-    robot = Robot()
-    robot.set_coord(0.0, 0.0, 0.0)
-    pf = ParticleFilter(robot, field, sense_noise=1.0)
-    pf.resampling(measurement)
+    #pf.resampling(measurement)
     return robot.return_coord()
