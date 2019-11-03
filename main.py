@@ -14,7 +14,7 @@ from strategy import Strategy
 sys.path.append('lowlevel')
 #from lowlevel import *
 sys.path.append('vision')
-from vision import Vision, Detector, ColoredObjectDetector, BallDetector
+from vision import Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
 
 
 robotHeight = 0.41 #[m]
@@ -28,9 +28,22 @@ sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
 
-vision = Vision({"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
-    "blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
-    "yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
+vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
+    #"blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
+
+    #(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
+    #pixel_th_ = 300, area_th_ = 300, merge_ = False,
+    #points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1):
+
+    "blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
+                                           (40, 60, -60, -10, 0, 45),
+                                           sector_rad_ = 30,
+                                           min_ang_ = 0,
+                                           max_ang_ = 3.14,
+                                           points_num_ = 7,
+                                           objects_num_ = 2)})
+
+    #"yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
 
 loc=Localization()
 strat=Strategy()
@@ -51,7 +64,6 @@ for i in range(10):
     clock.tick()
 
 
-
     for i in range(5):
 
         # motion part. Head movement.
@@ -59,9 +71,11 @@ for i in range(10):
 
         # vision part. Taking picture.
         img=sensor.snapshot()
+        #img = rgb_to_lab (img)
+
         cameraData=vision.get(
-            img, objects_list=["ball", "blue_posts", "yellow_posts"],
-            drawing_list=["ball", "blue_posts", "yellow_posts"])
+            img, objects_list=["blue_posts"],#, "yellow_posts"],
+            drawing_list=["blue_posts"])#, "yellow_posts"])
 
         # model part. Mapping to world coords.
 
