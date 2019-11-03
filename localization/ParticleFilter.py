@@ -94,17 +94,17 @@ class Robot(Field):
 
     def observation_score(self, observations, landmarks): #particle weight calculation
         prob = 1.0
-        matrix_means_land = []
-        for landmark in landmarks:
-            dists = []
-            for observation in observations:
-                #calc posts coords in field for every mesurement
-                x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
-                y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
-                dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
-                dists.append(dist)
-            prob *= self.gaussian(min(dists), self.sense_noise)
-
+        for color_landmarks in landmarks:
+            for landmark in landmarks[color_landmarks]:
+                dists = []
+                if len(observations[color_landmarks]) != 0:
+                    for observation in observations[color_landmarks]:
+               #calc posts coords in field for every mesurement
+                        x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                        y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                        dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
+                        dists.append(dist)
+                    prob *= self.gaussian(min(dists), self.sense_noise)
         return prob
 
     def observation_to_predict(self, observations, landmarks):
@@ -174,8 +174,8 @@ class ParticleFilter():
         for color_landmarks in self.landmarks:
             for landmark in self.landmarks[color_landmarks]:
                 dists = []
-                if len(observations[color_landmarks]) != 0:
-                    for observation in observations[color_landmarks]:
+                if len(obseravations[color_landmarks]) != 0:
+                    for observation in obseravations[color_landmarks]:
                 #calc posts coords in field for every mesurement
                         x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw)
                                    + observation[1]*math.cos(-self.myrobot.yaw))
@@ -317,7 +317,6 @@ class ParticleFilter():
 
 
 
-def updatePF(robot, measurement):
-
-    #pf.resampling(measurement)
+def updatePF(pf, robot, measurement):
+    pf.resampling(measurement)
     return robot.return_coord()
