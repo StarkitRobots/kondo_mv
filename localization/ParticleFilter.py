@@ -97,7 +97,7 @@ class Robot(Field):
         for color_landmarks in landmarks:
             for landmark in landmarks[color_landmarks]:
                 dists = []
-                if len(observations[color_landmarks]) != 0:
+                if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
                #calc posts coords in field for every mesurement
                         x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
@@ -134,7 +134,7 @@ class Robot(Field):
 
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,
-                 n = 200, forward_noise = 0.025,
+                 n = 100, forward_noise = 0.025,
                  turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4,
                  consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
                  badObsCost = 0.1, stepCost = 0.1 ):
@@ -152,7 +152,6 @@ class ParticleFilter():
         self.landmarks = landmarks
         #logs = uio.open('localization/logs/logs.txt',"w")
         #sys.stdout = self.logs
-        print(str(sys.stdout))
 
         self.consistency = consistency
         self.goodObsGain = goodObsGain
@@ -248,10 +247,12 @@ class ParticleFilter():
     def observation_to_predict(self, observations):
         predicts = []
         for color_landmarks in self.landmarks:
-            for obs in observations[color_landmarks]:
-                x_posts = self.myrobot.x + obs[0]*math.sin(-self.myrobot.yaw) + obs[1]*math.cos(-self.myrobot.yaw)
-                y_posts = self.myrobot.y + obs[0]*math.cos(-self.myrobot.yaw) - obs[1]*math.sin(-self.myrobot.yaw)
-                predicts.append([x_posts, y_posts])
+            for landmark in self.landmarks[color_landmarks]:
+                if len(observations[color_landmarks]) != 0:
+                    for obs in observations[color_landmarks]:
+                        x_posts = self.myrobot.x + obs[0]*math.sin(-self.myrobot.yaw) + obs[1]*math.cos(-self.myrobot.yaw)
+                        y_posts = self.myrobot.y + obs[0]*math.cos(-self.myrobot.yaw) - obs[1]*math.sin(-self.myrobot.yaw)
+                        predicts.append([x_posts, y_posts])
         return predicts
 
     def resampling(self, observations):
@@ -262,6 +263,7 @@ class ParticleFilter():
         S = 0
         for i in range(self.n):
             w.append(self.p[i][0].observation_score(observations, self.landmarks))
+            print(w[i])
             S += (w[i])
         for i in range(self.n):
             w[i] = w[i]/S

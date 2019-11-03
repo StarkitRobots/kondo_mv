@@ -13,7 +13,7 @@ class Localization:
         self.pf = ParticleFilter(self.robot, Field("localization/parfield.json"), landmarks, sense_noise=1.0)
 
     def update(self, data):
-        self.ball_position = data["ball"]
+        #self.ball_position = data["ball"]
         self.robot_position = updatePF(self.pf, self.robot, data)
         return 0
 
