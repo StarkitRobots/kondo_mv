@@ -27,6 +27,7 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
+field = (40, 85, -55, 25, -15, 55)
 
 vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     #"blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
@@ -38,12 +39,19 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
     #                                   (40, 60, -60, -10, 0, 45),
     "blue_posts": SurroundedObjectDetector((7, 35, 25, 70, -70, -30),
-                                          (50, 70, -45, 15, -5, 45),
+                                          field,
                                        sector_rad_ = 30,
                                            min_ang_ = 0,
                                            max_ang_ = 3.14,
                                            points_num_ = 7,
-                                           objects_num_ = 2)})
+                                           objects_num_ = 2),
+   "ball": SurroundedObjectDetector((30, 80, 40, 85, 10, 60),
+                                         field,
+                                      sector_rad_ = 30,
+                                          min_ang_ = 0,
+                                          max_ang_ = 6.1,
+                                          points_num_ = 10,
+                                          objects_num_ = 1)})
 
     #"yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
 
@@ -79,8 +87,8 @@ while(True):
         #img.save ("kekb.jpg", quality=100)
 
         cameraData=vision.get(
-            img, objects_list=["blue_posts"],#, "yellow_posts"],
-            drawing_list=["blue_posts"])#, "yellow_posts"])
+            img, objects_list=["blue_posts", "ball"],#, "yellow_posts"],
+            drawing_list=["blue_posts", "ball"])#, "yellow_posts"])
 
         # model part. Mapping to world coords.
 
@@ -90,8 +98,8 @@ while(True):
             selfPoints = []
             for observation in cameraData[observationType]:
                 selfPoints.append(
-                    model.pic2r(observation[0] - observation[2]/2,
-                    observation[1] - observation[3]))
+                    model.pic2r(observation[0] + observation[2]/2,
+                    observation[1] + observation[3]))
             selfData[observationType] = selfPoints
         print(selfData)
 
