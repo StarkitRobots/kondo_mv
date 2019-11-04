@@ -11,7 +11,7 @@ class Motion:
         self.kondo.open(uart)
         
         # loading motion dictionary
-        self.motions = json.open("kondo_motions.json")
+        self.motions = json.open("motion/data_motion.json")
         
         # timer for motions
         self._motion_duration = None
