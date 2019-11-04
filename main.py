@@ -37,8 +37,8 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
 
     #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
     #                                   (40, 60, -60, -10, 0, 45),
-    "blue_posts": SurroundedObjectDetector((7, 25, 10, 50, -50, -10),
-                                          (40, 70, -45, -10, -5, 45),
+    "blue_posts": SurroundedObjectDetector((7, 35, 25, 70, -70, -30),
+                                          (50, 70, -45, 15, -5, 45),
                                        sector_rad_ = 30,
                                            min_ang_ = 0,
                                            max_ang_ = 3.14,
@@ -76,6 +76,8 @@ while(True):
         # vision part. Taking picture.
         img=sensor.snapshot()
 
+        #img.save ("kekb.jpg", quality=100)
+
         cameraData=vision.get(
             img, objects_list=["blue_posts"],#, "yellow_posts"],
             drawing_list=["blue_posts"])#, "yellow_posts"])
@@ -93,6 +95,7 @@ while(True):
             selfData[observationType] = selfPoints
         print(selfData)
 
+    #break
 
     #loc.update(selfData)
 

@@ -9,14 +9,15 @@ class Detector:
         return (5, 6)
 
     def _draw(self, img, blobs=[], edges=True, axis_lines=False):
-        if (blobs == []):
-            blobs = self.blobs
+        #if (blobs == []):
+        #    blobs = self.blobs
 
         for blob in blobs:
             if (edges == True):
                 img.draw_edges(blob.min_corners(), color=(255, 0, 0))
 
             if (axis_lines == True):
+                #print ("ff")
                 img.draw_line(blob.major_axis_line(), color=(0, 255, 0))
                 img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
 
@@ -64,7 +65,8 @@ class ColoredObjectDetector(Detector):
 class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
             pixel_th_ = 30, area_th_ = 30, merge_ = True,
-            points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1):
+            points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
+            corr_ratio_ = 0.5):
         self.th  = obj_th_
         self.surr_th = surr_th_
 
@@ -78,6 +80,8 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.min_ang     = min_ang_
         self.max_ang     = max_ang_
         self.objects_num = objects_num_
+
+        self.corr_ratio = corr_ratio_
 
         self._generate_encl_points()
 
@@ -94,6 +98,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
     def detect(self, img):
         self.blobs = self._detect (img)
         self.result = []
+        self.check_success = []
 
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.objects_num)
@@ -106,6 +111,8 @@ class SurroundedObjectDetector(ColoredObjectDetector):
 
             proper = 0
 
+            curr_step_success = []
+
             for pt in self.sector_points:
                 pix = img.get_pixel(x + pt [0], y + pt [1])
 
@@ -113,27 +120,50 @@ class SurroundedObjectDetector(ColoredObjectDetector):
                     a = image.rgb_to_lab(pix)
                     if (all(self.surr_th[2*i] < a[i] < self.surr_th[2*i+1] for i in range(len(a)-1))):
                         proper += 1
+                        curr_step_success.append (True)
 
-            print (proper)
+                    else:
+                        curr_step_success.append (False)
+                else:
+                    curr_step_success.append (True)
+                    proper += 1
 
-            if (proper >= self.points_num // 2):
+            self.check_success.append (curr_step_success)
+            #self.succ_num.append (proper)
+
+            #print (proper)
+
+            if (proper >= self.points_num * self.corr_ratio):
                 self.result.append (res)
 
-        self.result = unchecked_result
+        #self.result = unchecked_result
 
         return self.result
 
     def draw(self, img):
+        print (len (self.result))
         self._draw(img, self.result, True, True)
-        #self._draw(img, self.blobs)
+        self._draw(img, self.blobs)
 
-        for res in self.result:
+        i = 0
+        for res in self.get_k_first_sorted (self.blobs, self.objects_num):#self.result:
+            #print (i)
             bbox = res.rect()
             x = int (bbox[0] + bbox[2]/2)
             y = int (bbox[1] + bbox[3])
 
+            j = 0
             for pt in self.sector_points:
-                img.draw_circle (x + pt [0], y + pt [1], 3, color=(30, 70, 130), thickness=1, fill=True)
+                col = (30, 70, 130)
+
+                if (self.check_success [i] [j] == False):
+                    col = (130, 100, 10)
+
+                j += 1
+
+                img.draw_circle (x + pt [0], y + pt [1], 3, color=col, thickness=1, fill=True)
+
+            i += 1
 
 class BallDetector (ColoredObjectDetector):
     def __init__(self):
