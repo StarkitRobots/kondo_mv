@@ -51,7 +51,7 @@ class Robot(Field):
         self.yaw = yaw  # robot's orientation
         self.forward_noise = 0.05   # noise of the forward movement
         self.turn_noise = 0.1      # noise of the turn
-        self.sense_noise = 1   # noise of the sensing
+        self.sense_noise = 0.1   # noise of the sensing
 
     def set_coord(self, new_x, new_y, new_orientation):
         self.x = float(new_x)
@@ -107,8 +107,8 @@ class Robot(Field):
                         y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
-            if (dists!=[]):
-                prob *= self.gaussian(min(dists), self.sense_noise)
+                if (dists!=[]):
+                    prob *= self.gaussian(min(dists), self.sense_noise)
         return prob
 
     def observation_to_predict(self, observations, landmarks):
@@ -142,7 +142,7 @@ class Robot(Field):
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,
                  n = 100, forward_noise = 0.025,
-                 turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4,
+                 turn_noise = 0.1, sense_noise = 0.4, gauss_noise = 0.4,
                  consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
                  badObsCost = 0.1, stepCost = 0.1 ):
         self.token = str(rand()*10000)
@@ -245,7 +245,7 @@ class ParticleFilter():
         for i in range(n):
             x_coord = self.myrobot.x + gauss(0, self.sense_noise*3)
             y_coord = self.myrobot.y + gauss(0, self.sense_noise*3)
-            yaw = self.myrobot.yaw + gauss(0, self.yaw_noise*3)*math.pi
+            yaw = self.myrobot.yaw + gauss(0, self.yaw_noise)*math.pi
             yaw %= 2 * math.pi
             p.append([Robot(x_coord, y_coord, yaw), 0])
         return p

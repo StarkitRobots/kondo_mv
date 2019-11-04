@@ -7,10 +7,10 @@ class Localization:
         self.localized = False
         self.seeBall = False
         self.robot = Robot()
-        self.robot.set_coord(0.0, 0.0, 1.57)
+        self.robot.set_coord(1.0, -1.0, 1.57)
         with open("localization/landmarks.json", "r") as f:
                 landmarks = json.loads(f.read())
-        self.pf = ParticleFilter(self.robot, Field("localization/parfield.json"), landmarks, sense_noise=0.2)
+        self.pf = ParticleFilter(self.robot, Field("localization/parfield.json"), landmarks, sense_noise=0.5)
 
     def update(self, data):
         #self.ball_position = data["ball"]
