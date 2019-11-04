@@ -14,8 +14,7 @@ from strategy import Strategy
 sys.path.append('lowlevel')
 #from lowlevel import *
 sys.path.append('vision')
-from vision import Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
-
+from vision import *#Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
 
 robotHeight = 0.37 #[m]
 # init code
@@ -27,7 +26,7 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
-field = (40, 85, -55, 25, -15, 55)
+field = (30, 85, -55, 25, -15, 55)
 
 vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
     #"blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
@@ -38,13 +37,23 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
 
     #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
     #                                   (40, 60, -60, -10, 0, 45),
-    "blue_posts": SurroundedObjectDetector((5, 22, 5, 55, -53, -10),
+    "blue_posts": SurroundedObjectDetector((15, 30, 25, 60, -80, -40),
+                                          field,
+                                       sector_rad_ = 50,
+                                           min_ang_ = 0,
+                                           max_ang_ = 3.14,
+                                           points_num_ = 7,
+                                           objects_num_ = 2),
+
+    "white_posts_support": SurroundedObjectDetector((80, 100, -10, 50, -40, 3),
                                           field,
                                        sector_rad_ = 30,
                                            min_ang_ = 0,
                                            max_ang_ = 3.14,
                                            points_num_ = 7,
-                                           objects_num_ = 2),
+                                           objects_num_ = 1,
+                                           sorting_func_=blob_width),
+
    "ball": SurroundedObjectDetector((30, 80, 40, 85, 10, 60),
                                          field,
                                       sector_rad_ = 30,
@@ -67,19 +76,34 @@ with open("calibration/cam_col.json") as f:
 model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
-t = 0
+#class Vision_postprocessing:
+#    def __init__(self, ):
+#        self.detectors = detectors_
 
+#    def approve(self, preliminary_result):
+#        result = {}
+
+#        for obj in objects_list:
+#            detection_result = self.detectors[obj].detect(img)
+#            result.update({obj: detection_result})
+
+#            if (obj in drawing_list):
+#                self.detectors[obj].draw(img)
+
+#        return result
+
+#vision_postprocessing = Vision_postprocessing ("blue_posts", ["left_blue_post", "right_blue_post"])
+
+t = 0
 # main loop
-ite = 1
-for i in range(16):
-#while(True):
+while(True):
     clock.tick()
 
     curr_t = pyb.millis()
     #print (curr_t - t)
     t = curr_t
 
-    for b in range(1):
+    for i in range(1):
 
         # motion part. Head movement.
         #motion.move_head()
@@ -89,40 +113,71 @@ for i in range(16):
 
         #img.save ("kekb.jpg", quality=100)
 
-        cameraData=vision.get(
-            img, objects_list=["blue_posts", "ball"],#, "yellow_posts"],
-            drawing_list=["blue_posts", "ball"])#, "yellow_posts"])
+        cameraDataRaw=vision.get(
+            img, objects_list=["blue_posts", "ball", "white_posts_support"],#, "yellow_posts"],
+            drawing_list=["blue_posts", "ball", "white_posts_support"])#, "yellow_posts"])
+
+        posts_num   = len (cameraDataRaw ["blue_posts"])
+        support_num = len (cameraDataRaw ["white_posts_support"])
+
+        left_post  = []
+        right_post = []
+
+        if (posts_num == 2):
+            post1 = cameraDataRaw ["blue_posts"] [0]
+            post2 = cameraDataRaw ["blue_posts"] [1]
+
+            if (post1.x () < post2.x ()):
+                left_post  = [post1]
+                right_post = [post2]
+
+            else:
+                left_post  = [post2]
+                right_post = [post1]
+
+            cameraDataRaw.update ({"left_blue_post"  : left_post})
+            cameraDataRaw.update ({"right_blue_post" : right_post})
+
+        elif (posts_num == 1):
+            post = cameraDataRaw ["blue_posts"] [0]
+
+            if (support_num == 1):
+                support = cameraDataRaw ["white_posts_support"] [0]
+
+                if (post.x() > support.x()):
+                    cameraDataRaw.update ({"left_blue_post"  : []})
+                    cameraDataRaw.update ({"right_blue_post" : [post]})
+                    print ("right post")
+
+                else:
+                    cameraDataRaw.update ({"left_blue_post"  : [post]})
+                    cameraDataRaw.update ({"right_blue_post" : []})
+                    print ("left post")
+
+            if (support_num == 0):
+                cameraDataRaw.update ({"left_blue_post"  : [post]})
+                cameraDataRaw.update ({"right_blue_post" : []})
+
+        cameraDataApproved = cameraDataRaw
 
         # model part. Mapping to world coords.
 
         # self means in robots coords
         selfData={}
-        for observationType in cameraData:
+        for observationType in cameraDataApproved:
             selfPoints = []
-            for observation in cameraData[observationType]:
+            for observation in cameraDataApproved[observationType]:
                 selfPoints.append(
                     model.pic2r(observation[0] + observation[2]/2,
-                    (observation[1] + observation[3])))
+                    observation[1] + observation[3]))
             selfData[observationType] = selfPoints
-        print(selfData)
+        #print(selfData)
 
     #break
-    if (i  == 8):
-        time.sleep(7000)
-        #a, b, c = input()
-        #a, b, c = map(float, input().split())
-        #if ite < 6:
-           # loc.move(0.0, -0.0, 0.0)
-        #if ite > 5 and ite < 15:
-            #loc.move(-0.55,0.0,0.0)
-        #if ite > 5 and ite < 15:
-        loc.move(-0.7,0.0,0.0)
-        print("thats motion",loc.pf.myrobot.return_coord())
 
+    #loc.update(selfData)
 
-    loc.update(selfData)
-    #action = strat.generate_action(loc)
+    action = strat.generate_action(loc)
 
-    #motion.apply(action)
-print(loc.pf.token)
-print('end')
+    motion.apply(action)
+
