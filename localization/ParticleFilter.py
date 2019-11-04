@@ -80,10 +80,10 @@ class Robot(Field):
         # move, and add randomness to the motion command
         x = self.x + x + gauss(0, self.forward_noise)
         y = self.y + y + gauss(0, self.forward_noise)
-        if math.fabs(x) >= field.w_width:
-            x = math.copysign(field.w_width/2.0, x)
-        if math.fabs(y) >= field.w_length:
-            y = math.copysign(field.w_length/2.0, y)
+        #if math.fabs(x) >= field.w_width:
+            #x = math.copysign(field.w_width/2.0, x)
+        #if math.fabs(y) >= field.w_length:
+           # y = math.copysign(field.w_length/2.0, y)
         self.x = x
         self.y = y
         self.yaw = orientation
@@ -103,11 +103,12 @@ class Robot(Field):
                 if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
                #calc posts coords in field for every mesurement
-                        x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                        x_posts = self.x - (observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw))
                         y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
-                    prob *= self.gaussian(min(dists), self.sense_noise)
+            if (dists!=[]):
+                prob *= self.gaussian(min(dists), self.sense_noise)
         return prob
 
     def observation_to_predict(self, observations, landmarks):
@@ -117,7 +118,7 @@ class Robot(Field):
                 continue
 
             for landmark in landmarks[color_landmarks]:
-                x_posts = self.x + observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                x_posts = self.x - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
                 y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
@@ -144,17 +145,19 @@ class ParticleFilter():
                  turn_noise = 0.1, sense_noise = 0.1, gauss_noise = 0.4,
                  consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
                  badObsCost = 0.1, stepCost = 0.1 ):
+        self.token = str(rand()*10000)
         self.forward_noise = forward_noise
         self.turn_noise = turn_noise
         self.sense_noise = sense_noise
         self.gauss_noise = gauss_noise
-        self.logs = open('localization/logs/logs.txt',"w")
+        self.logs = open("localization/logs/logs"+ self.token + '.txt',"w")
         self.n = n  # number of particles
         self.count = 0
         self.myrobot = myrobot
         self.p = []
         self.yaw_noise = 0.05
         self.gen_particles()
+        self.logs.close()
         self.landmarks = landmarks
         #logs = uio.open('localization/logs/logs.txt',"w")
         #sys.stdout = self.logs
@@ -177,7 +180,7 @@ class ParticleFilter():
         #prob = self.myrobot.observation_score(observations)
         stepConsistency = 0
         for color_landmarks in observations:
-            if (color_landmarks not in landmarks):
+            if (color_landmarks not in self.landmarks):
                 continue
 
             for landmark in self.landmarks[color_landmarks]:
@@ -197,12 +200,12 @@ class ParticleFilter():
                         stepConsistency -= self.badObsCost
                 else:
                     stepConsistency -= self.stepCost
-        print(stepConsistency)
+        #print(stepConsistency)
         self.consistency += stepConsistency
 
     def gen_particles(self):
         print('initial,step ', self.count, file=self.logs)
-        self.logs.write("$$")
+        print("$$", file=self.logs)
         print("position ", self.myrobot.x, ' ',
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         self.p = []
@@ -217,6 +220,7 @@ class ParticleFilter():
         self.count += 1
 
     def move(self, x, y, yaw):
+        self.logs = open('localization/logs/logs'+self.token+'.txt',"a")
         self.myrobot.move(x, y, yaw)
         print('|moving,step ', self.count, file=self.logs)
         print('$$', file=self.logs)
@@ -230,6 +234,7 @@ class ParticleFilter():
               partic[0].y, ' ', partic[0].yaw, file=self.logs)
         #print('|', file = self.logs)
         self.count += 1
+        self.logs.close()
 
     def do_n_steps(self, n_steps):
         for i in range(n_steps):
@@ -256,18 +261,19 @@ class ParticleFilter():
     def observation_to_predict(self, observations):
         predicts = []
         for color_landmarks in observations:
-            if (color_landmarks not in landmarks):
+            if (color_landmarks not in self.landmarks):
                 continue
 
             for landmark in self.landmarks[color_landmarks]:
                 if len(observations[color_landmarks]) != 0:
                     for obs in observations[color_landmarks]:
-                        x_posts = self.myrobot.x + obs[0]*math.sin(-self.myrobot.yaw) + obs[1]*math.cos(-self.myrobot.yaw)
+                        x_posts = self.myrobot.x - obs[0]*math.sin(-self.myrobot.yaw) + obs[1]*math.cos(-self.myrobot.yaw)
                         y_posts = self.myrobot.y + obs[0]*math.cos(-self.myrobot.yaw) - obs[1]*math.sin(-self.myrobot.yaw)
                         predicts.append([x_posts, y_posts])
         return predicts
 
     def resampling(self, observations):
+        self.logs =open('localization/logs/logs'+self.token+'.txt',"a")
         print('|resempling,step ', self.count, file=self.logs)
         print('$', self.observation_to_predict(observations), '$', file=self.logs)
         p_tmp = []
@@ -275,7 +281,6 @@ class ParticleFilter():
         S = 0
         for i in range(self.n):
             w.append(self.p[i][0].observation_score(observations, self.landmarks))
-            print(w[i])
             S += (w[i])
         for i in range(self.n):
             w[i] = w[i]/S
@@ -315,6 +320,7 @@ class ParticleFilter():
         #print('|', file = self.logs)
         self.count += 1
         self.update_consistency(observations)
+        self.logs.close()
 
     def custom_reset(self, x, y, yaw):
         self.myrobot.x = x
@@ -331,6 +337,7 @@ class ParticleFilter():
 
 
 
-def updatePF(pf, robot, measurement):
+def updatePF(pf, measurement):
     pf.resampling(measurement)
-    return robot.return_coord()
+    print(pf.myrobot.return_coord())
+    return pf.myrobot.return_coord()

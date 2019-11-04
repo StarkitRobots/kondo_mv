@@ -38,7 +38,7 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
 
     #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
     #                                   (40, 60, -60, -10, 0, 45),
-    "blue_posts": SurroundedObjectDetector((7, 35, 25, 70, -70, -30),
+    "blue_posts": SurroundedObjectDetector((5, 22, 5, 55, -53, -10),
                                           field,
                                        sector_rad_ = 30,
                                            min_ang_ = 0,
@@ -68,15 +68,18 @@ model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
 t = 0
+
 # main loop
-while(True):
+ite = 1
+for i in range(16):
+#while(True):
     clock.tick()
 
     curr_t = pyb.millis()
     #print (curr_t - t)
     t = curr_t
 
-    for i in range(1):
+    for b in range(1):
 
         # motion part. Head movement.
         #motion.move_head()
@@ -99,15 +102,27 @@ while(True):
             for observation in cameraData[observationType]:
                 selfPoints.append(
                     model.pic2r(observation[0] + observation[2]/2,
-                    observation[1] + observation[3]))
+                    (observation[1] + observation[3])))
             selfData[observationType] = selfPoints
         print(selfData)
 
     #break
+    if (i  == 8):
+        time.sleep(7000)
+        #a, b, c = input()
+        #a, b, c = map(float, input().split())
+        #if ite < 6:
+           # loc.move(0.0, -0.0, 0.0)
+        #if ite > 5 and ite < 15:
+            #loc.move(-0.55,0.0,0.0)
+        #if ite > 5 and ite < 15:
+        loc.move(-0.7,0.0,0.0)
+        print("thats motion",loc.pf.myrobot.return_coord())
 
-    #loc.update(selfData)
 
-    action = strat.generate_action(loc)
+    loc.update(selfData)
+    #action = strat.generate_action(loc)
 
-    motion.apply(action)
-
+    #motion.apply(action)
+print(loc.pf.token)
+print('end')
