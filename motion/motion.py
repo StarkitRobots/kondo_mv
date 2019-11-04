@@ -1,4 +1,6 @@
-from lowlevel.kondo_controller import Rcb4BaseLib
+import sys
+sys.path.append('../lowlevel')
+from kondo_controller import Rcb4BaseLib
 from pyb import UART
 import json
 import utime
@@ -8,18 +10,18 @@ class Motion:
         # RCB4 controller init
         self.kondo = Rcb4BaseLib()
         _uart = UART(1, 115200, parity=0)
-        self.kondo.open(uart)
+        self.kondo.open(_uart)
         
         # loading motion dictionary
-        self.motions = json.open("motion/data_motion.json")
+        self.motions = json.load("/motion/kondo_motions.json")
         
         # timer for motions
         self._motion_duration = None
         self._motion_start_time = None
         
         # head init
-        self.head_motion_states = json.open("head_motion.json")
-        self.head_enabled = false
+        self.head_motion_states = json.load("/motion/head_motion.json")
+        self.head_enabled = False
         self.head_pitch = 0
         self.head_tilt = 0
         self.head_state = 0
@@ -27,7 +29,7 @@ class Motion:
         # False if controller is busy (playing motion).
     def _timer_permission_check(self):
         if self._motion_duration is not None and self._motion_start_time is not None:
-        return _motion_start_time + _motion_duration <= utime.time()
+            return self._motion_start_time + self._motion_duration <= utime.time()
         else:
             return False
             
@@ -35,25 +37,33 @@ class Motion:
         self._motion_duration = duration
         self._motion_start_time = utime.time()
         
-    def do_motion(self, target_motion):
+    def do_motion(self, target_motion, args=None):
         self.current_motion = target_motion
         self._set_timer(self.current_motion['duration'])
-        self.kondo.motionPlay(self.motions[self.current_motion['id'])
-        
+        if args is not None:
+            if args['c1'] != 0:
+                self.kondo.setUserCounter(1, args['c1'])
+            if args['u1'] != 0:
+                self.kondo.setUserParameter(1, args['u1'])
+
+        self.kondo.motionPlay(self.current_motion['id'])
+
+
+    # does not work now    
     def em(self):
         self.kondo.freeAllServos()
         
         
     # Init position of robot (home position)
     def init(self):
-        self.current_motion = self.motions['home_position']
-        self._set_timer(self.current_motion['duration'])
-        self.kondo.motionPlay(self.motions[self.current_motion['id'])
+        if self._timer_permission_check():
+            self.do_motion(self.motions['home_position'])
         
     # walk position of robot (get_ready position)
     def walk(self):
-        self.kondo.motionPlay(self.motions['get_ready']['id'])
-        
+        if self._timer_permission_check():
+            self.do_motion(self.motions['get_ready'])
+
     # discrete head motion that understands its position and does next step
     def move_head(self):
         if self.head_enabled:
@@ -63,13 +73,15 @@ class Motion:
                 self.head_tilt = self.head_motion_states[self.head_state]['tilt']
                 self.kondo.setUserParameter(20, self.head_pitch)
                 self.kondo.setUserParameter(19, self.head_tilt)
+            else:
+                pass
+        else:
+            pass
             
         
-        
-
     def apply(self, action):
-        if motion_timer is not None and motion_timer == 0.0:
-            if action['step_forward'] != 0:
-                pass
+
+        if action['name'] == 'walk':
+            self.do_motion(self.motions['Soccer_WalkFF'])    
         
         return 0
