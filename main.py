@@ -4,7 +4,8 @@ import time, math, json
 import os
 import pyb
 
-from model.model import Model
+sys.path.append('Model')
+from model import Model
 sys.path.append('localization')
 from localization import Localization
 sys.path.append('motion')
@@ -103,10 +104,10 @@ while(True):
     #print (curr_t - t)
     t = curr_t
 
-    for i in range(1):
+    for i in range(motion.head_state_num):
 
         # motion part. Head movement.
-        #motion.move_head()
+        motion.move_head()
 
         # vision part. Taking picture.
         img=sensor.snapshot()
@@ -179,5 +180,5 @@ while(True):
 
     action = strat.generate_action(loc)
 
-    motion.apply(action)
+    #motion.apply(action)
 

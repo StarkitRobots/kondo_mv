@@ -134,6 +134,7 @@ class Motion:
         # head init
         with open("motion/head_motion.json", "r") as f:
             self.head_motion_states = json.loads(f.read())
+        self.head_state_num = len(self.head_motion_states)
         self.head_enabled = True
         self.head_yaw = 0
         self.head_pitch = 0
@@ -162,6 +163,7 @@ class Motion:
     def _set_timer(self, duration):
         self._motion_duration = duration
         self._motion_start_time = time.ticks()
+        time.sleep(int(duration))
 
 
 ###########################################################################################
@@ -203,7 +205,7 @@ class Motion:
     def move_head(self):
         if self.head_enabled:
             if self._timer_permission_check():
-                self.head_state = (self.head_state + 1) % len(self.head_motion_states)
+                self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
                 self.kondo.setUserParameter(20, self.head_pitch)
@@ -240,34 +242,42 @@ class Motion:
                 curr = func(c, u)
                 curr_err = abs (target - curr)
 
-            if curr_err < err:
-                err = curr_err
-                uo = u
-                co = c
+                if curr_err < err:
+                    err = curr_err
+                    uo = u
+                    co = c
 
         if (neg == True):
             uo *= -1
         return co, uo
 
-    def _walk_control(self, walk_args):
-        x = walk_args['x']
-        y = walk_args['y']
-        rotation_angle = math.atan(x / y) / math.pi * 180.
+    def _turn_control(self, turn_args):
+        rotation_angle = turn_args * 180. / math.pi
+        #rotation_angle = math.atan(x / y) / math.pi * 180.
         motion = self.motions['Soccer_Turn']
         c1, u1 = self._get_turn_params(rotation_angle, motion['shift_turn'])
 
         if rotation_angle > self.angle_error_treshold:
             self.do_motion(motion, {'c1': c1, 'u1': u1})
-            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], self.imu}
+            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], "yaw": self.imu}
+        else:
+            return {"shift_x": 0, "shift_y": 0, "yaw": self.imu}
+
+    def _walk_control(self, walk_args):
+        distance = walk_args[0]
+        rotation_angle = walk_args[1]
+        if rotation_angle > self.angle_error_treshold:
+            self._turn_control(rotation_angle)
         else:
             motion = self.motions['Soccer_WALK_FF']
-            distance = math.sqrt(x*x + y*y)
+            #distance = math.sqrt(x*x + y*y)
             if distance < self.max_blind_distance:
                 step_num = distance // self.step_len
             else:
-                step_nume = self.max_blind_distance // self.step_len
-            self.do_motion(motion, {'c1': step_num, 'u1': 0})
-            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], self.imu}
+                step_num = self.max_blind_distance // self.step_len
+            self.do_motion(motion, {'c1': step_num, 'u1': 1})
+            return {"shift_x": motion['shift_x'](step_num, 1),
+                "shift_y": motion['shift_y'](step_num, 1), "yaw": self.imu}
 
     def _kick_control(self, kick_args):
         if kick_args['left']:
@@ -287,7 +297,7 @@ class Motion:
             if action['name'] == 'walk':
                 self._walk_control(action['args'])
             elif action['name'] == 'turn':
-                self.do_motion(self.kondo.motionPlay(self.motions['Soccer_Turn']), {'u1':action['args'][0]})
+                self._turn_control(action['args'])
             elif action['name'] == 'kick':
                 self._kick_control(action['args'])
             elif action['name'] == 'lateral_step':

@@ -4,7 +4,7 @@ import json
 
 from ball_approach import ball_approach
 sys.path.append("../localization")
-from localization.localization import Localization
+from localization import Localization
 
 
 class Strategy:
@@ -27,14 +27,14 @@ class Strategy:
                 if dist == 0:
                     return 0
                 ang = math.acos(xr / dist)
-                
+
                 if yr < 0:
                     ang = -ang
-                
+
                 return {"name" : "walk", "args" : (dist, ang - yaw)}
             else:
                 return {"name" : "walk", "args" : (1, 0)}
-            
+
 
     def generate_action(self, loc):
         if loc.localized == True:
@@ -47,7 +47,7 @@ class Strategy:
 
                 with open('data.json') as f:
                     d = json.load(f)
-                    
+
                 dv = list(d.values())
                 ba.set_constants(list(d.values()))
 
@@ -75,7 +75,7 @@ class Strategy:
                         return {"name" : "side move", "args" : (-1 * rtraj[1][1])}
                 elif dec == "strike":
                     return {"name" : "kick", "args" : (1)}
-                
+
             else:
                 return self.searchball(loc)
         else:
