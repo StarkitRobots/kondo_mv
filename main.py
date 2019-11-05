@@ -4,7 +4,7 @@ import time, math, json
 import os
 import pyb
 
-sys.path.append('/model')
+sys.path.append('model')
 from model import Model
 sys.path.append('/localization')
 from localization import Localization
@@ -93,7 +93,7 @@ model.updateCameraPanTilt(0, -3.1415/4)
 
 #        return result
 
-#vision_postprocessing = Vision_postprocessing ("blue_posts", ["left_blue_post", "right_blue_post"])
+vision_postprocessing = Vision_postprocessing ()
 
 t = 0
 # main loop
@@ -115,59 +115,18 @@ while(True):
         #img.save ("kekb.jpg", quality=100)
 
         cameraDataRaw=vision.get(
-            img, objects_list=["blue_posts", "ball", "white_posts_support"],#, "yellow_posts"],
-            drawing_list=["blue_posts", "ball", "white_posts_support"])#, "yellow_posts"])
+            img, objects_list=["blue_posts", "ball", "white_posts_support"],
+            drawing_list=["blue_posts", "ball", "white_posts_support"])
 
-        posts_num   = len (cameraDataRaw ["blue_posts"])
-        support_num = len (cameraDataRaw ["white_posts_support"])
-
-        left_post  = []
-        right_post = []
-
-        if (posts_num == 2):
-            post1 = cameraDataRaw ["blue_posts"] [0]
-            post2 = cameraDataRaw ["blue_posts"] [1]
-
-            if (post1.x () < post2.x ()):
-                left_post  = [post1]
-                right_post = [post2]
-
-            else:
-                left_post  = [post2]
-                right_post = [post1]
-
-            cameraDataRaw.update ({"left_blue_post"  : left_post})
-            cameraDataRaw.update ({"right_blue_post" : right_post})
-
-        elif (posts_num == 1):
-            post = cameraDataRaw ["blue_posts"] [0]
-
-            if (support_num == 1):
-                support = cameraDataRaw ["white_posts_support"] [0]
-
-                if (post.x() > support.x()):
-                    cameraDataRaw.update ({"left_blue_post"  : []})
-                    cameraDataRaw.update ({"right_blue_post" : [post]})
-                    print ("right post")
-
-                else:
-                    cameraDataRaw.update ({"left_blue_post"  : [post]})
-                    cameraDataRaw.update ({"right_blue_post" : []})
-                    print ("left post")
-
-            if (support_num == 0):
-                cameraDataRaw.update ({"left_blue_post"  : [post]})
-                cameraDataRaw.update ({"right_blue_post" : []})
-
-        cameraDataApproved = cameraDataRaw
+        cameraDataProcessed = vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")
 
         # model part. Mapping to world coords.
 
         # self means in robots coords
         selfData={}
-        for observationType in cameraDataApproved:
+        for observationType in cameraDataProcessed:
             selfPoints = []
-            for observation in cameraDataApproved[observationType]:
+            for observation in cameraDataProcessed[observationType]:
                 selfPoints.append(
                     model.pic2r(observation[0] + observation[2]/2,
                     observation[1] + observation[3]))
