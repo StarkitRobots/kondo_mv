@@ -720,6 +720,9 @@ class Rcb4BaseLib:
         rxSize,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
         return  self.synchronizeAck(txbuf)
 
+    def freeAllServos():
+        pass
+
 
 
 
