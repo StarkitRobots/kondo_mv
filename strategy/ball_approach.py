@@ -1,4 +1,6 @@
 import math
+import json
+
 
 class ball_approach:
 
@@ -9,15 +11,15 @@ class ball_approach:
 		self.yb = yb
 		self.yaw = yaw
 
-	def set_constants(self, max_step, min_dist, ang_thres1, ang_thres2, CIRCLE_RADIUS, GOAL_LEN, WIND_X, GOAL_POS):
-		self.max_step = max_step
-		self.min_dist = min_dist
-		self.ang_thres1 = ang_thres1
-		self.ang_thres2 = ang_thres2
-		self.CIRCLE_RADIUS = CIRCLE_RADIUS
-		self.GOAL_LEN = GOAL_LEN
-		self.WIND_X = WIND_X
-		self.GOAL_POS = GOAL_POS
+	def set_constants(self, consts):
+		self.max_step = consts[0]
+		self.min_dist = consts[1]
+		self.ang_thres1 = consts[2]
+		self.ang_thres2 = consts[3]
+		self.CIRCLE_RADIUS = consts[4]
+		self.GOAL_LEN = consts[5]
+		self.WIND_X = consts[6]
+		self.GOAL_POS = consts[7]
 
 
 	def get_diff(self):
@@ -118,6 +120,16 @@ class ball_approach:
 		min_dist = self.min_dist
 		ang_thres1 = self.ang_thres1
 		ang_thres2 = self.ang_thres2
+
+		with open('data.json') as f:
+			d = json.load(f)
+		dv = list(d.values())
+
+		targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
+		tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
+		norm = (int(dv[-1] * targvec[1] / tv_ln), int(-dv[-1] * targvec[0] / tv_ln))
+		rtraj[1][0] -= norm[0]
+		rtraj[1][1] -= norm[1]
 	
 		path = rtraj[1]
 	

@@ -720,6 +720,9 @@ class Rcb4BaseLib:
         rxSize,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
         return  self.synchronizeAck(txbuf)
 
+    def freeAllServos():
+        pass
+
 
 
 
@@ -727,7 +730,7 @@ class Rcb4BaseLib:
 if __name__ == "__main__":
     kondo = Rcb4BaseLib()
     if openmv:
-        uart = UART(3, 1250000, timeout=1000, parity=0)
+        uart = UART(1, 115200, timeout=1000, parity=0)
         kondo.open(uart)
     else:
         kondo.open()
