@@ -1,10 +1,9 @@
 import sys
 import math
 import json
-import random
 
 from ball_approach import ball_approach
-sys.path.append("..")
+sys.path.append("../localization")
 from localization.localization import Localization
 
 
@@ -15,31 +14,27 @@ class Strategy:
 
     def searchball(self, loc):
         if self.turn_counter < 3:
-            return {"turn", (math.pi / 2)}
+            self.turn_counter += 1
+            return {"turn" : (math.pi / 2)}
         else:
             self.turn_counter = 0
             if loc.localized:
-                xr, yr, yaw = loc.robot_position
+                x0, y0 = (180, 130)
+                xr0, yr0, yaw = loc.robot_position
+                xr = x0 - xr0
+                yr = y0 - yr0
                 dist = math.sqrt(xr ** 2 + yr ** 2)
                 if dist == 0:
                     return "no idea"
                 ang = math.acos(xr / dist)
+                
                 if yr < 0:
                     ang = -ang
-                dang = yaw - ang
-                if dang > 0:
-                    rang = math.pi - dang
-                elif dang < 0:
-                    rang = dang - math.pi
-                return {"walk", (dist, rang)}
+                
+                return {"walk" : (dist, ang - yaw)}
             else:
-                dist = 100 * random.random()
-                ang = 2 * math.pi * (random.random() - 0.5)
-                return {"walk", (dist, ang)}
-
-
-
-
+                return {"walk" : (1, 0)}
+            
 
     def generate_action(self, loc):
         if loc.localized == True:
@@ -57,7 +52,6 @@ class Strategy:
                 ba.set_constants(list(d.values()))
 
                 traj = ba.find_trajectory()
-                print(traj)
                 rtraj = ba.convert_trajectory()
                 dec = ba.make_decision()
                 dist = math.sqrt(rtraj[1][0] ** 2 + rtraj[1][1] ** 2)
@@ -65,25 +59,25 @@ class Strategy:
                 if dist > dv[1]:
                     ang = math.acos(rtraj[1][0] / dist)
                     if rtraj[1][1] > 0:
-                        return {"walk", (dist, ang)}
+                        return {"walk" : (dist, ang)}
                     else:
                         return {"walk", (dist, -1 * ang)}
                 elif dec == "turn left" or dec == "turn right":
                     ang = math.acos(rtraj[1][0] / dist)
                     if rtraj[1][1] > 0:
-                        return {"turn", (ang)}
+                        return {"turn" : (ang)}
                     else:
                         return {"turn", (-1 * ang)}
                 elif dec == "step left" or dec == "step right":
                     if rtraj[1][1] > 0:
-                        return {"side move", (rtraj[1][1])}
+                        return {"side move" : (rtraj[1][1])}
                     else:
-                        return {"side move", (-1 * rtraj[1][1])}
+                        return {"side move" : (-1 * rtraj[1][1])}
                 elif dec == "strike":
-                    return {"strike", (1)}
+                    return {"strike" : (1)}
                 
             else:
-                return searchball(self, loc)
+                return self.searchball(loc)
         else:
             if loc.seeBall == True:
                 xb, yb = loc.ballPosSelf
@@ -92,20 +86,20 @@ class Strategy:
                 ang = math.acos(xb / dist)
                 if dist > 1:
                     if yb > 0:
-                        return {"walk", (dist, ang)}
+                        return {"walk" : (dist, ang)}
                     else:
-                        return {"walk", (dist, -1 * ang)}
+                        return {"walk" : (dist, -1 * ang)}
                 elif ang < 1:
                     if yb > 0:
-                        return {"turn", (ang)}
+                        return {"turn" : (ang)}
                     else:
-                        return {"turn", (-1 * ang)}
+                        return {"turn" : (-1 * ang)}
                 else:
-                    return {"take around right", (1)}
+                    return {"take around right" : (1)}
 
 
             else:
-                return searchball(self, loc)
+                return self.searchball(loc)
 
 
         return 0

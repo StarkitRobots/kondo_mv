@@ -1,4 +1,5 @@
 import math
+import json
 
 
 class ball_approach:
@@ -120,9 +121,13 @@ class ball_approach:
 		ang_thres1 = self.ang_thres1
 		ang_thres2 = self.ang_thres2
 
+		with open('data.json') as f:
+			d = json.load(f)
+		dv = list(d.values())
+
 		targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
 		tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
-		norm = (int(20 * targvec[1] / tv_ln), int(-20 * targvec[0] / tv_ln))
+		norm = (int(dv[-1] * targvec[1] / tv_ln), int(-dv[-1] * targvec[0] / tv_ln))
 		rtraj[1][0] -= norm[0]
 		rtraj[1][1] -= norm[1]
 	

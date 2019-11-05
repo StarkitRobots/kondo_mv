@@ -4,7 +4,8 @@
     "ang_thres1": 0.31415000000000004,
     "ang_thres2": 0.20943333333333333,
     "CIRCLE_RADIUS": 10,
-    "GOAL_LEN": 200,
-    "WIND_X": 500,
-    "GOAL_POS": 100
+    "GOAL_LEN": 110,
+    "WIND_X": 360,
+    "GOAL_POS": 75,
+    "step_before_strike": 10
 }
