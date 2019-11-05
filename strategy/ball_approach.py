@@ -10,15 +10,15 @@ class ball_approach:
 		self.yb = yb
 		self.yaw = yaw
 
-	def set_constants(self, max_step, min_dist, ang_thres1, ang_thres2, CIRCLE_RADIUS, GOAL_LEN, WIND_X, GOAL_POS):
-		self.max_step = max_step
-		self.min_dist = min_dist
-		self.ang_thres1 = ang_thres1
-		self.ang_thres2 = ang_thres2
-		self.CIRCLE_RADIUS = CIRCLE_RADIUS
-		self.GOAL_LEN = GOAL_LEN
-		self.WIND_X = WIND_X
-		self.GOAL_POS = GOAL_POS
+	def set_constants(self, consts):
+		self.max_step = consts[0]
+		self.min_dist = consts[1]
+		self.ang_thres1 = consts[2]
+		self.ang_thres2 = consts[3]
+		self.CIRCLE_RADIUS = consts[4]
+		self.GOAL_LEN = consts[5]
+		self.WIND_X = consts[6]
+		self.GOAL_POS = consts[7]
 
 
 	def get_diff(self):
