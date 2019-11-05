@@ -1,5 +1,5 @@
 import sensor, image
-import math
+import math, json
 
 class Detector:
     def __init__(self):
@@ -171,69 +171,60 @@ class SurroundedObjectDetector(ColoredObjectDetector):
 
             i += 1
 
-class BallDetector (ColoredObjectDetector):
-    def __init__(self):
-        self.threshold_index = 0
-
-        self.thresholds = [(30, 80, 0, 40, -10, 20),
-                           (30, 100, -64, -8, -32, 32),
-                           (0, 30, 0, 64, -128, 0)]
-
-        self.blobs = []
-
-    def detect(self, img):
-        self.blobs = []
-
-        detected_blobs = img.find_blobs([self.thresholds[self.threshold_index]],
-                                       pixels_threshold=200, area_threshold=200, merge=True)
-
-        for blob in detected_blobs:
-            # These values depend on the blob not being circular - otherwise they will be shaky.
-            if blob.roundness() > 0.9:
-                print(blob.rect())
-                a = image.rgb_to_lab(img.get_pixel(blob.x(), blob.y()))
-                b = image.rgb_to_lab(img.get_pixel(
-                    blob.x()+blob.w()-1, blob.y()))
-                c = image.rgb_to_lab(img.get_pixel(
-                    (blob.x()+blob.w()-1), (blob.y()+blob.h()-1)))
-                d = image.rgb_to_lab(img.get_pixel(
-                    blob.x(), blob.y()+blob.h()-1))
-
-                if (all(self.thresholds[1][2*i] < a[i] < self.thresholds[1][2*i+1] for i in range(len(a)-1)) or
-                    all(self.thresholds[1][2*i] < b[i] < self.thresholds[1][2*i+1] for i in range(len(b)-1)) or
-                    all(self.thresholds[1][2*i] < c[i] < self.thresholds[1][2*i+1] for i in range(len(c)-1)) or
-                        all(self.thresholds[1][2*i] < d[i] < self.thresholds[1][2*i+1] for i in range(len(d)-1))):
-                    self.blobs.append(blob)
-
-        return self.blobs
-
-
 class Vision:
     def __init__(self, detectors_):
         self.detectors = detectors_
 
-    """def load_detectors(self, settings_filename):
+    def load_detectors(self, settings_filename):
         with open (settings_filename) as f:
             data = json.load(f)
 
             for detector in data ["detectors"]:
                 detector_name = detector ["name"]
-                print (detector)
+                detector_type = detector ["type"]
+                print (detector_name, detector_type)
 
-                self.detectors.update ({detector_name : []})
+                if (detector_type == "SurroundedObjectDetector"):
+                    obj_th = (int (detector ["othl1"]), int (detector ["othh1"]),
+                              int (detector ["othl2"]), int (detector ["othh2"]),
+                              int (detector ["othl3"]), int (detector ["othh3"]))
 
-                for filter in detector ["filters"]:
-                    filter_name = filter ["name"]
-                    print(filter_name)
+                    sur_th = (int (detector ["sthl1"]), int (detector ["sthh1"]),
+                              int (detector ["sthl2"]), int (detector ["sthh2"]),
+                              int (detector ["sthl3"]), int (detector ["sthh3"]))
 
-                    if (filter_name == "inrange"):
-                        low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
-                        high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
-                        new_filter = inrange (low_th, high_th)
-                self.add_detector(new_detector)"""
+                    sector_radius = int (detector ["sector radius"])
+                    window_size = int (detector ["window size"])
+                    pixel_th = int (detector ["pixel th"])
+                    area_th = int (detector ["area th"])
+                    merge_str = detector ["merge"]
 
-    def add_detector(self, new_detector):
-        self.detectors.append (new_detector)
+                    merge = True
+                    if (merge_str == "False"):
+                        merge = False
+
+                    point_num = int (detector ["point num"])
+                    min_angle = float (detector ["min angle"])
+                    max_angle = float (detector ["max angle"])
+                    obj_num = int (detector ["objects num"])
+                    corr_ratio = float (detector ["correct ratio"])
+                    sort_func_str = detector ["sorting func"]
+
+                    sort_func = blob_area
+                    if (sort_func_str == "blob_width"):
+                        sort_func = blob_width
+
+                    new_detector = SurroundedObjectDetector(obj_th, sur_th, sector_radius,
+                        window_size, pixel_th, area_th, merge, point_num, min_angle, max_angle,
+                        obj_num, corr_ratio, sort_func_str)
+
+                else:
+                    print("unsupported detector type")
+
+                self.add_detector(new_detector, detector_name)
+
+    def add_detector(self, new_detector, name):
+        self.detectors.update ({name : new_detector})
 
     def clear(self):
         self.detectors = []
@@ -249,3 +240,19 @@ class Vision:
                 self.detectors[obj].draw(img)
 
         return result
+
+#class Vision_postprocessing:
+#    def __init__(self, ):
+#        self.detectors = detectors_
+
+#    def approve(self, preliminary_result):
+#        result = {}
+
+#        for obj in objects_list:
+#            detection_result = self.detectors[obj].detect(img)
+#            result.update({obj: detection_result})
+
+#            if (obj in drawing_list):
+#                self.detectors[obj].draw(img)
+
+#        return result
