@@ -24,6 +24,12 @@ class Detector:
     def draw(self, img):
         self._draw(img)
 
+def blob_area (blob):
+    return blob.area ()
+
+def blob_width (blob):
+    return blob.width ()
+
 class ColoredObjectDetector(Detector):
     def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1):
         self.th       = th_
@@ -41,7 +47,7 @@ class ColoredObjectDetector(Detector):
 
         return detected_blobs
 
-    def get_k_first_sorted (self, blobs, k=-1):
+    def get_k_first_sorted (self, blobs, sorting_func = blob_area, k=-1):
         if (k == -1):
             k = len (blobs)
 
@@ -64,9 +70,9 @@ class ColoredObjectDetector(Detector):
 
 class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
-            pixel_th_ = 30, area_th_ = 30, merge_ = True,
+            pixel_th_ = 300, area_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
-            corr_ratio_ = 0.5):
+            corr_ratio_ = 0.5, sorting_func_ = blob_area):
         self.th  = obj_th_
         self.surr_th = surr_th_
 
@@ -82,6 +88,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.objects_num = objects_num_
 
         self.corr_ratio = corr_ratio_
+        self.sorting_func = sorting_func_
 
         self._generate_encl_points()
 
@@ -101,7 +108,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.check_success = []
 
         #get candidates
-        unchecked_result = self.get_k_first_sorted (self.blobs, self.objects_num)
+        unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
 
         #get averaged surroundings for each
         for res in unchecked_result:
@@ -141,13 +148,12 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         return self.result
 
     def draw(self, img):
-        print (len (self.result))
+        #print (len (self.result))
         self._draw(img, self.result, True, True)
         self._draw(img, self.blobs)
 
         i = 0
-        for res in self.get_k_first_sorted (self.blobs, self.objects_num):#self.result:
-            #print (i)
+        for res in self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num):
             bbox = res.rect()
             x = int (bbox[0] + bbox[2]/2)
             y = int (bbox[1] + bbox[3])
@@ -205,6 +211,32 @@ class BallDetector (ColoredObjectDetector):
 class Vision:
     def __init__(self, detectors_):
         self.detectors = detectors_
+
+    """def load_detectors(self, settings_filename):
+        with open (settings_filename) as f:
+            data = json.load(f)
+
+            for detector in data ["detectors"]:
+                detector_name = detector ["name"]
+                print (detector)
+
+                self.detectors.update ({detector_name : []})
+
+                for filter in detector ["filters"]:
+                    filter_name = filter ["name"]
+                    print(filter_name)
+
+                    if (filter_name == "inrange"):
+                        low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
+                        high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
+                        new_filter = inrange (low_th, high_th)
+                self.add_detector(new_detector)"""
+
+    def add_detector(self, new_detector):
+        self.detectors.append (new_detector)
+
+    def clear(self):
+        self.detectors = []
 
     def get(self, img, objects_list, drawing_list=[]):
         result = {}
