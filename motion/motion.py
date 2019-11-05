@@ -15,6 +15,9 @@ class Motion:
         self.kondo.open(_uart)
         print(self.kondo.checkAcknowledge())
 
+        # imu init
+        self.imu = None
+
         # loading motion dictionary
 
         #self.motions = json.load("/motion/data_motion.json")
@@ -200,7 +203,6 @@ class Motion:
     def move_head(self):
         if self.head_enabled:
             if self._timer_permission_check():
-                print(self.head_motion_states)
                 self.head_state = (self.head_state + 1) % len(self.head_motion_states)
                 self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
@@ -251,17 +253,21 @@ class Motion:
         x = walk_args['x']
         y = walk_args['y']
         rotation_angle = math.atan(x / y) / math.pi * 180.
-        c1, u1 = self._get_turn_params(rotation_angle, self.motions['shift_turn'])
+        motion = self.motions['Soccer_Turn']
+        c1, u1 = self._get_turn_params(rotation_angle, motion['shift_turn'])
 
         if rotation_angle > self.angle_error_treshold:
-            self.do_motion(self.motions['Soccer_Turn'], {'c1': c1, 'u1': u1})
-
-        distance = math.sqrt(x*x + y*y)
-        if distance < self.max_blind_distance:
-            step_num = distance // self.step_len
+            self.do_motion(motion, {'c1': c1, 'u1': u1})
+            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], self.imu}
         else:
-            step_nume = self.max_blind_distance // self.step_len
-        self.do_motion(self.motions['Soccer_WALK_FF'], {'c1': step_num, 'u1': 0})
+            motion = self.motions['Soccer_WALK_FF']
+            distance = math.sqrt(x*x + y*y)
+            if distance < self.max_blind_distance:
+                step_num = distance // self.step_len
+            else:
+                step_nume = self.max_blind_distance // self.step_len
+            self.do_motion(motion, {'c1': step_num, 'u1': 0})
+            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], self.imu}
 
     def _kick_control(self, kick_args):
         if kick_args['left']:
