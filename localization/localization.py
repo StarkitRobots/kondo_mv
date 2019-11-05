@@ -2,6 +2,7 @@ from ParticleFilter import updatePF, ParticleFilter, Robot, Field
 import json
 class Localization:
     def __init__(self):
+        self.ballPosSelf = None
         self.ball_position = None
         self.robot_position = None
         self.localized = False
