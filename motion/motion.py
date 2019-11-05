@@ -1,11 +1,23 @@
 import sys
 sys.path.append('../lowlevel')
 from kondo_controller import Rcb4BaseLib
+from machine import I2C
+from bno055 import BNO055, AXIS_P7
 from pyb import UART
 import json, math
 import time
 sys.path.append('motion')
 from motion import *
+
+
+###########################################################################################
+# utils
+###########################################################################################
+
+def degrees_to_head(degrees):
+    return int(int(degrees) * 8000. / 270.)
+
+###########################################################################################
 
 class Motion:
     def __init__(self):
@@ -16,7 +28,8 @@ class Motion:
         print(self.kondo.checkAcknowledge())
 
         # imu init
-        self.imu = None
+        i2c = I2C(2)
+        self.imu = BNO055(i2c)
 
         # loading motion dictionary
 
@@ -174,7 +187,6 @@ class Motion:
     def do_motion(self, target_motion, args=None):
         if self._timer_permission_check():
             self.current_motion = target_motion
-            self._set_timer(self._get_timer_duration(self.current_motion, args))
             if args is not None:
                 if args['c1'] != 0:
                     self.kondo.setUserCounter(1, args['c1'])
@@ -182,6 +194,7 @@ class Motion:
                     self.kondo.setUserParameter(1, args['u1'])
 
             self.kondo.motionPlay(self.current_motion['id'])
+            self._set_timer(self._get_timer_duration(self.current_motion, args))
         return target_motion['shift_x'], target_motion['shift_y'],
 
 
@@ -208,9 +221,11 @@ class Motion:
                 self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
-                self.kondo.setUserParameter(20, self.head_pitch)
-                self.kondo.setUserParameter(19, self.head_yaw)
+                self.kondo.setUserParameter(20, degrees_to_head(self.head_pitch))
+                self.kondo.setUserParameter(19, degrees_to_head(self.head_yaw))
                 self._set_timer(500)
+                #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
+                return self.head_pitch, self.head_yaw
             else:
                 pass
         else:
@@ -259,9 +274,11 @@ class Motion:
 
         if rotation_angle > self.angle_error_treshold:
             self.do_motion(motion, {'c1': c1, 'u1': u1})
-            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], "yaw": self.imu}
+            yaw, roll, pitch = self.imu.euler()
+            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], "yaw": yaw}
         else:
-            return {"shift_x": 0, "shift_y": 0, "yaw": self.imu}
+            yaw, roll, pitch = self.imu.euler()
+            return {"shift_x": 0, "shift_y": 0, "yaw": yaw}
 
     def _walk_control(self, walk_args):
         distance = walk_args[0]

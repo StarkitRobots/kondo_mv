@@ -4,17 +4,17 @@ import time, math, json
 import os
 import pyb
 
-sys.path.append('Model')
+sys.path.append('/model')
 from model import Model
-sys.path.append('localization')
+sys.path.append('/localization')
 from localization import Localization
-sys.path.append('motion')
+sys.path.append('/motion')
 from motion import Motion
-sys.path.append('strategy')
+sys.path.append('/strategy')
 from strategy import Strategy
-sys.path.append('lowlevel')
+sys.path.append('/lowlevel')
 #from lowlevel import *
-sys.path.append('vision')
+sys.path.append('/vision')
 from vision import *#Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
 
 robotHeight = 0.37 #[m]
@@ -75,7 +75,7 @@ with open("calibration/cam_col.json") as f:
 
 # setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
-model.updateCameraPanTilt(0, -3.1415/6)
+model.updateCameraPanTilt(0, -3.1415/4)
 
 #class Vision_postprocessing:
 #    def __init__(self, ):
@@ -108,7 +108,7 @@ while(True):
 
         # motion part. Head movement.
         motion.move_head()
-
+        model.updateCameraPanTilt(0, motion.head_yaw)
         # vision part. Taking picture.
         img=sensor.snapshot()
 
@@ -172,13 +172,12 @@ while(True):
                     model.pic2r(observation[0] + observation[2]/2,
                     observation[1] + observation[3]))
             selfData[observationType] = selfPoints
-        #print(selfData)
+        print(selfData)
 
     #break
-
     #loc.update(selfData)
-
+    loc.update_ball(selfData)
     action = strat.generate_action(loc)
-
+    print(action)
     #motion.apply(action)
 

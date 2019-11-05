@@ -18,6 +18,17 @@ class Localization:
         self.robot_position = updatePF(self.pf, data)
         return 0
 
+    def update_ball(self, data):
+        if len(data['ball']):
+            self.seeBall = True
+            self.ballPosSelf = data['ball']
+            print("eto ball", self.ballPosSelf)
+        else:
+            self.seeBall = False
+
+    #self.robot_position = updatePF(self.pf, data):
+        #return 0
+
     def move(self, x, y, yaw):
         self.pf.move(x,y, yaw)
 

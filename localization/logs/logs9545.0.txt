@@ -9,16 +9,6 @@ import time
 sys.path.append('motion')
 from motion import *
 
-
-###########################################################################################
-# utils
-###########################################################################################
-
-def degrees_to_head(degrees):
-    return int(degrees) * 8000. / 360.
-
-###########################################################################################
-
 class Motion:
     def __init__(self):
         # RCB4 controller init
@@ -91,4 +81,11 @@ class Motion:
                 "id"        : 17,
                 "time"      : (lambda c1 : 1250 * c1 + 150),
                 "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
-                
+                                (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
+                "shift_y"   : (lambda c1 : -1.65 / math.sin(6.3 * math.pi / 180) *
+                                math.sin(12.6 * c1 * math.pi / 180) / 100.),
+                "shift_turn": (lambda c1 : -12.6 * c1)
+                },
+
+            "Soccer_Take_Around_Right" : {
+                "id"       

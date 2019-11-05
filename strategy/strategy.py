@@ -39,6 +39,7 @@ class Strategy:
     def generate_action(self, loc):
         if loc.localized == True:
             if loc.seeBall == True:
+                self.turn_counter = 0
                 ba = ball_approach()
                 xr, yr, yaw = loc.robot_position
                 xb, yb = loc.ball_position
@@ -70,9 +71,9 @@ class Strategy:
                         return {"name" : "turn", "args" : (-1 * ang)}
                 elif dec == "step left" or dec == "step right":
                     if rtraj[1][1] > 0:
-                        return {"name" : "side move", "args" : (rtraj[1][1])}
+                        return {"name" : "lateral_step", "args" : (rtraj[1][1])}
                     else:
-                        return {"name" : "side move", "args" : (-1 * rtraj[1][1])}
+                        return {"name" : "lateral_step", "args" : (-1 * rtraj[1][1])}
                 elif dec == "strike":
                     return {"name" : "kick", "args" : (1)}
 
@@ -80,11 +81,13 @@ class Strategy:
                 return self.searchball(loc)
         else:
             if loc.seeBall == True:
-                xb, yb = loc.ballPosSelf
+                self.turn_counter = 0
+                xb = loc.ballPosSelf[0][0]
+                yb = loc.ballPosSelf[0][1]
 
                 dist = math.sqrt(xb ** 2 + yb ** 2)
                 ang = math.acos(xb / dist)
-                if dist > 1:
+                if dist > 0.3:
                     if yb > 0:
                         return {"name" : "walk", "args" : (dist, ang)}
                     else:
