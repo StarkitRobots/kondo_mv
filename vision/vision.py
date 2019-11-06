@@ -139,10 +139,30 @@ class SurroundedObjectDetector(ColoredObjectDetector):
             curr_step_success = []
 
             for pt in self.sector_points:
-                pix = img.get_pixel(x + pt [0], y + pt [1])
+                pixels = []
 
-                if (pix is not None):
-                    a = image.rgb_to_lab(pix)
+                for i in range (x + pt [0] - self.wind_sz // 2, x + pt [0] + self.wind_sz // 2 + 1):
+                    for j in range (y + pt [1] - self.wind_sz // 2, y + pt [1] + self.wind_sz // 2 + 1):
+                        pix = img.get_pixel(x + pt [0] + i, y + pt [1] + j)
+                        if (pix is not None):
+                            pix_lab = image.rgb_to_lab(pix)
+                            pixels.append(pix_lab)
+
+                if (len (pixels) > 0):
+                    #print ("sas", pixels)
+
+                    r = 0#sum (pixels [:] [0]) / len (pixels)
+                    g = 0#sum (pixels [:] [1]) / len (pixels)
+                    b = 0#sum (pixels [:] [2]) / len (pixels)
+
+                    for pix in pixels:
+                        r += pix [0]
+                        g += pix [1]
+                        b += pix [2]
+
+                    a = (r, g, b)
+
+                    #a = image.rgb_to_lab(pix)
                     if (all(self.surr_th[2*i] < a[i] < self.surr_th[2*i+1] for i in range(len(a)-1))):
                         proper += 1
                         curr_step_success.append (True)
