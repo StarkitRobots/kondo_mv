@@ -4,7 +4,7 @@ import time, math, json
 import os
 import pyb
 
-sys.path.append('/model')
+sys.path.append('model')
 from model import Model
 sys.path.append('localization')
 from localization import Localization
@@ -42,7 +42,7 @@ with open("calibration/cam_col.json") as f:
 model.setParams(calib["cam_col"], robotHeight)
 model.updateCameraPanTilt(0, -3.1415/6)
 
-#vision_postprocessing = Vision_postprocessing ("blue_posts", ["left_blue_post", "right_blue_post"])
+vision_postprocessing = Vision_postprocessing ()
 
 t = 0
 # main loop
@@ -62,10 +62,10 @@ while(True):
 
         #img.save ("kekb.jpg", quality=100)
 
-        cameraDataRaw=vision.get(
-            img, objects_list=["blue_posts", "ball", "white_posts_support"],#, "yellow_posts"],
-            drawing_list=["blue_posts", "ball", "white_posts_support"])#, "yellow_posts"])
-
+        cameraDataRaw=vision.get(img, objects_list=
+        ["blue_posts", "ball", "white_posts_support"],	
+        drawing_list=["blue_posts", "ball", "white_posts_support"])		            
+        cameraDataProcessed = vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")		        
         # model part. Mapping to world coords.
 
         # self means in robots coords
