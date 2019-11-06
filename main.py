@@ -65,7 +65,7 @@ vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
 
     #"yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
 
-loc=Localization()
+loc=Localization(-0.3, 0.9, 1.57)
 strat=Strategy()
 motion=Motion()
 model=Model()
@@ -97,7 +97,6 @@ model.updateCameraPanTilt(0, -3.1415/4)
 
 t = 0
 # main loop
-loc.pf.myrobot.set_coord(-0.3, 0.9, 1.57)
 while(True):
     clock.tick()
 
@@ -108,7 +107,7 @@ while(True):
     for i in range(motion.head_state_num):
 
         # motion part. Head movement.
-        motion.move_head()
+        #motion.move_head()
         model.updateCameraPanTilt(motion.head_yaw * math.pi / 180., motion.head_pitch * math.pi / 180.)
         # vision part. Taking picture.
         img=sensor.snapshot()
@@ -175,12 +174,14 @@ while(True):
                 selfData[observationType].extend(selfPoints)
 
 
-        print("keys = ", selfData.keys())
+        #print("keys = ", selfData.keys())
 
     #break
     loc.update(selfData)
     loc.update_ball(selfData)
+    print("my_pose", loc.robot_position)
     action = strat.generate_action(loc)
     print(action)
+    print(loc.pf.token)
     #motion.apply(action)
 
