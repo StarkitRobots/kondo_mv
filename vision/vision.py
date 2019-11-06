@@ -31,13 +31,15 @@ def blob_width (blob):
     return blob.width ()
 
 class ColoredObjectDetector(Detector):
-    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1):
+    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1,
+                 roundness_th_ = -1):
         self.th       = th_
         self.pixel_th = pixel_th_
         self.area_th  = area_th_
         self.merge    = merge_
 
         self.objects_num = objects_num_
+        self.roundness_th = roundness_th_
 
         self.result = []
 
@@ -46,6 +48,15 @@ class ColoredObjectDetector(Detector):
             area_threshold=self.area_th, merge=self.merge)
 
         return detected_blobs
+
+    def _filter_by_roundness(self, blobs, roundness_th):
+        result = []
+
+        for blob in blobs:
+            if (blob.roundness > roundness_th):
+                result.append (blob)
+
+        return result
 
     def get_k_first_sorted (self, blobs, sorting_func = blob_area, k=-1):
         if (k == -1):
@@ -60,6 +71,9 @@ class ColoredObjectDetector(Detector):
     def detect(self, img):
         self.blobs = self._detect (img)
 
+        if (self.roundness_th != -1):
+            self.blobs = self._filter_by_roundness(self.blobs, self.roundness_th)
+
         self.result = self.get_k_first_sorted (self.blobs, self.objects_num)
 
         return self.result
@@ -72,7 +86,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
             pixel_th_ = 300, area_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
-            corr_ratio_ = 0.5, sorting_func_ = blob_area):
+            corr_ratio_ = 0.5, sorting_func_ = blob_area, roundness_th_ = -1):
         self.th  = obj_th_
         self.surr_th = surr_th_
 
@@ -89,6 +103,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
 
         self.corr_ratio = corr_ratio_
         self.sorting_func = sorting_func_
+        self.roundness_th = roundness_th_
 
         self._generate_encl_points()
 
@@ -106,6 +121,9 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.blobs = self._detect (img)
         self.result = []
         self.check_success = []
+
+        if (self.roundness_th != -1):
+            self.blobs = self._filter_by_roundness(self.blobs, self.roundness_th)
 
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
@@ -214,9 +232,11 @@ class Vision:
                     if (sort_func_str == "blob_width"):
                         sort_func = blob_width
 
+                    roundness_th = float (detector ["roundness th"])
+
                     new_detector = SurroundedObjectDetector(obj_th, sur_th, sector_radius,
                         window_size, pixel_th, area_th, merge, point_num, min_angle, max_angle,
-                        obj_num, corr_ratio, sort_func_str)
+                        obj_num, corr_ratio, sort_func_str, roundness_th)
 
                 else:
                     print("unsupported detector type")
