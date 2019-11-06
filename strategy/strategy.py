@@ -88,7 +88,10 @@ class Strategy:
             else:
                 return {"name" : "turn", "args" : (-1 * ang)}
         elif dec == "step left" or dec == "step right":
-            return {"name" : "lateral_step", "args" : (rtraj[1][1])}
+            if rtraj[1][1] > 0:
+                return {"name" : "lateral_step", "args" : (rtraj[1][1])}
+            else:
+                return {"name" : "lateral_step", "args" : (-1 * rtraj[1][1])}
         elif dec == "strike":
             return {"name" : "kick", "args" : (1)}
 
@@ -115,23 +118,22 @@ class gk_Strategy:
     def __init__(self):
         pass
 
+    def gk_ball_approach(self, loc):
+        if loc.seeBall:
+            xb = loc.ballPosSelf[0][0]
+            yb = loc.ballPosSelf[0][1]
+            dist = math.sqrt(xb ** 2 + yb ** 2)
+            if dist < 1:
+                return {"name" : "twine", "args" : (1)}
+            else:
+                return {"name" : "lateral_step", "args" : yb}
+
+
+    def take_def_pos(self, loc):
+        pass
+
+
     def gk_generate_action(self, loc):
-
-        def gk_ball_approach(self, loc):
-            if loc.seeBall:
-                xb = loc.ballPosSelf[0][0]
-                yb = loc.ballPosSelf[0][1]
-                dist = math.sqrt(xb ** 2 + yb ** 2)
-                if dist < 1:
-                    return {"name" : "twine", "args" : (1)}
-                else:
-                    return {"name" : "lateral_step", "args" : yb}
-
-
-        def take_def_pos(self, loc):
-            pass
-
-
         if loc.localized:
             if loc.seeBall:
                 return gk_ball_approach(loc)
