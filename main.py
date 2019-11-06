@@ -6,16 +6,16 @@ import pyb
 
 sys.path.append('/model')
 from model import Model
-sys.path.append('/localization')
+sys.path.append('localization')
 from localization import Localization
-sys.path.append('/motion')
+sys.path.append('motion')
 from motion import Motion
-sys.path.append('/strategy')
+sys.path.append('strategy')
 from strategy import Strategy
-sys.path.append('/lowlevel')
+sys.path.append('lowlevel')
 #from lowlevel import *
-sys.path.append('/vision')
-from vision import *#Vision, Detector, ColoredObjectDetector, BallDetector, SurroundedObjectDetector
+sys.path.append('vision')
+from vision import *
 
 robotHeight = 0.37 #[m]
 # init code
@@ -27,43 +27,8 @@ sensor.set_auto_gain(False)  # must be turned off for color tracking
 sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
-field = (30, 85, -55, 25, -15, 55)
-
-vision = Vision({#"ball": ColoredObjectDetector((30, 80, 0, 40, -10, 20)),
-    #"blue_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70)),
-
-    #(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
-    #pixel_th_ = 300, area_th_ = 300, merge_ = False,
-    #points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1):
-
-    #"blue_posts": SurroundedObjectDetector((0, 20, -10, 30, -45, 10),
-    #                                   (40, 60, -60, -10, 0, 45),
-    "blue_posts": SurroundedObjectDetector((15, 30, 25, 60, -80, -40),
-                                          field,
-                                       sector_rad_ = 50,
-                                           min_ang_ = 0,
-                                           max_ang_ = 3.14,
-                                           points_num_ = 7,
-                                           objects_num_ = 2),
-
-    "white_posts_support": SurroundedObjectDetector((80, 100, -10, 50, -40, 3),
-                                          field,
-                                       sector_rad_ = 30,
-                                           min_ang_ = 0,
-                                           max_ang_ = 3.14,
-                                           points_num_ = 7,
-                                           objects_num_ = 1,
-                                           sorting_func_=blob_width),
-
-   "ball": SurroundedObjectDetector((30, 80, 40, 85, 10, 60),
-                                         field,
-                                      sector_rad_ = 30,
-                                          min_ang_ = 0,
-                                          max_ang_ = 6.1,
-                                          points_num_ = 10,
-                                          objects_num_ = 1)})
-
-    #"yellow_posts": ColoredObjectDetector((20, 55, 40, 80, 30, 70))})
+vision = Vision ({})
+vision.load_detectors ("vision/detectors_config.json")
 
 loc=Localization(-0.3, 0.9, 1.57)
 strat=Strategy()
@@ -75,23 +40,7 @@ with open("calibration/cam_col.json") as f:
 
 # setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
-model.updateCameraPanTilt(0, -3.1415/4)
-
-#class Vision_postprocessing:
-#    def __init__(self, ):
-#        self.detectors = detectors_
-
-#    def approve(self, preliminary_result):
-#        result = {}
-
-#        for obj in objects_list:
-#            detection_result = self.detectors[obj].detect(img)
-#            result.update({obj: detection_result})
-
-#            if (obj in drawing_list):
-#                self.detectors[obj].draw(img)
-
-#        return result
+model.updateCameraPanTilt(0, -3.1415/6)
 
 #vision_postprocessing = Vision_postprocessing ("blue_posts", ["left_blue_post", "right_blue_post"])
 
@@ -108,7 +57,11 @@ while(True):
 
         # motion part. Head movement.
         #motion.move_head()
+<<<<<<< HEAD
         model.updateCameraPanTilt(motion.head_yaw * math.pi / 180., motion.head_pitch * math.pi / 180.)
+=======
+
+>>>>>>> 280988b1d4785684fb35834ac83790085a67c75d
         # vision part. Taking picture.
         img=sensor.snapshot()
 
@@ -171,6 +124,7 @@ while(True):
                 selfPoints.append(
                     model.pic2r(observation[0] + observation[2]/2,
                     observation[1] + observation[3]))
+<<<<<<< HEAD
                 selfData[observationType].extend(selfPoints)
 
 
@@ -183,5 +137,16 @@ while(True):
     action = strat.generate_action(loc)
     print(action)
     print(loc.pf.token)
+=======
+            selfData[observationType] = selfPoints
+        #print(selfData)
+
+    #break
+
+    #loc.update(selfData)
+
+    action = strat.generate_action(loc)
+
+>>>>>>> 280988b1d4785684fb35834ac83790085a67c75d
     #motion.apply(action)
 
