@@ -49,8 +49,8 @@ class ball_approach:
 		r    = CIRCLE_RADIUS
 		leng = math.sqrt (xbr**2 + ybr**2)
 		
-		beta  = math.asin (float (ybr) / leng)
-		alpha = math.asin (float (r) / leng)
+		beta  = math.asin (ybr / leng)
+		alpha = math.asin (r / leng)
 		
 		if (xb < xr):# + CIRCLE_RADIUS):
 			sx = 0
@@ -66,17 +66,17 @@ class ball_approach:
 				sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
 				sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
 		
-			traj.append ((int (sx), int (sy)))
+			traj.append ((sx, sy))
 	
 		#-----------------------------------------------------------
     	#find kick point on the circle
 		gbx = xb - WIND_X                        #goal-ball x
 		gby = yb - GOAL_POS - int (GOAL_LEN / 2) #goal-ball y
 		
-		length_gb = int (math.sqrt (gbx**2 + gby**2))
+		length_gb =  math.sqrt (gbx**2 + gby**2)
 		
-		kpx = xb + int (CIRCLE_RADIUS * gbx / length_gb) #kick point x
-		kpy = yb + int (CIRCLE_RADIUS * gby / length_gb) #kick point y
+		kpx = xb + CIRCLE_RADIUS * gbx / length_gb #kick point x
+		kpy = yb + CIRCLE_RADIUS * gby / length_gb #kick point y
 		
 		traj.append ((kpx, kpy))
 	
@@ -98,7 +98,7 @@ class ball_approach:
 
 	def lin_trans(self, W, shift, vec):
 		res = [vec[i] - shift[i] for i in range(2)]
-		res = [int(W[i][0] * res[0] + W[i][1] * res[1]) for i in range(2)]
+		res = [W[i][0] * res[0] + W[i][1] * res[1] for i in range(2)]
 		return res
 
 	def convert_trajectory(self):
@@ -112,7 +112,7 @@ class ball_approach:
 		return rtraj
 
 	def cross_dot(self, v1, v2):
-		return -int(v1[0] * v2[1] - v1[1] * v2[0]), int(v1[0] * v2[0] + v1[1] * v2[1])
+		return -v1[0] * v2[1] + v1[1] * v2[0], v1[0] * v2[0] + v1[1] * v2[1]
 
 	def make_decision(self):
 
