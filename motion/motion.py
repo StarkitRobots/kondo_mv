@@ -165,7 +165,7 @@ class Motion:
         self.step_len = 0.086
 
         # acceptable error in degrees
-        self.angle_error_treshold = 20. * math.pi / 180.
+        self.angle_error_treshold = 5. * math.pi / 180.
 
 
 ###########################################################################################
@@ -220,7 +220,7 @@ class Motion:
             except OSError:
                 time.sleep(CHANNEL_WAIT_TIME)
                 yaw, pitch, roll = self.imu.euler()
-        try: 
+        try:
             return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'yaw': yaw}
         except KeyError:
             pass
