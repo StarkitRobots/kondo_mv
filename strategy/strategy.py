@@ -17,10 +17,10 @@ class Strategy:
             else:
                 self.turn_counter = 0
                 return {"name" : "walk", "args" : (1, 0)}
-        
+
         else:
             self.turn_counter = 0
-            
+
             x0, y0 = (1.8, 1.3)
             xr0, yr0, yaw = loc.robot_position
             xr = x0 - xr0
@@ -34,12 +34,12 @@ class Strategy:
                 ang = -ang
 
             return {"name" : "walk", "args" : (dist, ang - yaw)}
-                       
+
 
     def walkball(self, loc):
         self.turn_counter = 0
-        xb = loc.ballPosSelf[0][0]
-        yb = loc.ballPosSelf[0][1]
+        xb = loc.ballPosSelf[1]
+        yb = loc.ballPosSelf[0]
 
         dist = math.sqrt(xb ** 2 + yb ** 2)
         ang = math.acos(xb / dist)
@@ -102,7 +102,7 @@ class Strategy:
                 return self.apply_ball_approach(loc)
             else:
                 return self.searchball(loc)
-                
+
         else:
             if loc.seeBall == True:
                 return self.walkball(loc)

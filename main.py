@@ -84,7 +84,7 @@ while(True):
         #print("keys = ", selfData.keys())
 
     #break
-    loc.update(selfData)
+    #loc.update(selfData)
     print("posts number = ", len(selfData["blue_posts"]))
     print("my_pose", loc.robot_position)
     loc.update_ball(selfData)
@@ -93,7 +93,7 @@ while(True):
     action = strat.generate_action(loc)
     print(action)
     print(loc.pf.token)
-    motion.apply(action)
-    #motion.apply({'name': 'walk', 'args': (0.5186465, 0.06)})
+    #motion.apply(action)
+    motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
     #time.sleep(10000)
 
