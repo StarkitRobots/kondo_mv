@@ -229,7 +229,7 @@ class ParticleFilter():
         # now we simulate a robot motion for each of
         # these particles
         for partic in self.p:
-            partic[0].move(x, y, yaw)
+            partic[0].move(coord['shift_x'],coord['shift_y'],coord['shift_yaw'])
             print(partic[0].x, ' ',
               partic[0].y, ' ', partic[0].yaw, file=self.logs)
         #print('|', file = self.logs)
