@@ -90,7 +90,7 @@ class ball_approach:
     	#    if (yr < yb):
     	#    else:
     	
-		traj.append ((WIND_X, GOAL_POS + int (GOAL_LEN / 2)))
+		traj.append ((WIND_X, GOAL_POS + GOAL_LEN / 2))
 
 		self.wtraj = traj
 		
