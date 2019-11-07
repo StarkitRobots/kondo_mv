@@ -103,8 +103,8 @@ class Robot(Field):
                 if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
                #calc posts coords in field for every mesurement
-                        x_posts = self.x - (observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw))
-                        y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                        x_posts = self.x - observation[0]*math.cos(-self.yaw) + observation[1]*math.sin(-self.yaw)
+                        y_posts = self.y - (observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw))
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
                 if (dists!=[]):
