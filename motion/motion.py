@@ -168,7 +168,9 @@ class Motion:
 
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
-        return self._motion_start_time + self._motion_duration <= time.ticks()
+        timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
+        motion_finished = self.kondo.getMotionPlayNum() == self.motions['Soccer_Get_Ready']['id']
+        return motion_finished and timer_check
 
     def _get_timer_duration(self, motion, args):
         return motion['time'](args['c1'])
