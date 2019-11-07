@@ -40,10 +40,8 @@ with open("calibration/cam_col.json") as f:
 
 # setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
-model.updateCameraPanTilt(0, -3.1415/6)
 
 vision_postprocessing = Vision_postprocessing ()
-motion.move_head()
 t = 0
 # main loop
 while(True):
@@ -56,7 +54,8 @@ while(True):
     for i in range(motion.head_state_num):
 
         # motion part. Head movement.
-        motion.move_head()
+        pan, tilt = motion.move_head()
+        model.updateCameraPanTilt(pan, tilt)
         # vision part. Taking picture.
         img=sensor.snapshot()
 
@@ -93,7 +92,7 @@ while(True):
     action = strat.generate_action(loc)
     print(action)
     print(loc.pf.token)
-    
+
     loc.pf.move(motion.apply(action))
     #motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
     #time.sleep(10000)
