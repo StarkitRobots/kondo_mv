@@ -93,7 +93,7 @@ while(True):
     action = strat.generate_action(loc)
     print(action)
     print(loc.pf.token)
-    #motion.apply(action)
-    motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
+    loc.pf.move(motion.apply(action))
+    #motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
     #time.sleep(10000)
 

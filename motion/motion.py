@@ -168,6 +168,14 @@ class Motion:
         self.angle_error_treshold = 5. * math.pi / 180.
 
 
+    def get_imu_yaw(self):
+        try:
+            yaw, pitch, roll = self.imu.euler()
+        except OSError:
+            time.sleep(CHANNEL_WAIT_TIME)
+            yaw, pitch, roll = self.imu.euler()
+        return yaw
+
 ###########################################################################################
 # timer methods
 ###########################################################################################
@@ -209,19 +217,16 @@ class Motion:
                     self.kondo.setUserCounter(1, args['c1'])
                 if args['u1'] != 0:
                     self.kondo.setUserParameter(1, args['u1'])
+            yaw_before = self.get_imu_yaw()
             try:
                 self.kondo.motionPlay(self.current_motion['id'])
             except OSError:
                 time.sleep(CHANNEL_WAIT_TIME)
                 self.kondo.motionPlay(self.current_motion['id'])
             self._set_timer(self._get_timer_duration(self.current_motion, args))
-            try:
-                yaw, pitch, roll = self.imu.euler()
-            except OSError:
-                time.sleep(CHANNEL_WAIT_TIME)
-                yaw, pitch, roll = self.imu.euler()
+            yaw_after = self.get_imu_yaw()
         try:
-            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'yaw': yaw}
+            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'yaw': yaw_after - yaw_before}
         except KeyError:
             pass
 
