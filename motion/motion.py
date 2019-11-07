@@ -155,8 +155,8 @@ class Motion:
             self.head_motion_states = json.loads(f.read())
         self.head_state_num = len(self.head_motion_states)
         self.head_enabled = True
-        self.head_yaw = 0
-        self.head_pitch = 0
+        self.head_tilt = 0
+        self.head_pan = 0
         self.head_state = -1
 
         # walk threshold
@@ -253,13 +253,13 @@ class Motion:
             if self._timer_permission_check():
                 self._set_timer(300)
                 self.head_state = (self.head_state + 1) % self.head_state_num
-                self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
-                self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
-                self.kondo.setUserParameter(20, degrees_to_head(self.head_pitch))
-                self.kondo.setUserParameter(19, degrees_to_head(self.head_yaw))
+                self.head_pan = int(self.head_motion_states[str(self.head_state)]['yaw'])
+                self.head_tilt = int(self.head_motion_states[str(self.head_state)]['pitch'])
+                self.kondo.setUserParameter(20, degrees_to_head(self.head_tilt))
+                self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
                 self._set_timer(300)
                 #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-                return self.head_pitch, self.head_yaw
+                return self.head_pan / 180. * math.pi, self.head_tilt / 180. * math.pi
             else:
                 pass
         else:
