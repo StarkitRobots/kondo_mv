@@ -48,7 +48,7 @@ class Strategy:
                 return {"name" : "walk", "args" : (dist, -ang)}
             else:
                 return {"name" : "walk", "args" : (dist, ang)}
-        elif ang < 1:
+        elif ang > 0.3:
             if yb > 0:
                 return {"name" : "turn", "args" : (-ang)}
             else:
