@@ -51,7 +51,7 @@ class Robot(Field):
         self.yaw = yaw  # robot's orientation
         self.forward_noise = 0.05   # noise of the forward movement
         self.turn_noise = 0.1      # noise of the turn
-        self.sense_noise = 0.1   # noise of the sensing
+        self.sense_noise = 1.7   # noise of the sensing
 
     def set_coord(self, new_x, new_y, new_orientation):
         self.x = float(new_x)
