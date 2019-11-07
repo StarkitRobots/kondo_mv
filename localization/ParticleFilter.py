@@ -219,9 +219,9 @@ class ParticleFilter():
         #print('|', file = self.logs)
         self.count += 1
 
-    def move(self, x, y, yaw):
+    def move(self, coord):
         self.logs = open('localization/logs/logs'+self.token+'.txt',"a")
-        self.myrobot.move(x, y, yaw)
+        self.myrobot.move(coord[shift_x],coord[shift_y],coord[shift_yaw])
         print('|moving,step ', self.count, file=self.logs)
         print('$$', file=self.logs)
         print("position ", self.myrobot.x, ' ',
