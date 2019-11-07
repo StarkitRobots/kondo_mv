@@ -10,6 +10,8 @@ sys.path.append('motion')
 from motion import *
 
 
+CHANNEL_WAIT_TIME = 100
+
 ###########################################################################################
 # utils
 ###########################################################################################
@@ -173,7 +175,11 @@ class Motion:
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
         timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
-        current_motion = self.kondo.getMotionPlayNum()
+        try:
+            current_motion = self.kondo.getMotionPlayNum()
+        except OSError:
+            time.sleep(CHANNEL_WAIT_TIME)
+            current_motion = self.kondo.getMotionPlayNum()
         motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
         return motion_finished and timer_check
 
@@ -183,7 +189,7 @@ class Motion:
     def _set_timer(self, duration):
         self._motion_duration = duration
         self._motion_start_time = time.ticks()
-        #time.sleep(int(duration))
+        time.sleep(int(duration))
 
 
 ###########################################################################################
@@ -199,10 +205,21 @@ class Motion:
                     self.kondo.setUserCounter(1, args['c1'])
                 if args['u1'] != 0:
                     self.kondo.setUserParameter(1, args['u1'])
-
-            self.kondo.motionPlay(self.current_motion['id'])
+            try:
+                self.kondo.motionPlay(self.current_motion['id'])
+            except OSError:
+                time.sleep(CHANNEL_WAIT_TIME)
+                self.kondo.motionPlay(self.current_motion['id'])
             self._set_timer(self._get_timer_duration(self.current_motion, args))
-        return target_motion['shift_x'], target_motion['shift_y'],
+            try:
+                yaw, pitch, roll = self.imu.euler()
+            except OSError:
+                time.sleep(CHANNEL_WAIT_TIME)
+                yaw, pitch, roll = self.imu.euler()
+        try: 
+            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'yaw': yaw}
+        except KeyError:
+            pass
 
 
     # Free all servos (Almost similar to rhoban 'em' command)
@@ -281,9 +298,7 @@ class Motion:
         c1, u1 = self._get_turn_params(rotation_angle, motion['shift_turn'])
 
         if abs(rotation_angle) > self.angle_error_treshold:
-            self.do_motion(motion, {'c1': c1, 'u1': u1})
-            yaw, roll, pitch = self.imu.euler()
-            return {"shift_x": 0, "shift_y": 0, "yaw": yaw}
+            return self.do_motion(motion, {'c1': c1, 'u1': u1})
 
     def _walk_control(self, walk_args):
         distance = walk_args[0]
@@ -294,16 +309,11 @@ class Motion:
             motion = self.motions['Soccer_WALK_FF']
             #distance = math.sqrt(x*x + y*y)
             if distance < self.max_blind_distance:
-                step_num = distance // self.step_len
+                step_num = 1
             else:
-                step_num = self.max_blind_distance // self.step_len
+                step_num = 3
 
-            step_num = 2
-            self.do_motion(motion, {'c1': step_num, 'u1': 1})
-            yaw, roll, pitch = self.imu.euler()
-
-            return {"shift_x": motion['shift_x'](step_num, 1),
-                "shift_y": motion['shift_y'](step_num, 1), "yaw": yaw}
+            return self.do_motion(motion, {'c1': step_num, 'u1': 1})
 
     def _kick_control(self, kick_args):
         if kick_args['left']:
@@ -321,13 +331,13 @@ class Motion:
     def apply(self, action):
         if self._timer_permission_check():
             if action['name'] == 'walk':
-                self._walk_control(action['args'])
+                return self._walk_control(action['args'])
             elif action['name'] == 'turn':
-                self._turn_control(action['args'])
+                return self._turn_control(action['args'])
             elif action['name'] == 'kick':
-                self._kick_control(action['args'])
+                return self._kick_control(action['args'])
             elif action['name'] == 'lateral_step':
-                self._lateral_control(action['args'])
-            elif action['name'] == 'take_around':
-                pass
+                return  self._lateral_control(action['args'])
+            elif action['name'] == 'take_around_right':
+                return self.do_motion(self.motions['Soccer_Take_Around_Right' , {'c1': 1})
         return 0
