@@ -52,41 +52,41 @@ class Motion:
             "Soccer_Turn" : {
                 "id"        : 15,
                 "time"      : (lambda c1 : 220 * c1 + 80),
-                "shift_x"   : 0,
-                "shift_y"   : 0,
-                "shift_turn": (lambda c1, u1 : u1 * 0.12 * c1)
+                "shift_x"   : (lambda c1: 0),
+                "shift_y"   : (lambda c1: 0),
+                "shift_turn": (lambda c1, u1 : -1* u1 * 0.12 * c1)
                 },
 
             "Soccer_Side_Step_Left" : {
                 "id"        : 11,
                 "time"      : (lambda c1 : 180 * c1 + 360),
-                "shift_x"   : 0,
-                "shift_y"   : (lambda c1: -11. * c1 / 100.),
-                "shift_turn": 0
+                "shift_x"   : (lambda c1: 0),
+                "shift_y"   : (lambda c1: 11. * c1 / 100.),
+                "shift_turn": (lambda c1: 0)
                 },
 
             "Soccer_Side_Step_Right" : {
                 "id"        : 10,
                 "time"      : (lambda c1 : 180 * c1 + 360),
-                "shift_x"   : 0,
-                "shift_y"   : (lambda c1: 11. * c1 / 100.),
-                "shift_turn": 0
+                "shift_x"   : (lambda c1: 0),
+                "shift_y"   : (lambda c1: -11. * c1 / 100.),
+                "shift_turn": (lambda c1: 0)
                 },
 
             "Soccer_Small_Step_Left" : {
                 "id"        : 13,
                 "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : 0,
-                "shift_y"   : (lambda c1: -3.3 * c1 / 100.),
-                "shift_turn": 0
+                "shift_x"   : (lambda c1: 0),
+                "shift_y"   : (lambda c1: 3.3 * c1 / 100.),
+                "shift_turn": (lambda c1: 0)
                 },
 
             "Soccer_Small_Step_Right" : {
                 "id"        : 12,
                 "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : 0,
-                "shift_y"   : (lambda c1: 3.3 * c1 / 100.),
-                "shift_turn": 0
+                "shift_x"   : (lambda c1: 0),
+                "shift_y"   : (lambda c1: -3.3 * c1 / 100.),
+                "shift_turn": (lambda c1: 0)
                 },
 
             "Soccer_Take_Around_Left" : {
@@ -94,9 +94,9 @@ class Motion:
                 "time"      : (lambda c1 : 1250 * c1 + 150),
                 "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
-                "shift_y"   : (lambda c1 : -1.65 / math.sin(6.3 * math.pi / 180) *
+                "shift_y"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 math.sin(12.6 * c1 * math.pi / 180) / 100.),
-                "shift_turn": (lambda c1 : -12.6 * c1)
+                "shift_turn": (lambda c1 : 12.6 * c1)
                 },
 
             "Soccer_Take_Around_Right" : {
@@ -104,9 +104,9 @@ class Motion:
                 "time"      : (lambda c1 : 1250 * c1 + 150),
                 "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
-                "shift_y"   : (lambda c1: 1.65 / math.sin(6.3 * math.pi / 180) *
+                "shift_y"   : (lambda c1: -1.65 / math.sin(6.3 * math.pi / 180) *
                                 math.sin(12.6 * c1 * math.pi / 180) / 100.),
-                "shift_turn": (lambda c1 : 12.6 * c1)
+                "shift_turn": (lambda c1 : -12.6 * c1)
                 },
 
             "Soccer_Kick Forward_Left_leg " : {
@@ -226,7 +226,7 @@ class Motion:
             self._set_timer(self._get_timer_duration(self.current_motion, args))
             yaw_after = self.get_imu_yaw()
         try:
-            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'yaw': yaw_after - yaw_before}
+            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'shift_yaw': yaw_after - yaw_before}
         except KeyError:
             pass
 
@@ -301,7 +301,7 @@ class Motion:
         return co, uo
 
     def _turn_control(self, turn_args):
-        rotation_angle = -1 * turn_args / math.pi * 180.
+        rotation_angle = turn_args / math.pi * 180.
         #rotation_angle = math.atan(x / y) / math.pi * 180.
         motion = self.motions['Soccer_Turn']
         c1, u1 = self._get_turn_params(rotation_angle, motion['shift_turn'])
