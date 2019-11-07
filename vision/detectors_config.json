@@ -13,7 +13,7 @@
         "othh2": "35",
         "othl3": "-40",
         "othh3": "-5",
-        "sthl1": "30",
+        "sthl1": "20",
         "sthh1": "85",
         "sthl2": "-55",
         "sthh2": "25",
@@ -32,19 +32,20 @@
         "sorting func": "blob_area",
 	"roundness th": "-1",
 	"height width ratio low": "2",
-	"height width ratio high": "-1"
+	"height width ratio high": "-1",
+        "alternative surrounding":"0"
         },
 
         {
         "name": "yellow_posts",
         "type": "SurroundedObjectDetector",
-        "othl1": "50",
+        "othl1": "40",
         "othh1": "75",
         "othl2": "-5",
-        "othh2": "35",
+        "othh2": "45",
         "othl3": "25",
         "othh3": "70",
-        "sthl1": "30",
+        "sthl1": "20",
         "sthh1": "85",
         "sthl2": "-55",
         "sthh2": "25",
@@ -63,7 +64,14 @@
         "sorting func": "blob_area",
 	"roundness th": "-1",
 	"height width ratio low": "2",
-	"height width ratio high": "-1"
+	"height width ratio high": "-1",
+        "alternative surrounding":"1",
+        "asthl1": "55",
+        "asthh1": "85",
+        "asthl2": "-20",
+        "asthh2": "20",
+        "asthl3": "-30",
+        "asthh3": "5"
         },
 
         {
@@ -75,7 +83,7 @@
         "othh2": "60",
         "othl3": "-70",
         "othh3": "0",
-        "sthl1": "30",
+        "sthl1": "20",
         "sthh1": "85",
         "sthl2": "-55",
         "sthh2": "25",
@@ -94,7 +102,8 @@
         "sorting func": "blob_width",
 	"roundness th": "-1",
 	"height width ratio low": "-1",
-	"height width ratio high": "0.3"
+	"height width ratio high": "0.3",
+        "alternative surrounding":"0"
         },
 
         {
@@ -106,7 +115,7 @@
         "othh2": "95",
         "othl3": "10",
         "othh3": "75",
-        "sthl1": "30",
+        "sthl1": "20",
         "sthh1": "85",
         "sthl2": "-55",
         "sthh2": "25",
@@ -114,8 +123,8 @@
         "sthh3": "55",
         "sector radius": "30",
         "window size": "1",
-        "pixel th": "300",
-        "area th": "300",
+        "pixel th": "100",
+        "area th": "100",
         "merge": "True",
         "point num": "10",
         "min angle": "0",
@@ -125,7 +134,8 @@
         "sorting func": "blob_area",
 	"roundness th": "0.8",
 	"height width ratio low": "-1",
-	"height width ratio high": "-1"
+	"height width ratio high": "-1",
+        "alternative surrounding":"0"
         }
         ]
 }
