@@ -53,7 +53,7 @@ class ColoredObjectDetector(Detector):
         result = []
 
         for blob in blobs:
-            if (blob.roundness > roundness_th):
+            if (blob.roundness () > roundness_th):
                 result.append (blob)
 
         return result
@@ -86,7 +86,8 @@ class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr_th_, sector_rad_ = 50, wind_sz_ = 3,
             pixel_th_ = 300, area_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
-            corr_ratio_ = 0.5, sorting_func_ = blob_area, roundness_th_ = -1):
+            corr_ratio_ = 0.5, sorting_func_ = blob_area, roundness_th_ = -1,
+            heigh_width_ratio_low_th_ = -1, heigh_width_ratio_high_th_ = -1):
         self.th  = obj_th_
         self.surr_th = surr_th_
 
@@ -104,6 +105,8 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.corr_ratio = corr_ratio_
         self.sorting_func = sorting_func_
         self.roundness_th = roundness_th_
+        self.heigh_width_ratio_low_th  = heigh_width_ratio_low_th_
+        self.heigh_width_ratio_high_th = heigh_width_ratio_high_th_
 
         self._generate_encl_points()
 
@@ -122,8 +125,29 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.result = []
         self.check_success = []
 
+        res = []
+
         if (self.roundness_th != -1):
-            self.blobs = self._filter_by_roundness(self.blobs, self.roundness_th)
+            res = self._filter_by_roundness(self.blobs, self.roundness_th)
+
+        if (self.heigh_width_ratio_low_th  != -1 or
+            self.heigh_width_ratio_high_th != -1):
+            for blob in res:
+                height_width_ratio = blob.height() / blob.width()
+
+                if (self.heigh_width_ratio_low_th  != -1 and
+                    self.heigh_width_ratio_high_th != -1):
+                    if (height_width_ratio > self.heigh_width_ratio_low_th and
+                        height_width_ratio < self.heigh_width_ratio_high_th):
+                        self.blobs.append (blob)
+
+                elif (self.heigh_width_ratio_low_th  != -1):
+                    if (height_width_ratio > self.heigh_width_ratio_low_th):
+                        self.blobs.append (blob)
+
+                elif (self.heigh_width_ratio_high_th  != -1):
+                    if (height_width_ratio < self.heigh_width_ratio_high_th):
+                        self.blobs.append (blob)
 
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
@@ -254,9 +278,13 @@ class Vision:
 
                     roundness_th = float (detector ["roundness th"])
 
+                    height_width_ratio_low_th  = float (detector ["height width ratio low"])
+                    height_width_ratio_high_th = float (detector ["height width ratio high"])
+
                     new_detector = SurroundedObjectDetector(obj_th, sur_th, sector_radius,
                         window_size, pixel_th, area_th, merge, point_num, min_angle, max_angle,
-                        obj_num, corr_ratio, sort_func_str, roundness_th)
+                        obj_num, corr_ratio, sort_func_str, roundness_th, height_width_ratio_low_th,
+                        height_width_ratio_high_th)
 
                 else:
                     print("unsupported detector type")
