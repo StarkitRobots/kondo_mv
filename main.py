@@ -82,16 +82,15 @@ while(True):
 
     #break
     #loc.update(selfData)
-    #print("posts number = ", len(selfData["yellow_posts"]))
-    #print("my_pose", loc.robot_position)
+    print("posts number = ", len(selfData["yellow_posts"]))
+    print("my_pose", loc.robot_position)
     loc.update_ball(selfData)
-    #print(loc.ballPosSelf)
+    print(loc.ballPosSelf)
 
-    #action = strat.generate_action(loc)
-    #print(action)
-    #print(loc.pf.token)
+    action = strat.generate_action(loc)
+    print(action)
+    print(loc.pf.token)
 
-    #loc.pf.move(motion.apply(action))
-    #motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
-    #time.sleep(10000)
-
+    odometry_results = motion.apply(action)
+    if odometry_results is not None:
+        loc.pf.move(odometry_results)
