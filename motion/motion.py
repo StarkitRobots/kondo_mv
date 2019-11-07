@@ -10,7 +10,7 @@ sys.path.append('motion')
 from motion import *
 
 
-CHANNEL_WAIT_TIME = 100
+CHANNEL_WAIT_TIME = 10
 
 ###########################################################################################
 # utils
@@ -175,13 +175,16 @@ class Motion:
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
         timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
-        try:
-            current_motion = self.kondo.getMotionPlayNum()
-        except OSError:
-            time.sleep(CHANNEL_WAIT_TIME)
-            current_motion = self.kondo.getMotionPlayNum()
-        motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
-        return motion_finished and timer_check
+        motion_finished = False
+        while not (motion_finished and timer_check):
+            try:
+                time.sleep(100)
+                current_motion = self.kondo.getMotionPlayNum()
+            except OSError:
+                time.sleep(CHANNEL_WAIT_TIME)
+                current_motion = self.kondo.getMotionPlayNum()
+            motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
+        return True
 
     def _get_timer_duration(self, motion, args):
         return motion['time'](args['c1'])
@@ -189,6 +192,7 @@ class Motion:
     def _set_timer(self, duration):
         self._motion_duration = duration
         self._motion_start_time = time.ticks()
+
         time.sleep(int(duration))
 
 
@@ -339,5 +343,5 @@ class Motion:
             elif action['name'] == 'lateral_step':
                 return  self._lateral_control(action['args'])
             elif action['name'] == 'take_around_right':
-                return self.do_motion(self.motions['Soccer_Take_Around_Right' , {'c1': 1})
+                return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1})
         return 0
