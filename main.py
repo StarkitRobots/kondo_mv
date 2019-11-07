@@ -94,6 +94,6 @@ while(True):
     print(action)
     print(loc.pf.token)
     motion.apply(action)
-    break
-    time.sleep(10000)
+    #motion.apply({'name': 'walk', 'args': (0.5186465, 0.06)})
+    #time.sleep(10000)
 

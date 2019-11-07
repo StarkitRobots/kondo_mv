@@ -159,7 +159,7 @@ class Motion:
         self.step_len = 0.086
 
         # acceptable error in degrees
-        self.angle_error_treshold = 5
+        self.angle_error_treshold = 20. * math.pi / 180.
 
 
 ###########################################################################################
@@ -218,12 +218,13 @@ class Motion:
     def move_head(self):
         if self.head_enabled:
             if self._timer_permission_check():
+                self._set_timer(300)
                 self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
                 self.kondo.setUserParameter(20, degrees_to_head(self.head_pitch))
                 self.kondo.setUserParameter(19, degrees_to_head(self.head_yaw))
-                self._set_timer(500)
+                self._set_timer(300)
                 #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
                 return self.head_pitch, self.head_yaw
             else:
@@ -267,23 +268,20 @@ class Motion:
         return co, uo
 
     def _turn_control(self, turn_args):
-        rotation_angle = turn_args * 180. / math.pi
+        rotation_angle = -1 * turn_args / math.pi * 180.
         #rotation_angle = math.atan(x / y) / math.pi * 180.
         motion = self.motions['Soccer_Turn']
         c1, u1 = self._get_turn_params(rotation_angle, motion['shift_turn'])
 
-        if rotation_angle > self.angle_error_treshold:
+        if abs(rotation_angle) > self.angle_error_treshold:
             self.do_motion(motion, {'c1': c1, 'u1': u1})
-            yaw, roll, pitch = self.imu.euler()
-            return {"shift_x": motion['shift_x'], "shift_y": motion['shift_y'], "yaw": yaw}
-        else:
             yaw, roll, pitch = self.imu.euler()
             return {"shift_x": 0, "shift_y": 0, "yaw": yaw}
 
     def _walk_control(self, walk_args):
         distance = walk_args[0]
         rotation_angle = walk_args[1]
-        if rotation_angle > self.angle_error_treshold:
+        if abs(rotation_angle) > self.angle_error_treshold:
             self._turn_control(rotation_angle)
         else:
             motion = self.motions['Soccer_WALK_FF']
@@ -292,9 +290,13 @@ class Motion:
                 step_num = distance // self.step_len
             else:
                 step_num = self.max_blind_distance // self.step_len
+
+            step_num = 2
             self.do_motion(motion, {'c1': step_num, 'u1': 1})
+            yaw, roll, pitch = self.imu.euler()
+
             return {"shift_x": motion['shift_x'](step_num, 1),
-                "shift_y": motion['shift_y'](step_num, 1), "yaw": self.imu}
+                "shift_y": motion['shift_y'](step_num, 1), "yaw": yaw}
 
     def _kick_control(self, kick_args):
         if kick_args['left']:
