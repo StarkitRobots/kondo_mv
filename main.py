@@ -93,7 +93,9 @@ while(True):
     print(action)
     print(loc.pf.token)
 
-    loc.pf.move(motion.apply(action))
+    odometry_results = motion.apply(action)
+    if odometry_results is not None:
+        loc.pf.move(odometry_results)
     #motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
     #time.sleep(10000)
 

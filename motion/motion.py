@@ -40,108 +40,120 @@ class Motion:
         self.motions = {
             "Soccer_WALK_FF" : {
                 "id"        : 8,
-                "time"      : (lambda c1 : 230 * c1 + 440),
+                "time"      : (lambda c1, u1 : 230 * c1 + 440),
                 "shift_x"   : (lambda c1, u1 : 4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
                                 math.sin(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
                 "shift_y"   : (lambda c1, u1 : -4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) +
                                 4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
                                 math.cos(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
-                "shift_turn": (lambda u1 : u1 * 0.028125)
+                "shift_turn": (lambda c1, u1 : u1 * 0.028125)
                 },
 
             "Soccer_Turn" : {
                 "id"        : 15,
-                "time"      : (lambda c1 : 220 * c1 + 80),
-                "shift_x"   : (lambda c1: 0),
-                "shift_y"   : (lambda c1: 0),
+                "time"      : (lambda c1, u1 : 220 * c1 + 80),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1 : -1* u1 * 0.12 * c1)
                 },
 
             "Soccer_Side_Step_Left" : {
                 "id"        : 11,
-                "time"      : (lambda c1 : 180 * c1 + 360),
-                "shift_x"   : (lambda c1: 0),
-                "shift_y"   : (lambda c1: 11. * c1 / 100.),
-                "shift_turn": (lambda c1: 0)
+                "time"      : (lambda c1, u1 : 180 * c1 + 360),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 11. * c1 / 100.),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Side_Step_Right" : {
                 "id"        : 10,
-                "time"      : (lambda c1 : 180 * c1 + 360),
-                "shift_x"   : (lambda c1: 0),
-                "shift_y"   : (lambda c1: -11. * c1 / 100.),
-                "shift_turn": (lambda c1: 0)
+                "time"      : (lambda c1, u1 : 180 * c1 + 360),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: -11. * c1 / 100.),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Small_Step_Left" : {
                 "id"        : 13,
-                "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : (lambda c1: 0),
-                "shift_y"   : (lambda c1: 3.3 * c1 / 100.),
-                "shift_turn": (lambda c1: 0)
+                "time"      : (lambda c1, u1 : 1250 * c1 + 150),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 3.3 * c1 / 100.),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Small_Step_Right" : {
                 "id"        : 12,
-                "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : (lambda c1: 0),
-                "shift_y"   : (lambda c1: -3.3 * c1 / 100.),
-                "shift_turn": (lambda c1: 0)
+                "time"      : (lambda c1, u1 : 1250 * c1 + 150),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: -3.3 * c1 / 100.),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Take_Around_Left" : {
                 "id"        : 17,
-                "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
+                "time"      : (lambda c1, u1 : 1250 * c1 + 150),
+                "shift_x"   : (lambda c1, u1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
-                "shift_y"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
+                "shift_y"   : (lambda c1, u1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 math.sin(12.6 * c1 * math.pi / 180) / 100.),
-                "shift_turn": (lambda c1 : 12.6 * c1)
+                "shift_turn": (lambda c1, u1 : 12.6 * c1)
                 },
 
             "Soccer_Take_Around_Right" : {
                 "id"        : 16,
-                "time"      : (lambda c1 : 1250 * c1 + 150),
-                "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
+                "time"      : (lambda c1, u1 : 1250 * c1 + 150),
+                "shift_x"   : (lambda c1, u1 : 1.65 / math.sin(6.3 * math.pi / 180) *
                                 (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
-                "shift_y"   : (lambda c1: -1.65 / math.sin(6.3 * math.pi / 180) *
+                "shift_y"   : (lambda c1, u1: -1.65 / math.sin(6.3 * math.pi / 180) *
                                 math.sin(12.6 * c1 * math.pi / 180) / 100.),
-                "shift_turn": (lambda c1 : -12.6 * c1)
+                "shift_turn": (lambda c1, u1 : -12.6 * c1)
                 },
 
             "Soccer_Kick Forward_Left_leg " : {
                 "id"        : 19,
                 "time"      : 3000,
-                "shift_x"   : None,
-                "shift_y"   : None,
-                "shift_turn": None
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Kick Forward_Right_leg " : {
                 "id"        : 18,
                 "time"      : 3000,
-                "shift_x"   : None,
-                "shift_y"   : None,
-                "shift_turn": None
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_HomePosition" : {
                 "id"        : 1,
-                "time"      : 1000
+                "time"      : 1000,
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Soccer_Get_Ready" : {
                 "id"        : 2,
-                "time"      : 1000
+                "time"      : 1000,
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 },
 
             "Free" : {
                 "id"        : 4,
-                "time"      : 1000
+                "time"      : 1000,
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 },
             "Move_Head" : {
                 "id"        : 112,
-                "time"      : 600
+                "time"      : 600,
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 }
             }
 
@@ -195,7 +207,7 @@ class Motion:
         return True
 
     def _get_timer_duration(self, motion, args):
-        return motion['time'](args['c1'])
+        return motion['time'](args['c1'], 0)
 
     def _set_timer(self, duration):
         self._motion_duration = duration
@@ -210,13 +222,17 @@ class Motion:
 
     # basic method of any motion appliance
     def do_motion(self, target_motion, args=None):
+        c1 = 0
+        u1 = 0
         if self._timer_permission_check():
             self.current_motion = target_motion
             if args is not None:
                 if args['c1'] != 0:
-                    self.kondo.setUserCounter(1, args['c1'])
+                    c1 = args['c1']
+                    self.kondo.setUserCounter(1, c1)
                 if args['u1'] != 0:
-                    self.kondo.setUserParameter(1, args['u1'])
+                    u1 = args['u1']
+                    self.kondo.setUserParameter(1, u1)
             yaw_before = self.get_imu_yaw()
             try:
                 self.kondo.motionPlay(self.current_motion['id'])
@@ -226,7 +242,7 @@ class Motion:
             self._set_timer(self._get_timer_duration(self.current_motion, args))
             yaw_after = self.get_imu_yaw()
         try:
-            return {'shift_x': target_motion['shift_x'], 'shift_y': target_motion['shift_y'], 'shift_yaw': yaw_after - yaw_before}
+            return {'shift_x': target_motion['shift_x'](c1, u1), 'shift_y': target_motion['shift_y'](c1, u1), 'shift_yaw': yaw_after - yaw_before}
         except KeyError:
             pass
 
@@ -313,7 +329,7 @@ class Motion:
         distance = walk_args[0]
         rotation_angle = walk_args[1]
         if abs(rotation_angle) > self.angle_error_treshold:
-            self._turn_control(rotation_angle)
+            return self._turn_control(rotation_angle)
         else:
             motion = self.motions['Soccer_WALK_FF']
             #distance = math.sqrt(x*x + y*y)
@@ -344,9 +360,10 @@ class Motion:
             elif action['name'] == 'turn':
                 return self._turn_control(action['args'])
             elif action['name'] == 'kick':
-                return self._kick_control(action['args'])
+                self._kick_control(action['args'])
             elif action['name'] == 'lateral_step':
-                return  self._lateral_control(action['args'])
+                #return  self._lateral_control(action['args'])
+                return 0
             elif action['name'] == 'take_around_right':
                 return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1})
         return 0
