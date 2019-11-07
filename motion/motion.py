@@ -157,7 +157,7 @@ class Motion:
         self.head_enabled = True
         self.head_yaw = 0
         self.head_pitch = 0
-        self.head_state = 0
+        self.head_state = -1
 
         # walk threshold
         self.walk_threshold = 1.0
