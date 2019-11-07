@@ -28,7 +28,7 @@ def blob_area (blob):
     return blob.area ()
 
 def blob_width (blob):
-    return blob.width ()
+    return blob.w ()
 
 class ColoredObjectDetector(Detector):
     def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1,
@@ -87,7 +87,8 @@ class SurroundedObjectDetector(ColoredObjectDetector):
             pixel_th_ = 300, area_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
             corr_ratio_ = 0.5, sorting_func_ = blob_area, roundness_th_ = -1,
-            heigh_width_ratio_low_th_ = -1, heigh_width_ratio_high_th_ = -1):
+            heigh_width_ratio_low_th_ = -1, heigh_width_ratio_high_th_ = -1,
+            rad_coeff_ = 1, circle_y_shift_ = 0):
         self.th  = obj_th_
         self.surr1_th = surr1_th_
         self.surr2_th = surr2_th_
@@ -96,7 +97,10 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.area_th  = area_th_
         self.merge    = merge_
 
+        self.rad_coeff   = rad_coeff_
         self.sector_rad  = sector_rad_
+        self.circle_y_shift = circle_y_shift_
+
         self.wind_sz     = wind_sz_
         self.points_num  = points_num_
         self.min_ang     = min_ang_
@@ -153,7 +157,12 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
 
+        if (self.rad_coeff < 0 and len (unchecked_result)):
+            self.sector_rad = - blob_width(unchecked_result[0]) * self.rad_coeff
+            self._generate_encl_points()
+
         #get averaged surroundings for each
+
         for res in unchecked_result:
             bbox = res.rect()
             x = int (bbox[0] + bbox[2]/2)
@@ -219,8 +228,15 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         i = 0
         for res in self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num):
             bbox = res.rect()
+
             x = int (bbox[0] + bbox[2]/2)
             y = int (bbox[1] + bbox[3])
+
+            if (self.circle_y_shift - int (self.circle_y_shift) != 0):
+                y += int (self.circle_y_shift * bbox[2])
+            else:
+                print ("poshel")
+                y += int (self.circle_y_shift)
 
             j = 0
             for pt in self.sector_points:
@@ -266,11 +282,14 @@ class Vision:
                                    int (detector ["asthl2"]), int (detector ["asthh2"]),
                                    int (detector ["asthl3"]), int (detector ["asthh3"]))
 
-                    sector_radius = int (detector ["sector radius"])
-                    window_size = int (detector ["window size"])
-                    pixel_th = int (detector ["pixel th"])
-                    area_th = int (detector ["area th"])
-                    merge_str = detector ["merge"]
+                    rad_coeff      = float (detector ["rad coeff"])
+                    sector_radius  = int (detector ["sector radius"])
+                    circle_y_shift = float (detector ["circle y shift"])
+
+                    window_size    = int (detector ["window size"])
+                    pixel_th       = int (detector ["pixel th"])
+                    area_th        = int (detector ["area th"])
+                    merge_str      = detector ["merge"]
 
                     merge = True
                     if (merge_str == "False"):
@@ -295,7 +314,7 @@ class Vision:
                     new_detector = SurroundedObjectDetector(obj_th, sur1_th, sur2_th, sector_radius,
                         window_size, pixel_th, area_th, merge, point_num, min_angle, max_angle,
                         obj_num, corr_ratio, sort_func_str, roundness_th, height_width_ratio_low_th,
-                        height_width_ratio_high_th)
+                        height_width_ratio_high_th, rad_coeff, circle_y_shift)
 
                 else:
                     print("unsupported detector type")

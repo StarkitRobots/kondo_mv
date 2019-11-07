@@ -103,8 +103,8 @@ class Robot(Field):
                 if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
                #calc posts coords in field for every mesurement
-                        x_posts = self.x - observation[0]*math.cos(-self.yaw) + observation[1]*math.sin(-self.yaw)
-                        y_posts = self.y - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                        x_posts = self.x - (observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw))
+                        y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
                 if (dists!=[]):
@@ -219,9 +219,9 @@ class ParticleFilter():
         #print('|', file = self.logs)
         self.count += 1
 
-    def move(self, coord):
+    def move(self, x, y, yaw):
         self.logs = open('localization/logs/logs'+self.token+'.txt',"a")
-        self.myrobot.move(coord['shift_x'],coord['shift_y'],coord['shift_yaw'])
+        self.myrobot.move(x, y, yaw)
         print('|moving,step ', self.count, file=self.logs)
         print('$$', file=self.logs)
         print("position ", self.myrobot.x, ' ',
@@ -229,7 +229,7 @@ class ParticleFilter():
         # now we simulate a robot motion for each of
         # these particles
         for partic in self.p:
-            partic[0].move(coord['shift_x'],coord['shift_y'],coord['shift_yaw'])
+            partic[0].move(x, y, yaw)
             print(partic[0].x, ' ',
               partic[0].y, ' ', partic[0].yaw, file=self.logs)
         #print('|', file = self.logs)
