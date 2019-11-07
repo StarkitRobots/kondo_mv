@@ -43,7 +43,7 @@ class Strategy:
 
         dist = math.sqrt(xb ** 2 + yb ** 2)
         ang = math.acos(xb / dist)
-        if dist > 0.3:
+        if dist > 0.15:
             if yb > 0:
                 return {"name" : "walk", "args" : (dist, -ang)}
             else:

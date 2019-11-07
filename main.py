@@ -40,8 +40,10 @@ with open("calibration/cam_col.json") as f:
 
 # setting model parametrs
 model.setParams(calib["cam_col"], robotHeight)
+model.updateCameraPanTilt(0, -3.1415/6)
 
 vision_postprocessing = Vision_postprocessing ()
+#motion.move_head()
 t = 0
 # main loop
 while(True):
@@ -51,22 +53,18 @@ while(True):
     #print (curr_t - t)
     t = curr_t
     selfData = {}
-    for i in range(motion.head_state_num):
-
+    for i in range(1):
         # motion part. Head movement.
-        pan, tilt = motion.move_head()
-        model.updateCameraPanTilt(pan, tilt)
+        #motion.move_head()
         # vision part. Taking picture.
         img=sensor.snapshot()
 
         #img.save ("kekb.jpg", quality=100)
 
-        cameraDataRaw=vision.get(img, objects_list=
-        ["blue_posts", "ball", "white_posts_support"],
-        drawing_list=["blue_posts", "ball", "white_posts_support"])
+        cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "ball", "white_posts_support"],
+                         drawing_list=["yellow_posts", "ball", "white_posts_support"])
 
-        cameraDataProcessed = vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")
-
+        cameraDataProcessed = vision_postprocessing.process (cameraDataRaw, "yellow_posts", "white_posts_support")
         # model part. Mapping to world coords.
 
         # self means in robots coords
@@ -96,6 +94,3 @@ while(True):
     odometry_results = motion.apply(action)
     if odometry_results is not None:
         loc.pf.move(odometry_results)
-    #motion.apply({'name': 'walk', 'args': (0.5186465, 0.5)})
-    #time.sleep(10000)
-
