@@ -82,7 +82,7 @@ while(True):
 
     #break
     #loc.update(selfData)
-    print("posts number = ", len(selfData["blue_posts"]))
+    print("posts number = ", len(selfData["yellow_posts"]))
     print("my_pose", loc.robot_position)
     loc.update_ball(selfData)
     print(loc.ballPosSelf)
