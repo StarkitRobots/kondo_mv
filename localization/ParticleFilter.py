@@ -339,5 +339,5 @@ class ParticleFilter():
 
 def updatePF(pf, measurement):
     pf.resampling(measurement)
-    print(pf.myrobot.return_coord())
+    #print(pf.myrobot.return_coord())
     return pf.myrobot.return_coord()
