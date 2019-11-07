@@ -38,8 +38,8 @@ class Strategy:
 
     def walkball(self, loc):
         self.turn_counter = 0
-        xb = loc.ballPosSelf[1]
-        yb = loc.ballPosSelf[0]
+        xb = loc.ballPosSelf[0]
+        yb = -loc.ballPosSelf[1]
 
         dist = math.sqrt(xb ** 2 + yb ** 2)
         ang = math.acos(xb / dist)
