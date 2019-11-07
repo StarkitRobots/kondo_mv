@@ -34,7 +34,7 @@ class Motion:
         # loading motion dictionary
 
         #self.motions = json.load("/motion/data_motion.json")
-
+        self.motion_to_apply = None
         self.motions = {
             "Soccer_WALK_FF" : {
                 "id"        : 8,
@@ -136,6 +136,10 @@ class Motion:
             "Free" : {
                 "id"        : 4,
                 "time"      : 1000
+                },
+            "Move_Head" : {
+                "id"        : 112,
+                "time"      : 600
                 }
             }
 
@@ -169,7 +173,8 @@ class Motion:
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
         timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
-        motion_finished = self.kondo.getMotionPlayNum() == self.motions['Soccer_Get_Ready']['id']
+        current_motion = self.kondo.getMotionPlayNum()
+        motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
         return motion_finished and timer_check
 
     def _get_timer_duration(self, motion, args):
@@ -178,7 +183,7 @@ class Motion:
     def _set_timer(self, duration):
         self._motion_duration = duration
         self._motion_start_time = time.ticks()
-        time.sleep(int(duration))
+        #time.sleep(int(duration))
 
 
 ###########################################################################################
