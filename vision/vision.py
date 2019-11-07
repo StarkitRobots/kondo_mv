@@ -157,7 +157,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
 
-        if (self.rad_coeff < 0 and len (unchecked_result)):
+        if (self.rad_coeff < 0 and len (unchecked_result) != 0):
             self.sector_rad = - blob_width(unchecked_result[0]) * self.rad_coeff
             self._generate_encl_points()
 
@@ -235,7 +235,7 @@ class SurroundedObjectDetector(ColoredObjectDetector):
             if (self.circle_y_shift - int (self.circle_y_shift) != 0):
                 y += int (self.circle_y_shift * bbox[2])
             else:
-                print ("poshel")
+                #print ("poshla mazuta")
                 y += int (self.circle_y_shift)
 
             j = 0
