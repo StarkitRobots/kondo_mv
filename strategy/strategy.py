@@ -54,7 +54,7 @@ class Strategy:
             else:
                 return {"name" : "turn", "args" : (-1 * ang)}
         else:
-            return {"name" : "take around right", "args" : (1)}
+            return {"name" : "take_around_right", "args" : (1)}
 
     def apply_ball_approach(self, loc):
         self.turn_counter = 0
