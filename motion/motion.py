@@ -251,13 +251,14 @@ class Motion:
     def move_head(self):
         if self.head_enabled:
             if self._timer_permission_check():
-                self._set_timer(300)
+                self._set_timer(150)
                 self.head_state = (self.head_state + 1) % self.head_state_num
-                self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
-                self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
-                self.kondo.setUserParameter(20, degrees_to_head(self.head_pitch))
-                self.kondo.setUserParameter(19, degrees_to_head(self.head_yaw))
-                self._set_timer(300)
+<<<<<<< HEAD
+                self.head_pan = int(self.head_motion_states[str(self.head_state)]['yaw'])
+                self.head_tilt = int(self.head_motion_states[str(self.head_state)]['pitch'])
+                self.kondo.setUserParameter(20, degrees_to_head(self.head_tilt))
+                self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
+                self._set_timer(150)
                 #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
                 return self.head_pitch, self.head_yaw
             else:
@@ -348,5 +349,5 @@ class Motion:
             elif action['name'] == 'lateral_step':
                 return  self._lateral_control(action['args'])
             elif action['name'] == 'take_around_right':
-                return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1})
+                return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1, 'u1': 0})
         return 0
