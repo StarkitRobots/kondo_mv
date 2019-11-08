@@ -353,7 +353,12 @@ class Motion:
             self.do_motion(self.motions['Soccer_Kick Forward_Right_leg'])
 
     def _lateral_control(self, lateral_args):
-        pass
+        step_num = int(lateral_args / 3.3)
+        if step_num > 0:
+            self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
+        else:
+            self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
+
 
 ###########################################################################################
 #
