@@ -271,8 +271,6 @@ class Motion:
                 self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pan = int(self.head_motion_states[str(self.head_state)]['yaw'])
                 self.head_tilt = int(self.head_motion_states[str(self.head_state)]['pitch'])
-                self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
-                self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.kondo.setUserParameter(20, degrees_to_head(self.head_tilt))
                 self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
                 self._set_timer(150)
