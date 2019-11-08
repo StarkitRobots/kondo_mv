@@ -207,7 +207,7 @@ class Motion:
         return True
 
     def _get_timer_duration(self, motion, args):
-        return motion['time'](args['c1'])
+        return motion['time'](args['c1'], 0)
 
     def _set_timer(self, duration):
         self._motion_duration = duration
@@ -221,7 +221,7 @@ class Motion:
 ###########################################################################################
 
     # basic method of any motion appliance
-        def do_motion(self, target_motion, args=None):
+    def do_motion(self, target_motion, args=None):
         c1 = 0
         u1 = 0
         if self._timer_permission_check():
@@ -271,11 +271,17 @@ class Motion:
                 self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pan = int(self.head_motion_states[str(self.head_state)]['yaw'])
                 self.head_tilt = int(self.head_motion_states[str(self.head_state)]['pitch'])
+                self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
+                self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.kondo.setUserParameter(20, degrees_to_head(self.head_tilt))
                 self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
                 self._set_timer(150)
                 #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-                return self.head_pitch, self.head_yaw
+                pitch_rad = self.head_pitch * math.pi / 180.
+                yaw_rad   = self.head_yaw * math.pi / 180.
+                print ("pitch, yaw (move_head)", self.head_pitch, self.head_yaw)
+
+                return (pitch_rad, yaw_rad)
             else:
                 pass
         else:
