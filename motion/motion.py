@@ -260,8 +260,8 @@ class Motion:
     def ready(self):
         self.do_motion(self.motions['Soccer_Get_Ready'])
 
-    def kick(self, left=True):
-        self._kick_control({'left' : left})
+    def kick(self, side=1):
+        self._kick_control(side)
 
     # discrete head motion that understands its position and does next step
     def move_head(self):
