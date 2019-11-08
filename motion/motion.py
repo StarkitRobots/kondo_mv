@@ -109,7 +109,7 @@ class Motion:
                 "shift_turn": (lambda c1, u1 : -12.6 * c1)
                 },
 
-            "Soccer_Kick Forward_Left_leg " : {
+            "Soccer_Kick_Forward_Left_leg " : {
                 "id"        : 19,
                 "time"      : 3000,
                 "shift_x"   : (lambda c1, u1: 0),
@@ -117,7 +117,7 @@ class Motion:
                 "shift_turn": (lambda c1, u1: 0)
                 },
 
-            "Soccer_Kick Forward_Right_leg " : {
+            "Soccer_Kick_Forward_Right_leg " : {
                 "id"        : 18,
                 "time"      : 3000,
                 "shift_x"   : (lambda c1, u1: 0),
@@ -341,10 +341,10 @@ class Motion:
             return self.do_motion(motion, {'c1': step_num, 'u1': 1})
 
     def _kick_control(self, kick_args):
-        if kick_args['left']:
-            self.do_motion(self.motions['Soccer_Kick Forward_Left_leg'])
+        if kick_args == -1:
+            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'])
         else:
-            self.do_motion(self.motions['Soccer_Kick Forward_Right_leg'])
+            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'])
 
     def _lateral_control(self, lateral_args):
         step_num = int(lateral_args / 3.3)
