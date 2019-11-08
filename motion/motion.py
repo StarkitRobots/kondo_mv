@@ -167,8 +167,8 @@ class Motion:
             self.head_motion_states = json.loads(f.read())
         self.head_state_num = len(self.head_motion_states)
         self.head_enabled = True
-        self.head_yaw = 0
-        self.head_pitch = 0
+        self.head_pan = 0
+        self.head_tilt = 0
         self.head_state = -1
 
         # walk threshold
@@ -207,7 +207,7 @@ class Motion:
         return True
 
     def _get_timer_duration(self, motion, args):
-        return motion['time'](args['c1'])
+        return motion['time'](args['c1'], 0)
 
     def _set_timer(self, duration):
         self._motion_duration = duration
@@ -221,7 +221,7 @@ class Motion:
 ###########################################################################################
 
     # basic method of any motion appliance
-        def do_motion(self, target_motion, args=None):
+    def do_motion(self, target_motion, args=None):
         c1 = 0
         u1 = 0
         if self._timer_permission_check():
@@ -275,7 +275,7 @@ class Motion:
                 self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
                 self._set_timer(150)
                 #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-                return self.head_pitch, self.head_yaw
+                return self.head_p an * math.pi / 180., self.head_tilt * math.pi / 180.
             else:
                 pass
         else:
