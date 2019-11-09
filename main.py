@@ -70,6 +70,7 @@ def __main__(enemyPosts):
     # main loop
     while(True):
         clock.tick()
+        #print ("mde")
 
         curr_t = pyb.millis()
         #print (curr_t - t)
@@ -77,8 +78,8 @@ def __main__(enemyPosts):
         selfData = {}
         for i in range(motion.head_state_num):
             # motion part. Head movement.
-            pan, tilt = motion.move_head()
-            model.updateCameraPanTilt(pan, tilt)
+            #pan, tilt = motion.move_head()
+            #model.updateCameraPanTilt(pan, tilt)
             # vision part. Taking picture.
             img=sensor.snapshot()
 
@@ -178,19 +179,19 @@ def __main__(enemyPosts):
         print(action)
         #print(loc.pf.token)
 
-        odometry_results = motion.apply(action)
+        #odometry_results = motion.apply(action)
         #if odometry_results is not None:
         #    loc.pf.move(odometry_results)
 
-#ala = 0
-#while(ala==0):
-#    if (pin9.value() == 0):   # нажатие на кнопку на голове
-#        ala = 1
-#        print("I will attack blue goals")
+"""ala = 0
+while(ala==0):
+    if (pin9.value() == 0):   # нажатие на кнопку на голове
+        ala = 1
+        print("I will attack blue goals")"""
 __main__("blue")
 
-#    if (pin3.value() == 0):
-#        ala = 1
-#        print("I will attack yellow goals")
-#        __main__("yellow")
+"""    if (pin3.value() == 0):
+        ala = 1
+        print("I will attack yellow goals")
+        __main__("yellow")"""
 

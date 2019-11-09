@@ -2,13 +2,14 @@ import sensor, image
 import math, json
 
 class Detector:
-    def __init__(self):
+    def __init__(self, name_=""):
         self.blobs = []
+        self.name = name_
 
     def detect(self, img):
         return (5, 6)
 
-    def _draw(self, img, blobs=[], edges=True, axis_lines=False):
+    def _draw(self, img, blobs=[], edges=True, axis_lines=False, object_name=True):
         #if (blobs == []):
         #    blobs = self.blobs
 
@@ -21,6 +22,9 @@ class Detector:
                 img.draw_line(blob.major_axis_line(), color=(0, 255, 0))
                 img.draw_line(blob.minor_axis_line(), color=(0, 0, 255))
 
+            if (object_name == True):
+                img.draw_string(blob.x(), blob.y(), self.name, (20, 200, 234))
+
     def draw(self, img):
         self._draw(img)
 
@@ -31,21 +35,23 @@ def blob_width (blob):
     return blob.w ()
 
 class ColoredObjectDetector(Detector):
-    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1,
-                 roundness_th_ = -1):
+    def __init__(self, th_, pixel_th_ = 300, area_high_th_ = 300, area_low_th_ = 300,
+        merge_ = False, objects_num_ = 1, roundness_th_ = -1, name_=""):
         self.th       = th_
         self.pixel_th = pixel_th_
-        self.area_th  = area_th_
+        self.area_high_th  = area_high_th_
+        self.area_low_th  = area_low_th_
         self.merge    = merge_
 
         self.objects_num = objects_num_
         self.roundness_th = roundness_th_
 
         self.result = []
+        self.name = name_
 
     def _detect(self, img):
-        detected_blobs = img.find_blobs([self.th], pixels_threshold=self.pixel_th,
-            area_threshold=self.area_th, merge=self.merge)
+        detected_blobs = img.find_blobs([self.th], area_threshold=self.area_low_th,
+            pixel_threshold=self.pixel_th, merge=self.merge)
 
         return detected_blobs
 
@@ -53,7 +59,17 @@ class ColoredObjectDetector(Detector):
         result = []
 
         for blob in blobs:
+            #print ("roundness: ", blob.roundness ())
             if (blob.roundness () > roundness_th):
+                result.append (blob)
+
+        return result
+
+    def _filter_by_area(self, blobs, area_high_th):
+        result = []
+
+        for blob in blobs:
+            if (area_high_th > blob.area ()):
                 result.append (blob)
 
         return result
@@ -62,7 +78,7 @@ class ColoredObjectDetector(Detector):
         if (k == -1):
             k = len (blobs)
 
-        blobs_sorted = sorted (blobs, key=lambda blob: blob.area(), reverse=True)
+        blobs_sorted = sorted (blobs, key=lambda blob: blob_area(blob), reverse=True)
 
         result = blobs_sorted [:k]
 
@@ -74,6 +90,9 @@ class ColoredObjectDetector(Detector):
         if (self.roundness_th != -1):
             self.blobs = self._filter_by_roundness(self.blobs, self.roundness_th)
 
+        if (self.area_high_th != -1):
+            self.blobs = _filter_by_area (self.blobs, self.area_high_th)
+
         self.result = self.get_k_first_sorted (self.blobs, self.objects_num)
 
         return self.result
@@ -84,18 +103,19 @@ class ColoredObjectDetector(Detector):
 
 class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr1_th_, surr2_th_, sector_rad_ = 50, wind_sz_ = 3,
-            pixel_th_ = 300, area_th_ = 300, merge_ = True,
+            pixel_th_ = 300, area_low_th_ = 300, area_high_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
             corr_ratio_ = 0.5, sorting_func_ = blob_area, roundness_th_ = -1,
             heigh_width_ratio_low_th_ = -1, heigh_width_ratio_high_th_ = -1,
-            rad_coeff_ = 1, circle_y_shift_ = 0):
+            rad_coeff_ = 1, circle_y_shift_ = 0, name_=""):
         self.th  = obj_th_
         self.surr1_th = surr1_th_
         self.surr2_th = surr2_th_
 
-        self.pixel_th = pixel_th_
-        self.area_th  = area_th_
-        self.merge    = merge_
+        self.pixel_th     = pixel_th_
+        self.area_low_th  = area_low_th_
+        self.area_high_th = area_high_th_
+        self.merge        = merge_
 
         self.rad_coeff   = rad_coeff_
         self.sector_rad  = sector_rad_
@@ -112,6 +132,9 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.roundness_th = roundness_th_
         self.heigh_width_ratio_low_th  = heigh_width_ratio_low_th_
         self.heigh_width_ratio_high_th = heigh_width_ratio_high_th_
+        self.name = name_
+
+        self.unchecked_result = []
 
         self._generate_encl_points()
 
@@ -130,41 +153,61 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         self.result = []
         self.check_success = []
 
-        res = []
+        #print ("len self blobs", len (self.blobs))
 
         if (self.roundness_th != -1):
-            res = self._filter_by_roundness(self.blobs, self.roundness_th)
+            self.result = self._filter_by_roundness(self.blobs, self.roundness_th)
+            #print ("len: ", len (self.result))
+
+        else:
+            self.result = self.blobs
+
+        #print ("len self result", len (self.result))
+
+        res = []
 
         if (self.heigh_width_ratio_low_th  != -1 or
             self.heigh_width_ratio_high_th != -1):
-            for blob in res:
-                height_width_ratio = blob.height() / blob.width()
+            for blob in self.result:
+                #print (self.heigh_width_ratio_low_th, self.heigh_width_ratio_high_th)
+                #print ("m")
+
+                height_width_ratio = blob.h() / blob.w()
 
                 if (self.heigh_width_ratio_low_th  != -1 and
                     self.heigh_width_ratio_high_th != -1):
                     if (height_width_ratio > self.heigh_width_ratio_low_th and
                         height_width_ratio < self.heigh_width_ratio_high_th):
-                        self.blobs.append (blob)
+                        res.append (blob)
 
                 elif (self.heigh_width_ratio_low_th  != -1):
                     if (height_width_ratio > self.heigh_width_ratio_low_th):
-                        self.blobs.append (blob)
+                        res.append (blob)
 
                 elif (self.heigh_width_ratio_high_th  != -1):
                     if (height_width_ratio < self.heigh_width_ratio_high_th):
-                        self.blobs.append (blob)
+                        res.append (blob)
+
+        else:
+            res = self.result
+
+        #print ("len res", len (res))
+
+        self.result = []
 
         #get candidates
-        unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)
+        self.unchecked_result = self.get_k_first_sorted (res, self.sorting_func, self.objects_num)
 
-        if (self.rad_coeff < 0 and len (unchecked_result) != 0):
-            self.sector_rad = - blob_width(unchecked_result[0]) * self.rad_coeff
+        #print ("len unchecked result", len (self.unchecked_result))
+
+        if (self.rad_coeff < 0 and len (self.unchecked_result) != 0):
+            self.sector_rad = - blob_width(self.unchecked_result[0]) * self.rad_coeff
             self._generate_encl_points()
 
         #get averaged surroundings for each
 
-        for res in unchecked_result:
-            bbox = res.rect()
+        for bl in self.unchecked_result:
+            bbox = bl.rect()
             x = int (bbox[0] + bbox[2]/2)
             y = int (bbox[1] + bbox[3])
 
@@ -214,19 +257,22 @@ class SurroundedObjectDetector(ColoredObjectDetector):
             #print (proper)
 
             if (proper >= self.points_num * self.corr_ratio):
-                self.result.append (res)
+                self.result.append (bl)
 
         #self.result = unchecked_result
+
+        #print ("len self result", len (self.result))
 
         return self.result
 
     def draw(self, img):
         #print (len (self.result))
         self._draw(img, self.result, True, True)
-        self._draw(img, self.blobs)
+        self._draw(img, self.blobs, False, False, False)
 
         i = 0
-        for res in self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num):
+        #for res in self.get_k_first_sorted (self.unchecked_result, self.sorting_func, self.objects_num):
+        for res in self.unchecked_result:
             bbox = res.rect()
 
             x = int (bbox[0] + bbox[2]/2)
@@ -288,7 +334,8 @@ class Vision:
 
                     window_size    = int (detector ["window size"])
                     pixel_th       = int (detector ["pixel th"])
-                    area_th        = int (detector ["area th"])
+                    area_low_th    = int (detector ["area low th"])
+                    area_high_th   = int (detector ["area high th"])
                     merge_str      = detector ["merge"]
 
                     merge = True
@@ -302,6 +349,8 @@ class Vision:
                     corr_ratio = float (detector ["correct ratio"])
                     sort_func_str = detector ["sorting func"]
 
+                    name = detector ["name"]
+
                     sort_func = blob_area
                     if (sort_func_str == "blob_width"):
                         sort_func = blob_width
@@ -312,9 +361,10 @@ class Vision:
                     height_width_ratio_high_th = float (detector ["height width ratio high"])
 
                     new_detector = SurroundedObjectDetector(obj_th, sur1_th, sur2_th, sector_radius,
-                        window_size, pixel_th, area_th, merge, point_num, min_angle, max_angle,
-                        obj_num, corr_ratio, sort_func_str, roundness_th, height_width_ratio_low_th,
-                        height_width_ratio_high_th, rad_coeff, circle_y_shift)
+                        window_size, pixel_th, area_low_th, area_high_th, merge, point_num,
+                        min_angle, max_angle, obj_num, corr_ratio, sort_func_str, roundness_th,
+                        height_width_ratio_low_th, height_width_ratio_high_th, rad_coeff,
+                        circle_y_shift, name)
 
                 else:
                     print("unsupported detector type")
