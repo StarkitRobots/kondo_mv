@@ -109,17 +109,17 @@ class Motion:
                 "shift_turn": (lambda c1, u1 : -12.6 * c1)
                 },
 
-            "Soccer_Kick_Forward_Left_leg " : {
+            "Soccer_Kick_Forward_Left_leg" : {
                 "id"        : 19,
-                "time"      : 3000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
                 },
 
-            "Soccer_Kick_Forward_Right_leg " : {
+            "Soccer_Kick_Forward_Right_leg" : {
                 "id"        : 18,
-                "time"      : 3000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -127,7 +127,7 @@ class Motion:
 
             "Soccer_HomePosition" : {
                 "id"        : 1,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -135,7 +135,7 @@ class Motion:
 
             "Soccer_Get_Ready" : {
                 "id"        : 2,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -143,14 +143,14 @@ class Motion:
 
             "Free" : {
                 "id"        : 4,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
                 },
             "Move_Head" : {
                 "id"        : 112,
-                "time"      : 600,
+                "time"      : (lambda c1, u1: 600),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -207,7 +207,7 @@ class Motion:
         return True
 
     def _get_timer_duration(self, motion, args):
-        return motion['time'](args['c1'], 0)
+        return motion['time'](args['c1'], args['u1'])
 
     def _set_timer(self, duration):
         self._motion_duration = duration
@@ -342,12 +342,12 @@ class Motion:
 
     def _kick_control(self, kick_args):
         if kick_args == -1:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'])
+            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'])
+            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
 
     def _lateral_control(self, lateral_args):
-        step_num = int(lateral_args / 3.3)
+        step_num = int(lateral_args / 0.033)
         if step_num > 0:
             self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
         else:
