@@ -31,7 +31,7 @@ pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 
 
-def __main__():
+def __main__(enemyPosts):
     robotHeight = 0.40 #[m]
     cameraHeight = 0.04 #[m]
     # init code
@@ -83,9 +83,12 @@ def __main__():
             img=sensor.snapshot()
 
             #img.save ("kekb.jpg", quality=100)
-
-            cameraDataRaw=vision.get(img, objects_list=["blue_posts", "ball"],#, "white_posts_support"],
-                             drawing_list=["blue_posts", "ball"])#, "white_posts_support"])
+            if enemyPosts == "blue":
+                posts = "blue_posts"
+            elif enemyPosts == "yellow":
+                posts = "yellow_posts"
+            cameraDataRaw=vision.get(img, objects_list=[posts, "ball"],#, "white_posts_support"],
+                             drawing_list=[posts, "ball"])#, "white_posts_support"])
 
             cameraDataProcessed = cameraDataRaw#vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")
             # model part. Mapping to world coords.
@@ -142,7 +145,11 @@ def __main__():
                     #if not, trying to orintate body to the center of the goal
                     if (positive_pan + negative_pan < math.pi/8) or (positive_pan + negative_pan > -math.pi/8):
                         print("I'm targeted on goal")
-                        action = {"name" : "kick", "args" : (1)}
+                        #choosing foot
+                        if loc.ballPosSelf[1] > 0:
+                            action = {"name" : "kick", "args" : (1)} #right
+                        else:
+                            action = {"name" : "kick", "args" : (-1)} #left
                     else:
                         if positive_pan + negative_pan < 0:
                             action ={"name" : "take_around_left"}
@@ -177,8 +184,14 @@ def __main__():
 
 ala = 0
 while(ala==0):
-    if (pin9.value()== 0):   # нажатие на кнопку на голове
+    if (pin9.value() == 0):   # нажатие на кнопку на голове
         ala = 1
-        print("pressed")
-        __main__()
+        print("I will attack blue goals")
+        __main__("blue")
+
+    if (pin3.value() == 0):
+        ala = 1
+        print("I will attack yellow goals")
+        __main__("yellow")
+
 

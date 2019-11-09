@@ -30,9 +30,12 @@ class Localization:
     def update_posts(self, data):
         if len(data['blue_posts']) != 0:
             self.posts = data["blue_posts"]
-            self.postPan = []
-            for post in self.posts:
-                self.postPan.append(math.atan(post[1]/post[0]))
+        elif len(data['yellow_posts']) != 0:
+            self.posts = data["yellow_posts"]
+
+        self.postPan = []
+        for post in self.posts:
+            self.postPan.append(math.atan(post[1]/post[0]))
 
     def update_ball(self, data):
         if len(data['ball']) != 0:
@@ -43,7 +46,7 @@ class Localization:
                 ballY+=el[1]
             self.seeBall = True
             self.ballPosSelf = (ballX/len(data['ball']), ballY/len(data['ball']))
-            print("eto ball", self.ballPosSelf)
+            #print("eto ball", self.ballPosSelf)
         else:
             self.seeBall = False
 
