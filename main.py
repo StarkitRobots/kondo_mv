@@ -106,7 +106,7 @@ def __main__(enemyPosts):
             time.sleep(200) # sleep for better controlling vision, not for prod
 
         #cacl posts pan and put it in loc.postPan
-        loc.update_posts(selfData)
+        loc.update_posts(selfData, posts)
 
         #clusterize posts for negative and positive pan relative to the robot
         positive_pan = []
@@ -182,16 +182,15 @@ def __main__(enemyPosts):
         #if odometry_results is not None:
         #    loc.pf.move(odometry_results)
 
-ala = 0
-while(ala==0):
-    if (pin9.value() == 0):   # нажатие на кнопку на голове
-        ala = 1
-        print("I will attack blue goals")
-        __main__("blue")
+#ala = 0
+#while(ala==0):
+#    if (pin9.value() == 0):   # нажатие на кнопку на голове
+#        ala = 1
+#        print("I will attack blue goals")
+__main__("blue")
 
-    if (pin3.value() == 0):
-        ala = 1
-        print("I will attack yellow goals")
-        __main__("yellow")
-
+#    if (pin3.value() == 0):
+#        ala = 1
+#        print("I will attack yellow goals")
+#        __main__("yellow")
 

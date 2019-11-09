@@ -28,19 +28,17 @@ class Model:
         return (int(u), int(v))
 
     def pic2r(self, u, v):
-        print("model u v",u , v)
         x = (float(u) - self.A[0][2]) / self.A[0][0]
         y = (float(v) - self.A[1][2]) / self.A[1][1]
-        print ("x, y, й", x, y)
         alp = math.atan(y)
         bet = math.atan(x)
-        print("model alp bet",alp,bet)
-        print ("tilt, pan: ", self.cameraTilt, self.cameraPan)
-        print (self.A)
+        #print("model alp bet",alp,bet)
+        #print ("tilt, pan: ", self.cameraTilt, self.cameraPan)
+        #print (self.A)
 
         balp = alp - self.cameraTilt
         bbet = bet - self.cameraPan
-        print ("balp, bbet", balp, bbet)
+        #print ("balp, bbet", balp, bbet)
 
         if math.tan(balp) == 0:
             return "problem"
@@ -48,6 +46,6 @@ class Model:
         xb = self.h / math.tan(balp) * math.cos(bbet)
         yb = self.h / math.tan(balp) * math.sin(bbet)
 
-        print (xb, -yb)
+        #print (xb, -yb)
 
         return (xb, -yb)
