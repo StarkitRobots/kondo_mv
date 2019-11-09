@@ -1,7 +1,9 @@
 from ParticleFilter import updatePF, ParticleFilter, Robot, Field
 import json
+import math
 class Localization:
     def __init__(self, x, y, yaw):
+        self.postPan = []
         self.ballPosSelf = None
         self.ball_position = None
         self.robot_position = None
@@ -15,8 +17,22 @@ class Localization:
 
     def update(self, data):
         #self.ball_position = data["ball"]
-        self.robot_position = updatePF(self.pf, data)
+        for i in range(5):
+            self.robot_position = updatePF(self.pf, data)
+        self.localized = True
+        x_ball = self.robot_position[0] - self.ballPosSelf[0]*math.cos(-self.robot_position[2])
+        + self.ballPosSelf[1]*math.sin(-self.robot_position[2])
+        y_ball = self.robot_position[1] - self.ballPosSelf[0]*math.sin(-self.robot_position[2])
+        + self.ballPosSelf[1]*math.cos(-self.robot_position[2])
+        self.ball_position = (x_ball, y_ball)
         return 0
+
+    def update_posts(self, data):
+        if len(data['blue_posts']) != 0:
+            self.posts = data["blue_posts"]
+            self.postPan = []
+            for post in self.posts:
+                self.postPan.append(math.atan(post[1]/post[0]))
 
     def update_ball(self, data):
         if len(data['ball']) != 0:
