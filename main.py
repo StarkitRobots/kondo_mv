@@ -27,6 +27,12 @@ sys.path.append('lowlevel')
 sys.path.append('vision')
 from vision import *
 
+
+def cord(x1, x2, y1, y2):
+    x3 = x2+*0.2(x2-x1)/math.sqrt((x2-x1)**2+(y2-y1)**2)
+    y3 = y2+*0.2(y2-y1)/math.sqrt((y2-y1)**2+(x2-x1)**2)
+    return x3, y3
+
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 
@@ -61,7 +67,11 @@ def __main__(enemyPosts):
 
     # setting model parametrs
     model.setParams(calib["cam_col"], robotHeight)
+    print ("que verga")
+
     #pan, tilt = motion.move_head()
+    print ("que verga")
+
     #model.updateCameraPanTilt(pan, tilt)
 
     vision_postprocessing = Vision_postprocessing ()
@@ -70,7 +80,7 @@ def __main__(enemyPosts):
     # main loop
     while(True):
         clock.tick()
-        #print ("mde")
+        print ("mde")
 
         curr_t = pyb.millis()
         #print (curr_t - t)
@@ -88,10 +98,10 @@ def __main__(enemyPosts):
                 posts = "blue_posts"
             elif enemyPosts == "yellow":
                 posts = "yellow_posts"
-            cameraDataRaw=vision.get(img, objects_list=[posts, "ball"],#, "white_posts_support"],
-                             drawing_list=[posts, "ball"])#, "white_posts_support"])
+            cameraDataRaw=vision.get(img, objects_list=[posts, "ball", "white_posts_support"],
+                             drawing_list=[posts, "ball", "white_posts_support"])#, "white_posts_support"])
 
-            cameraDataProcessed = cameraDataRaw#vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")
+            cameraDataProcessed = vision_postprocessing.process (cameraDataRaw, "blue_posts", "white_posts_support")
             # model part. Mapping to world coords.
 
             # self means in robots coords
@@ -104,27 +114,45 @@ def __main__(enemyPosts):
                         model.pic2r(observation[0] + observation[2]/2,
                         observation[1] + observation[3]))
                 selfData[observationType]+=selfPoints
-            time.sleep(200) # sleep for better controlling vision, not for prod
+            #time.sleep(200) # sleep for better controlling vision, not for prod
+
+        time.sleep(200)
 
         #cacl posts pan and put it in loc.postPan
-        loc.update_posts(selfData, posts)
+        #loc.update_posts(selfData, posts)
+
+        #print ("posts: ", selfData [posts])
 
         #clusterize posts for negative and positive pan relative to the robot
-        positive_pan = []
-        negative_pan = []
+        positive_pan_ = []
+        negative_pan_ = []
+        #for post in loc.postPan:
+        #    if post > 0:
+        #        positive_pan_.append(post)
+        #    else:
+        #        negative_pan_.append(post)
+
+        loc.update_posts(selfData, "left_"+enemyPosts+"_posts")
+        print ("shi")
+
         for post in loc.postPan:
-            if post > 0:
-                positive_pan.append(post)
-            else:
-                negative_pan.append(post)
-        negative_pan = mean(negative_pan)
-        positive_pan = mean(positive_pan)
+            positive_pan_.append(post)
+
+        loc.update_posts(selfData, "right_"+enemyPosts+"_posts")
+
+        for post in loc.postPan:
+            negative_pan_.append(post)
+
+        negative_pan = mean(negative_pan_)
+        positive_pan = mean(positive_pan_)
         print("negative_pan = ", negative_pan, "positive_pan = ", positive_pan)
 
-        #new update for ball. Now it filtered too close balls(we suppose it to be sevros LED) and take the nearest from the remaining
+        #new update for ball. Now it filtered too close balls(we suppose it to be sevros LED)
+        #and take the nearest from the remaining
         bestBall = (100, 100) # simply very far ball
         for el in selfData["ball"]:
-            if math.sqrt(el[0]**2 + el[1]**2) < math.sqrt(bestBall[0]**2 + bestBall[1]**2) and math.sqrt(el[0]**2 + el[1]**2) > 0.1:
+            if math.sqrt(el[0]**2 + el[1]**2) < math.sqrt(bestBall[0]**2 + bestBall[1]**2) and\
+                math.sqrt(el[0]**2 + el[1]**2) > 0.03:
                 bestBall = el
 
         #If we find propper ball, push it to localization
@@ -135,8 +163,10 @@ def __main__(enemyPosts):
         else:
             loc.seeBall = False
 
+        print ("pans: pos, neg m", positive_pan,  negative_pan)
 
         if loc.seeBall:
+            print ("see ball")
             action = strat.walkball(loc)
             if (math.sqrt(loc.ballPosSelf[0]**2 + loc.ballPosSelf[1]**2) < 0.15):
             #if we see the ball nearby us, checking for our orintation
@@ -144,30 +174,40 @@ def __main__(enemyPosts):
                     print("I see both posts")
                     #if it see both posts, lets check, can we do direct kick
                     #if not, trying to orintate body to the center of the goal
-                    if (positive_pan + negative_pan < math.pi/8) or (positive_pan + negative_pan > -math.pi/8):
+                    if (positive_pan + negative_pan < math.pi/4) and (positive_pan + negative_pan > -math.pi/4):
                         print("I'm targeted on goal")
                         #choosing foot
-                        if loc.ballPosSelf[1] > 0:
+                        if loc.ballPosSelf[1] < 0:
                             action = {"name" : "kick", "args" : (1)} #right
                         else:
                             action = {"name" : "kick", "args" : (-1)} #left
                     else:
                         if positive_pan + negative_pan < 0:
-                            action ={"name" : "take_around_left"}
+                            #action ={"name" : "take_around_left"}
+                            action ={"name" : "turn", "args" : -0.2}#(positive_pan + negative_pan)}
+                            print ("ppan+npan<0")
                         else:
-                            action ={"name" : "take_around_right"}
+                            #action ={"name" : "take_around_right"}
+                            action ={"name" : "turn", "args" : 0.2}#(positive_pan + negative_pan)}
+                            print ("ppan+npan>=0")
                 #if we dont see one of post, trying to see
                 else:
                     if negative_pan == 0:
-                        action ={"name" : "take_around_left"}
+                        action ={"name" : "turn", "args" : -0.2}#(positive_pan + negative_pan)}
+                        #action ={"name" : "take_around_left"}
+                        print("npan=0")
 
                     elif positive_pan == 0:
-                        action={"name" : "take_around_right"}
+                        #action={"name" : "take_around_right"}
+                        action ={"name" : "turn", "args" : 0.2}#(positive_pan + negative_pan)}
+                        print("ppan=0")
                 #if we dont see both, trying to do forward step. MB here we can turn or smth else
                     else:
-                        action={"name" : "walk", "args" : (0.1, 0)}
+                        #action={"name" : "walk", "args" : (0.2, 0)}
+                        print ("piZda")
 
         else:
+            print ("don't see ball")
             action = strat.searchball(loc)
 
         #loc.update(selfData)
