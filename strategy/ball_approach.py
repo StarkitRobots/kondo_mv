@@ -2,7 +2,7 @@ import math
 import json
 
 
-class ball_approach:
+class BallApproach:
 
 	def get_data(self, xr, yr, xb, yb, yaw):
 		self.xr = xr
@@ -103,7 +103,9 @@ class ball_approach:
 
 	def convert_trajectory(self):
 		traj = self.wtraj
-		yaw = self.yaw   
+		yaw = self.yaw
+
+		# shift,rotmat - coefficients of the rotation transformation
 		shift = traj[0]
 		rotmat = [[math.cos(yaw), math.sin(yaw)], [-1 * math.sin(yaw), math.cos(yaw)]]
 	
@@ -118,21 +120,25 @@ class ball_approach:
 
 		rtraj = self.rtraj
 		min_dist = self.min_dist
-		ang_thres1 = self.ang_thres1
-		ang_thres2 = self.ang_thres2
+		ang_thres1 = self.ang_thres1 # - minimum allowed angle between robot walk direction and robot-to-ball direction
+		ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
 
 		with open('data.json') as f:
 			d = json.load(f)
-		dv = list(d.values())
 
+		# changing the strike point in rtraj to the point that is better for right foot kick
+		# targvec - the vector from  center of the goal to the ball
+		# tv_ln - length of the targvec
+		# norm - the vector normal to the targvec with the length taken from data.json
 		targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
 		tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
-		norm = (int(dv[-1] * targvec[1] / tv_ln), int(-dv[-1] * targvec[0] / tv_ln))
+		norm = (int(d["step_before_strike"] * targvec[1] / tv_ln), int(-d["step_before_strike"] * targvec[0] / tv_ln))
 		rtraj[1][0] -= norm[0]
 		rtraj[1][1] -= norm[1]
 	
+		# path - vector from robot to ball
+		# vec1,vec2 - vectors, representing the first and the second parts of the trajectory
 		path = rtraj[1]
-	
 		vec1 = path
 		vec1_ln = math.sqrt(vec1[0] ** 2 + vec1[1] ** 2)
 		vec2 = (rtraj[2][0] - vec1[0], rtraj[2][1] - vec1[1])
@@ -145,10 +151,12 @@ class ball_approach:
 			ang2 = (math.pi - abs(ang2)) * prod[0] / abs(prod[0])
 
 
+		# making the decision, based on the distance and angles
 		if vec1_ln < min_dist:
 	
+			# checking if the ball is too close to the robot
 			if path[0] <= 0:
-				return "problem"
+				raise Exception('robot too close to the ball')
 		
 			if ang2 > 0 and (math.pi - abs(ang2)) > ang_thres2:
 				return "step right"
