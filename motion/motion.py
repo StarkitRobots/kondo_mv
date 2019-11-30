@@ -109,17 +109,17 @@ class Motion:
                 "shift_turn": (lambda c1, u1 : -12.6 * c1)
                 },
 
-            "Soccer_Kick Forward_Left_leg " : {
+            "Soccer_Kick_Forward_Left_leg" : {
                 "id"        : 19,
-                "time"      : 3000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
                 },
 
-            "Soccer_Kick Forward_Right_leg " : {
+            "Soccer_Kick_Forward_Right_leg" : {
                 "id"        : 18,
-                "time"      : 3000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -127,7 +127,7 @@ class Motion:
 
             "Soccer_HomePosition" : {
                 "id"        : 1,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -135,7 +135,7 @@ class Motion:
 
             "Soccer_Get_Ready" : {
                 "id"        : 2,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -143,14 +143,14 @@ class Motion:
 
             "Free" : {
                 "id"        : 4,
-                "time"      : 1000,
+                "time"      : (lambda c1, u1: 1000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
                 },
             "Move_Head" : {
                 "id"        : 112,
-                "time"      : 600,
+                "time"      : (lambda c1, u1: 600),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
@@ -207,7 +207,7 @@ class Motion:
         return True
 
     def _get_timer_duration(self, motion, args):
-        return motion['time'](args['c1'], 0)
+        return motion['time'](args['c1'], args['u1'])
 
     def _set_timer(self, duration):
         self._motion_duration = duration
@@ -260,8 +260,8 @@ class Motion:
     def ready(self):
         self.do_motion(self.motions['Soccer_Get_Ready'])
 
-    def kick(self, left=True):
-        self._kick_control({'left' : left})
+    def kick(self, side=1):
+        self._kick_control(side)
 
     # discrete head motion that understands its position and does next step
     def move_head(self):
@@ -271,8 +271,6 @@ class Motion:
                 self.head_state = (self.head_state + 1) % self.head_state_num
                 self.head_pan = int(self.head_motion_states[str(self.head_state)]['yaw'])
                 self.head_tilt = int(self.head_motion_states[str(self.head_state)]['pitch'])
-                self.head_yaw = int(self.head_motion_states[str(self.head_state)]['yaw'])
-                self.head_pitch = int(self.head_motion_states[str(self.head_state)]['pitch'])
                 self.kondo.setUserParameter(20, degrees_to_head(self.head_tilt))
                 self.kondo.setUserParameter(19, degrees_to_head(-self.head_pan))
                 self._set_timer(150)
@@ -343,13 +341,18 @@ class Motion:
             return self.do_motion(motion, {'c1': step_num, 'u1': 1})
 
     def _kick_control(self, kick_args):
-        if kick_args['left']:
-            self.do_motion(self.motions['Soccer_Kick Forward_Left_leg'])
+        if kick_args == -1:
+            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Kick Forward_Right_leg'])
+            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
 
     def _lateral_control(self, lateral_args):
-        pass
+        step_num = int(lateral_args / 0.033)
+        if step_num > 0:
+            self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
+        else:
+            self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
+
 
 ###########################################################################################
 #
