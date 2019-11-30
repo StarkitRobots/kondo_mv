@@ -8,6 +8,7 @@ import sys
 import uio
 from urandom import *
 
+#TODO: make random lib
 def randrange(start, stop=None):
     if stop is None:
         stop = start
@@ -35,7 +36,7 @@ def gauss(mu, sigma):
     z = math.cos(x2pi) * g2rad
     return mu + z * sigma
 
-
+#TODO make Field.py
 class Field:
     def __init__(self, path):
         with open(path, "r") as f:
@@ -43,6 +44,9 @@ class Field:
             self.w_width = self.field['main_rectangle'][0][0]
             self.w_length = self.field['main_rectangle'][0][1]
 
+#TODO make Robot.py 
+#TODO remove inheritance from Field
+#robot: coord, move, remove all with noise
 
 class Robot(Field):
     def __init__(self, x = 1, y = 0.5, yaw = 0):
@@ -72,7 +76,6 @@ class Robot(Field):
             z.append(dist)
         return z
 
-
     def move(self, x, y, yaw):
         # turn, and add randomness to the turning command
         orientation = self.yaw + float(yaw) + gauss(0.0, self.turn_noise)
@@ -88,6 +91,7 @@ class Robot(Field):
         self.y = y
         self.yaw = orientation
 
+    #TODO to rand lib
     def gaussian(self, x, sigma):
         # calculates the probability of x for 1-dim Gaussian with mean mu and var. sigma
         return math.exp(-(x ** 2) / 2*(sigma ** 2)) / math.sqrt(2.0 * math.pi * (sigma ** 2))
@@ -122,7 +126,7 @@ class Robot(Field):
                 y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
-
+    #TODO to pf 
     def update_coord(self, particles):
         x = 0.0
         y = 0.0
@@ -138,7 +142,9 @@ class Robot(Field):
     def return_coord(self):
         return self.x, self.y, self.yaw
 
-
+#TODO all constants to JSON
+#TODO 
+#TODO delete all unused functions
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,
                  n = 100, forward_noise = 0.025,
@@ -218,7 +224,7 @@ class ParticleFilter():
             print(x_coord, ' ', y_coord, ' ', yaw, file=self.logs)
         #print('|', file = self.logs)
         self.count += 1
-
+    #TODO rename 
     def move(self, coord):
         self.logs = open('localization/logs/logs'+self.token+'.txt',"a")
         self.myrobot.move(coord['shift_x'], coord['shift_y'], coord['shift_yaw'])
@@ -235,7 +241,7 @@ class ParticleFilter():
         #print('|', file = self.logs)
         self.count += 1
         self.logs.close()
-
+    
     def do_n_steps(self, n_steps):
         for i in range(n_steps):
             self.step()
@@ -272,6 +278,7 @@ class ParticleFilter():
                         predicts.append([x_posts, y_posts])
         return predicts
 
+    #TODO refactor
     def resampling(self, observations):
         self.logs =open('localization/logs/logs'+self.token+'.txt',"a")
         print('|resempling,step ', self.count, file=self.logs)
