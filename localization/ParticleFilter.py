@@ -6,35 +6,11 @@ import json
 import os
 import sys
 import uio
-from urandom import *
-
-#TODO: make random lib
-def randrange(start, stop=None):
-    if stop is None:
-        stop = start
-        start = 0
-    upper = stop - start
-    bits = 0
-    pwr2 = 1
-    while upper > pwr2:
-        pwr2 <<= 1
-        bits += 1
-    while True:
-        r = getrandbits(bits)
-        if r < upper:
-            break
-    return r + start
+sys.path.append('localization/tools/')
+import Random
 
 
-def rand():
-    return randrange(10000) / 10000
 
-
-def gauss(mu, sigma):
-    x2pi = rand() * math.pi * 2
-    g2rad = math.sqrt(-2.0 * math.log(1.0 - rand()))
-    z = math.cos(x2pi) * g2rad
-    return mu + z * sigma
 
 #TODO make Field.py
 class Field:
@@ -77,10 +53,10 @@ class Robot(Field):
         return z
 
     def move(self, x, y, yaw):
-        # turn, and add randomness to the turning command
+        # turn, and add randomomness to the turning command
         orientation = self.yaw + float(yaw) + gauss(0.0, self.turn_noise)
         orientation %= 2 * math.pi
-        # move, and add randomness to the motion command
+        # move, and add randomomness to the motion command
         x = self.x + x + gauss(0, self.forward_noise)
         y = self.y + y + gauss(0, self.forward_noise)
         #if math.fabs(x) >= field.w_width:
@@ -91,10 +67,8 @@ class Robot(Field):
         self.y = y
         self.yaw = orientation
 
-    #TODO to rand lib
-    def gaussian(self, x, sigma):
-        # calculates the probability of x for 1-dim Gaussian with mean mu and var. sigma
-        return math.exp(-(x ** 2) / 2*(sigma ** 2)) / math.sqrt(2.0 * math.pi * (sigma ** 2))
+    #TODO to random lib
+    
 
     def observation_score(self, observations, landmarks): #particle weight calculation
         prob = 1.0
@@ -151,7 +125,7 @@ class ParticleFilter():
                  turn_noise = 0.1, sense_noise = 0.4, gauss_noise = 0.4,
                  consistency = 0.0, dist_threshold = 0.5, goodObsGain = 0.1,
                  badObsCost = 0.1, stepCost = 0.1 ):
-        self.token = str(rand()*10000)
+        self.token = str(random()*10000)
         self.forward_noise = forward_noise
         self.turn_noise = turn_noise
         self.sense_noise = sense_noise
@@ -177,7 +151,7 @@ class ParticleFilter():
     def uniform_reset(self):
         self.p=[]
         for i in range(self.n):
-            x = Robot((rand()-0.5)*field.w_width, (rand()-0.5)*field.w_length, rand()*math.pi*2)
+            x = Robot((random()-0.5)*field.w_width, (random()-0.5)*field.w_length, random()*math.pi*2)
             #x.set_noise(forward_noise, turn_noise, 0)
             self.p.append([x,0])
         self.myrobot.update_coord(self.p)
@@ -259,7 +233,7 @@ class ParticleFilter():
     def gen_n_particles(self, n):
         tmp = []
         for i in range(n):
-            x = Robot((rand()-0.5)*field.w_width, (rand()-0.5)*field.w_length, rand()*math.pi*2)
+            x = Robot((random()-0.5)*field.w_width, (random()-0.5)*field.w_length, random()*math.pi*2)
             #x.set_noise(forward_noise, turn_noise, 0)
             tmp.append([x,0])
         return tmp
@@ -292,13 +266,13 @@ class ParticleFilter():
         for i in range(self.n):
             w[i] = w[i]/S
             #S += w[i]
-        index = int(rand() * self.n)
+        index = int(random() * self.n)
         beta = 0.0
         mw = max(w)
         #print(mw)
         new_particles = {}
         for i in range(self.n):
-            beta += rand() * 2.0 * mw
+            beta += random() * 2.0 * mw
             while beta > w[index]:
                 beta -= w[index]
                 index = (index + 1) % self.n
