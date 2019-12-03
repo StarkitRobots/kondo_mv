@@ -12,14 +12,15 @@ class BallApproach:
 		self.yaw = yaw
 
 	def set_constants(self, consts):
-		self.max_step = consts[0]
-		self.min_dist = consts[1]
-		self.ang_thres1 = consts[2]
-		self.ang_thres2 = consts[3]
-		self.CIRCLE_RADIUS = consts[4]
-		self.GOAL_LEN = consts[5]
-		self.WIND_X = consts[6]
-		self.GOAL_POS = consts[7]
+		self.max_step = consts["max_step"]
+		self.min_dist = consts["min_dist"]
+		self.ang_thres1 = consts["ang_thres1"]
+		self.ang_thres2 = consts["ang_thres2"]
+		self.CIRCLE_RADIUS = consts["CIRCLE_RADIUS"]
+		self.GOAL_LEN = consts["GOAL_LEN"]
+		self.WIND_X = consts["WIND_X"]
+		self.GOAL_POS = consts["GOAL_POS"]
+		self.step_before_strike = consts["step_before_strike"]
 
 
 	def get_diff(self):
@@ -113,8 +114,6 @@ class BallApproach:
 		self.rtraj = rtraj
 		return rtraj
 
-	def cross_dot(self, v1, v2):
-		return -v1[0] * v2[1] + v1[1] * v2[0], v1[0] * v2[0] + v1[1] * v2[1]
 
 	def make_decision(self):
 
@@ -123,8 +122,6 @@ class BallApproach:
 		ang_thres1 = self.ang_thres1 # - minimum allowed angle between robot walk direction and robot-to-ball direction
 		ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
 
-		with open('data.json') as f:
-			d = json.load(f)
 
 		# changing the strike point in rtraj to the point that is better for right foot kick
 		# targvec - the vector from  center of the goal to the ball
@@ -132,61 +129,44 @@ class BallApproach:
 		# norm - the vector normal to the targvec with the length taken from data.json
 		targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
 		tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
-		norm = (int(d["step_before_strike"] * targvec[1] / tv_ln), int(-d["step_before_strike"] * targvec[0] / tv_ln))
-		rtraj[1][0] -= norm[0]
-		rtraj[1][1] -= norm[1]
-	
+		norm = (self.step_before_strike * targvec[1] * 1.0 / tv_ln, -self.step_before_strike * targvec[0] * 1.0 / tv_ln)
+		rtraj[1][0] += norm[0]
+		rtraj[1][1] += norm[1]
+        
 		# path - vector from robot to ball
 		# vec1,vec2 - vectors, representing the first and the second parts of the trajectory
 		path = rtraj[1]
-		vec1 = path
-		vec1_ln = math.sqrt(vec1[0] ** 2 + vec1[1] ** 2)
-		vec2 = (rtraj[2][0] - vec1[0], rtraj[2][1] - vec1[1])
-		vec2_ln = math.sqrt(vec2[0] ** 2 + vec2[1] ** 2)
-	
-		prod = self.cross_dot(vec1, vec2)
-		ang2 = prod[0] / vec1_ln / vec2_ln
-	
-		if prod[1] > 0:
-			ang2 = (math.pi - abs(ang2)) * prod[0] / abs(prod[0])
+		pth_ln = math.sqrt(path[0] ** 2 + path[1] ** 2)
+        # checking if the robot is too close to the ball
+		if pth_ln == 0:
+			raise Exception('robot too close to the kick point')
+            
+		ang1 = math.acos(path[0] / pth_ln)
+		ang2 = math.pi - math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
+		vec_prod = targvec[0] * path[1] - targvec[1] * path[0]
 
-
-		# making the decision, based on the distance and angles
-		if vec1_ln < min_dist:
-	
-			# checking if the ball is too close to the robot
-			if path[0] <= 0:
-				raise Exception('robot too close to the ball')
-		
-			if ang2 > 0 and (math.pi - abs(ang2)) > ang_thres2:
-				return "step right"
-
-			elif ang2 < 0 and (math.pi - abs(ang2)) > ang_thres2:
-				return "step left"
-		
-			if path[0] > 0:
-				if abs(math.atan(path[1] / path[0])) < ang_thres1:
+        # making the decision, based on the distance and angles
+		if pth_ln < min_dist:            
+			if ang2 > ang_thres2:
+				if vec_prod < 0:
+					return "step left"
+				elif vec_prod > 0:
+					return "step right"
+                
+			if ang2 < ang_thres2:
+				if ang1 > ang_thres1:
+					if path[1] > 0:
+						return "turn left"
+					else:
+						return "turn right"
+				else:
 					return "strike"
-				elif path[1] < 0:
-					return "turn left"
-				else:
-					return "turn right"
-			else:
-				if path[1] < 0:
-					return "turn left"
-				else:
-					return "turn right"
 
-		elif path[0] > 0:
-			if abs(math.atan(path[1] / path[0])) < ang_thres1:
-				return "step forward"
-			elif path[1] < 0:
-				return "turn left"
-			else:
-				return "turn right"
 		else:
-			if path[1] < 0:
-				return "turn left"
+			if ang1 > ang_thres1:
+				if path[1] > 0:
+					return "turn left"
+				else:
+					return "turn right"
 			else:
-				return "turn right"
-
+				return "step forward"
