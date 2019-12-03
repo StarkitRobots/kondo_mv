@@ -1,4 +1,5 @@
-from ParticleFilter import updatePF, ParticleFilter, Robot, Field
+from ParticleFilter import updatePF, ParticleFilter, Field
+import Robot
 import json
 class Localization:
     def __init__(self, x, y, yaw):
