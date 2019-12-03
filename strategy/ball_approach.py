@@ -4,12 +4,17 @@ import json
 
 class BallApproach:
 
-	def get_data(self, xr, yr, xb, yb, yaw):
+	dist = 1
+	turn_ang = 0
+
+	def get_data(self, xr, yr, xb, yb, yaw, half_ang):
 		self.xr = xr
 		self.yr = yr
 		self.xb = xb
 		self.yb = yb
 		self.yaw = yaw
+		self.half_ang = half_ang
+
 
 	def set_constants(self, consts):
 		self.max_step = consts["max_step"]
@@ -31,7 +36,7 @@ class BallApproach:
 		yr = self.yr
 		xb = self.xb
 		yb = self.yb
-		max_step = self.max_step
+		#max_step = self.max_step
 		CIRCLE_RADIUS = self.CIRCLE_RADIUS
 		GOAL_LEN = self.GOAL_LEN
 		WIND_X = self.WIND_X
@@ -137,6 +142,7 @@ class BallApproach:
 		# vec1,vec2 - vectors, representing the first and the second parts of the trajectory
 		path = rtraj[1]
 		pth_ln = math.sqrt(path[0] ** 2 + path[1] ** 2)
+		self.dist = pth_ln
         # checking if the robot is too close to the ball
 		if pth_ln == 0:
 			raise Exception('robot too close to the kick point')
@@ -163,10 +169,40 @@ class BallApproach:
 					return "strike"
 
 		else:
-			if ang1 > ang_thres1:
+			if ang2 < ang_thres2:
+				if ang1 > ang_thres1:
+					if path[1] > 0:
+						self.turn_ang = ang1
+						return "turn left"
+					else:
+						self.turn_ang = ang1
+						return "turn right"
+				else:
+					return "step forward"
+                
+			if vec_prod > 0:
+				if path[1] < 0:
+					self.turn_ang = ang1 + self.half_ang / 2.0
+					return "turn right"
+				else:
+					if abs(ang1 - self.half_ang / 2.0) < ang_thres1:
+						return "step forward"
+					elif ang1 < self.half_ang / 2.0 - ang_thres1:
+						self.turn_ang = self.half_ang - ang1
+						return "turn right"
+					else:
+						self.turn_ang = -self.half_ang + ang1
+						return "turn left"
+			elif vec_prod < 0:
 				if path[1] > 0:
+					self.turn_ang = ang1 + self.half_ang / 2.0
 					return "turn left"
 				else:
-					return "turn right"
-			else:
-				return "step forward"
+					if abs(ang1 - self.half_ang / 2.0) < ang_thres1:
+						return "step forward"
+					elif ang1 < self.half_ang / 2.0 - ang_thres1:
+						self.turn_ang = self.half_ang - ang1
+						return "turn left"
+					else:
+						self.turn_ang = -self.half_ang + ang1
+						return "turn right"

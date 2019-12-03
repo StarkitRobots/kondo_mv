@@ -2,7 +2,7 @@ import sys
 import math
 import json
 
-from ball_approach import ball_approach
+from ball_approach import BallApproach
 
 class Strategy:
     def __init__(self):
@@ -80,12 +80,12 @@ class Strategy:
         xr, yr, yaw = loc.robot_position
         xb, yb = loc.ball_position
 
-        ball_approach.get_data(xr, yr, xb, yb, -yaw)
+        ball_approach.get_data(xr, yr, xb, yb, -yaw, math.pi / 4)
 
         with open('data.json') as f:
             d = json.load(f)
 
-        ball_approach.set_constants(list(d.values()))
+        ball_approach.set_constants(d)
 
         # traj - trajectory in the world coords
         # rtraj - trajectory in the robot coords
@@ -93,15 +93,18 @@ class Strategy:
         traj = ball_approach.find_trajectory()
         rtraj = ball_approach.convert_trajectory()
         decision = ball_approach.make_decision()
-        dist = math.sqrt(rtraj[1][0] ** 2 + rtraj[1][1] ** 2)
+        dist = ball_approach.dist
 
         # making the choice according to the decision of BallApproach and the distance to the ball
         if dist > d["min_dist"]:
-            ang = math.acos(rtraj[1][0] / dist)
-            if rtraj[1][1] > 0:
-                return {"name" : "walk", "args" : (dist, -ang)}
-            else:
-                return {"name" : "walk", "args" : (dist, ang)}
+            if decision == "step forward":
+                return {"name" : "walk", "args" : (dist, 0)}
+            elif decision == "turn right":
+                ang = ball_approach.turn_ang
+                return {"name" : "turn", "args" : (ang)}
+            elif decision == "turn left":
+                ang = ball_approach.turn_ang
+                return {"name" : "turn", "args" : (-ang)}
         elif decision == "turn left" or decision == "turn right":
             ang = math.acos(rtraj[1][0] / dist)
             if rtraj[1][1] > 0:
