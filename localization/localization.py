@@ -1,4 +1,5 @@
-from ParticleFilter import updatePF, ParticleFilter, Robot, Field
+from ParticleFilter import updatePF, ParticleFilter, Field
+import Robot
 import json
 class Localization:
     def __init__(self, x, y, yaw):
@@ -7,11 +8,9 @@ class Localization:
         self.robot_position = None
         self.localized = False
         self.seeBall = False
-        self.robot = Robot()
-        self.robot.set_coord(x, y, yaw)
         with open("localization/landmarks.json", "r") as f:
                 landmarks = json.loads(f.read())
-        self.pf = ParticleFilter(self.robot, Field("localization/parfield.json"), landmarks, sense_noise=0.5)
+        self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks, sense_noise=0.5)
 
     def update(self, data):
         #self.ball_position = data["ball"]

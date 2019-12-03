@@ -567,6 +567,43 @@ class Rcb4BaseLib:
         else:
             return  -1
 
+    def setParametersBaseCmd(self, servoDatas, servoParameter):
+        buf = []
+
+        sDatas = []
+        if type(servoDatas) == self.ServoData:
+            sDatas.append(servoDatas)
+        else:
+            sDatas = servoDatas
+
+        if self.checkServoDatas(sDatas) == False:
+            return -1, buf
+
+        wk = self.setServoNo(sDatas) >> 24
+        buf.append(len(sDatas) + 9)
+        buf.append(self.CommandTypes.ServoParam)
+        buf.append(wk & 0xff)
+        buf.append((wk >> 8) & 0xff)
+        buf.append((wk >> 16) & 0xff)
+        buf.append((wk >> 24) & 0xff)
+        buf.append((wk >> 32) & 0xff)
+        buf.append(servoParameter)
+        servoDatas = sorted(sDatas)
+        for idat in sDatas:
+            if 0 < idat.Data < 128:
+                buf.append(idat.Data & 0xff)
+            else:
+                buf = []
+                return 0, buf
+        buf.append(self.CheckSum(buf))
+        return 4, buf
+
+    def setSpeedCmd(self, servoDatas):
+        return self.setParametersBaseCmd(servoDatas, 2)
+
+    def setStretchCmd(self, servoDatas):
+        return self.setParametersBaseCmd(servoDatas, 1)
+
 
     #runs uploaded motion
     def motionPlay(self, motionNum):
@@ -720,8 +757,15 @@ class Rcb4BaseLib:
         rxSize,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
         return  self.synchronizeAck(txbuf)
 
-    def freeAllServos():
-        pass
+    def setServoSpeed(self, servoDatas):
+        rxSize, txbuf = self.setSpeedCmd(servoDatas)
+        return self.synchronizeAck(txbuf)
+
+    def setServoStretch(self, servoDatas):
+        rxSize, txbuf = self.setStretchCmd(servoDatas)
+        return self.synchronizeAck(txbuf)
+
+    
 
 
 
