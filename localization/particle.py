@@ -30,3 +30,9 @@ class Particle(Robot):
                 if (dists!=[]):
                     prob *= gaussian(min(dists), self.sense_noise)
         return prob
+
+
+def set_noise(self, new_forward_noise, new_turn_noise, new_sense_noise):
+        self.forward_noise = float(new_forward_noise)
+        self.turn_noise = float(new_turn_noise)
+        self.sense_noise = float(new_sense_noise)
