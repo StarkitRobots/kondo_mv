@@ -11,12 +11,12 @@ class Localization:
         self.seeBall = False
         with open("localization/landmarks.json", "r") as f:
                 landmarks = json.loads(f.read())
-        self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks, sense_noise=0.5)
+        self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks)
 
     def update(self, data):
         #self.ball_position = data["ball"]
         self.robot_position = updatePF(self.pf, data)
-        return 0
+
 
     def update_ball(self, data):
         if len(data['ball']) != 0:
@@ -27,7 +27,7 @@ class Localization:
                 ballY+=el[1]
             self.seeBall = True
             self.ballPosSelf = (ballX/len(data['ball']), ballY/len(data['ball']))
-            print("eto ball", self.ballPosSelf)
+            #print("eto ball", self.ballPosSelf)
         else:
             self.seeBall = False
 
