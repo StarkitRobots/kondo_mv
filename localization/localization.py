@@ -35,5 +35,5 @@ class Localization:
         #return 0
 
     def move(self, x, y, yaw):
-        self.pf.move(x,y, yaw)
+        self.pf.particles_move(x,y, yaw)
 

@@ -85,6 +85,7 @@ while(True):
     print("posts number = ", len(selfData["yellow_posts"]))
     print("my_pose", loc.robot_position)
     loc.update_ball(selfData)
+    loc.ballPosSelf
     print(loc.ballPosSelf)
 
     action = strat.generate_action(loc)
