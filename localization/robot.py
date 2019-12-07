@@ -3,7 +3,8 @@ import math
 class Robot:
     def __init__(self, x = 0, y = 0, yaw = 0):
         self.x = x          # robot's x coordinate
-        self.y = y          # robot's y coordinate
+        self.y = y    
+        self.yaw = yaw      # robot's y coordinate
 
     def set_coord(self, new_x, new_y, new_orientation):
         self.x = float(new_x)
@@ -38,6 +39,6 @@ class Robot:
                 y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
-    #TODO to pf 
+
    
 
