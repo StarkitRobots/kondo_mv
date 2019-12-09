@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('localization')
 from robot import Robot
 sys.path.append('localization/tools')

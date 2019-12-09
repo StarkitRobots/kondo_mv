@@ -1,44 +1,53 @@
 from machine import I2C
+import sys
+sys.path.append('../lowlevel')
 from bno055 import BNO055, AXIS_P7
 import time
-import sensor, image, time
-
 
 
 class IMU():
-    def __init__(self):
+    #def __init__(self, init_angle = 90.0):
+    #    self.i2c = I2C(2)
+    #    self.imu = BNO055(self.i2c)
+    #    self.init_angle = init_angle
+    #    self.init_yaw, self.init_roll, self.init_pitch = self.imu.euler()  #init position yaw, roll, pitch
+    #    self.yaw, self.roll, self.pitch = self.imu.euler()
+    #    #self.yaw = (self.yaw - self.init_yaw  + self.init_angle)%360
+    #    self.yaw = self.init_angle
+    #    print ('init yaw, yaw', self.init_yaw, self.yaw)
+
+    def __init__(self, init_angle = 90.0):
         self.i2c = I2C(2)
         self.imu = BNO055(self.i2c)
-        self.init_yaw, self.init_roll, self.init_pitch = self.imu.euler()  #init position yaw, roll, pitch
+        self.init_angle = init_angle
 
-        # self.current_yaw = self.init_yaw
-        #self.current_yaw, self.current_roll, self.current_pitch = imu.euler() # current position yaw, roll, pitch
+        self.init_yaw, _, _ = self.imu.euler()  #init position yaw, roll, pitch
+        #self.init_yaw *= -1
 
-        #change zero position 360 --- 0
+        self.yaw = self.init_yaw#self.init_angle
 
-        self.init_yaw_our = 90.0
-        # self.init_yaw = self.init_yaw_our
+        #print ('init yaw, yaw', self.init_yaw, self.yaw)
 
-        #  self.init_roll = self.init.roll1 - 360
-        # self.init_pitch = self.init.pitch1 - 360
-
+    #def update(self):
+    #    yaw, roll, pitch = self.imu.euler()
+    #    #yaw = self.yaw - (yaw - self.init_yaw)
+    #    self.yaw = (self.yaw - yaw + 360)%360
+    #    print('self.yaw, yaw', self.yaw, yaw)
+    #    return yaw
 
     def update(self):
-        self.a_yaw, self.b_roll, self.c_pitch = self.imu.euler()
-        self.current_yaw = (-self.a_yaw - self.init_yaw - 360 + self.init_yaw_our)%360
+        #self.yaw - current yaw
+        #yaw_diff - yaw_difference))0)
 
-        #self.current_roll = self.b_roll - 360
-        #self.current_pitch = self.c_pitch - 360
-        time.sleep(2500)
-    def change(self):
-        self.a1_yaw, self.b1_roll, self.c1_pitch = self.imu.euler()
-        self.current_yaw2 = (-self.a1_yaw - self.init_yaw - 360 + self.init_yaw_our)%360
-       # self.shange_yaw = self.a1_yaw  - self.current_yaw
+        yaw, _, _ = self.imu.euler()
+        yaw *= -1
 
-        #global change
-        self.change_position_yaw = self.current_yaw2 - self.current_yaw
-        #self.change_position_roll = self.current_roll - self.init_roll
-        #self.change_position_pitch = self.current_pitch - self.init_pitch
+        #print('yaw imu, self.yaw, init yaw', yaw, self.yaw, self.init_yaw)
 
+        yaw_diff = self.yaw - yaw
+        #self.yaw_diff = yaw_diff + self.
 
-      #  time.sleep(2500)
+        self.yaw = (self.yaw - yaw_diff + self.init_angle + 360)%360
+
+        #print('self.yaw, yaw', self.yaw, yaw_diff)
+        return self.yaw

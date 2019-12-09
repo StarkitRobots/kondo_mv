@@ -1,5 +1,5 @@
-import json
 
+import json
 class Field:
     def __init__(self, path):
         with open(path, "r") as f:

@@ -1,7 +1,10 @@
+
 from ParticleFilter import updatePF, ParticleFilter
+
 from robot import Robot
 from field import Field
 import json
+import math
 class Localization:
     def __init__(self, x, y, yaw):
         self.ballPosSelf = None
@@ -16,6 +19,7 @@ class Localization:
     def update(self, data):
         #self.ball_position = data["ball"]
         self.robot_position = updatePF(self.pf, data)
+        self.localized = True
 
 
     def update_ball(self, data):
@@ -27,7 +31,13 @@ class Localization:
                 ballY+=el[1]
             self.seeBall = True
             self.ballPosSelf = (ballX/len(data['ball']), ballY/len(data['ball']))
-            #print("eto ball", self.ballPosSelf)
+            bx = ballX/len(data['ball'])
+            by = ballY/len(data['ball'])
+            x_ball = self.pf.myrobot.x + bx*math.cos(-self.pf.myrobot.yaw) + by*math.sin(-self.pf.myrobot.yaw)
+            y_ball = self.pf.myrobot.y - bx*math.sin(-self.pf.myrobot.yaw) + by*math.cos(-self.pf.myrobot.yaw)
+            self.ball_position = (x_ball, y_ball)
+
+            print("eto ball", self.ball_position)
         else:
             self.seeBall = False
 
