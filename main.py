@@ -3,6 +3,8 @@ import sensor, image
 import time, math, json
 import os
 import pyb
+from pyb import Pin
+from pyb import LED
 
 sys.path.append('model')
 from model import Model
@@ -46,9 +48,26 @@ strat=Strategy()
 motion=Motion()
 model=Model()
 imu = IMU(180)
-
+pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
+pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:
     calib=json.load(f)
+
+
+ala = 0
+while(ala==0):
+    if (pin9.value() == 0):   # нажатие на кнопку на голове
+        ala = 1
+        loc.side = True
+        print("I will attack blue goals")
+        break
+         
+    if (pin3.value() == 0):
+        ala = 1
+        loc.side = False
+        print("I will attack yellow goals")
+        break
+
 
 # setting model parametrs
 mass1 = [0,0,0,0,0,0]
@@ -59,6 +78,9 @@ model.updateCameraPanTilt(0, -3.1415/9)
 vision_postprocessing = Vision_postprocessing ()
 motion.move_head()
 t = 0
+
+
+
 # main loop
 while(True):
     clock.tick()
