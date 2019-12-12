@@ -5,7 +5,7 @@ import json
 class BallApproach:
 
 	dist = 1
-	turn_ang = 0
+	turn_ang = 0.1 * math.pi
 
 	def get_data(self, xr, yr, xb, yb, yaw, half_ang):
 		self.xr = xr
@@ -30,6 +30,8 @@ class BallApproach:
 
 	def get_diff(self):
 		return self.xr - self.xb
+    
+    
 
 	def find_trajectory (self):
 		xr = self.xr
@@ -58,21 +60,21 @@ class BallApproach:
 		beta  = math.asin (ybr / leng)
 		alpha = math.asin (r / leng)
 		
-		if (xb < xr):# + CIRCLE_RADIUS):
-			sx = 0
-			sy = 0
+		#if (xb < xr):# + CIRCLE_RADIUS):
+		#	sx = 0
+		#	sy = 0
 
-			if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
-				sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-				sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
+		#	if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
+		#		sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
+		#		sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
 		
-			else:
-				alpha = - alpha
-				
-				sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-				sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
+		#	else:
+		#		alpha = - alpha
+		#		
+		#		sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
+		#		sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
 		
-			traj.append ((sx, sy))
+		#	traj.append ((sx, sy))
 	
 		#-----------------------------------------------------------
     	#find kick point on the circle
@@ -106,6 +108,7 @@ class BallApproach:
 		res = [vec[i] - shift[i] for i in range(2)]
 		res = [W[i][0] * res[0] + W[i][1] * res[1] for i in range(2)]
 		return res
+        
 
 	def convert_trajectory(self):
 		traj = self.wtraj
@@ -180,29 +183,36 @@ class BallApproach:
 				else:
 					return "step forward"
                 
-			if vec_prod > 0:
-				if path[1] < 0:
-					self.turn_ang = ang1 + self.half_ang / 2.0
-					return "turn right"
-				else:
-					if abs(ang1 - self.half_ang / 2.0) < ang_thres1:
-						return "step forward"
-					elif ang1 < self.half_ang / 2.0 - ang_thres1:
-						self.turn_ang = self.half_ang - ang1
-						return "turn right"
-					else:
-						self.turn_ang = -self.half_ang + ang1
-						return "turn left"
-			elif vec_prod < 0:
+			elif pth_ln > 0.4:
+				if ang1 < ang_thres1:
+					return "step forwrd"
 				if path[1] > 0:
-					self.turn_ang = ang1 + self.half_ang / 2.0
 					return "turn left"
 				else:
-					if abs(ang1 - self.half_ang / 2.0) < ang_thres1:
-						return "step forward"
-					elif ang1 < self.half_ang / 2.0 - ang_thres1:
-						self.turn_ang = self.half_ang - ang1
+					return "turn right"
+                
+			else:
+				if ang2 > math.pi - ang_thres2:
+					return "step right"
+				R = pth_ln / 2.0 / math.sin(ang2)
+				circ_path = R * 2.0 * ang2
+				if vec_prod > 0:
+					if path[1] < 0:
+						return "turn right"
+					elif ang1 < ang2 - math.pi / 10:
+						return "turn right"
+					elif ang1 > ang2 + math.pi / 10:
 						return "turn left"
 					else:
-						self.turn_ang = -self.half_ang + ang1
+						return "step forward"
+                        #return ("circle left", R, circ_path)
+				elif vec_prod < 0:
+					if path[1] > 0:
+						return "turn left"
+					elif ang1 < ang2 - math.pi / 10:
+						return "turn left"
+					elif ang1 > ang2 + math.pi / 10:
 						return "turn right"
+					else:
+						return "step forward"
+                        #return ("circle right", R, circ_path)
