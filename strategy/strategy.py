@@ -25,7 +25,7 @@ class Strategy:
             # this is the case when the robot goes to the center of the field
             self.turn_counter = 0
 
-            # x0,y0 - the position of the center of the field 
+            # x0,y0 - the position of the center of the field
             x0, y0 = (0, 0)
 
             xr, yr, yaw = loc.robot_position
@@ -73,16 +73,18 @@ class Strategy:
         else:
             return {"name" : "take_around_right", "args" : (1)}
 
-    def apply_ball_approach(self, loc):
+    def apply_ball_approach(self, loc, img):
         # this is the case when the robot is localized and sees the ball
         self.turn_counter = 0
         ball_approach = BallApproach()
         xr, yr, yaw = loc.robot_position
+        print('robotposwrpd', xr, yr, yaw)
         xb, yb = loc.ball_position
+        print('ballposworld', xb, yb)
 
         ball_approach.get_data(xr, yr, xb, yb, -yaw, math.pi / 4)
 
-        with open('data.json') as f:
+        with open('strategy/data.json') as f:
             d = json.load(f)
 
         ball_approach.set_constants(d)
@@ -94,6 +96,17 @@ class Strategy:
         rtraj = ball_approach.convert_trajectory()
         decision = ball_approach.make_decision()
         dist = ball_approach.dist
+
+        scale_factor = 20
+        x0 = 160
+        y0 = 120
+
+        img.draw_circle (int (traj [0] [1] * scale_factor) + x0, int (traj [0] [0]  * scale_factor) + y0,
+            5, (251, 10, 200), thickness=1, fill=True)
+
+        for el in traj [1:]:
+            img.draw_circle (int (el [1] * scale_factor) + x0, int (el [0]  * scale_factor) + y0,
+                5, (190, 100, 20), thickness=1, fill=True)
 
         # making the choice according to the decision of BallApproach and the distance to the ball
         if dist > d["min_dist"]:
@@ -117,19 +130,23 @@ class Strategy:
             return {"name" : "kick", "args" : (1)}
 
 
-    def generate_action(self, loc):
+    def generate_action(self, loc, img):
         # general strategy
         if loc.localized == True:
             if loc.seeBall == True:
-                return self.apply_ball_approach(loc)
+                print('apply_ba')
+                return self.apply_ball_approach(loc, img)
             else:
+                print('search1')
                 return self.searchball(loc)
 
         else:
             if loc.seeBall == True:
+                print('wlkbl')
                 return self.walkball(loc)
 
             else:
+                print('search2')
                 return self.searchball(loc)
 
 

@@ -135,10 +135,15 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         if (self.roundness_th != -1):
             res = self._filter_by_roundness(self.blobs, self.roundness_th)
 
+        else:
+            res = self.blobs
+
         if (self.heigh_width_ratio_low_th  != -1 or
             self.heigh_width_ratio_high_th != -1):
+            self.blobs = []
+
             for blob in res:
-                height_width_ratio = blob.height() / blob.width()
+                height_width_ratio = float (blob.h()) / blob.w()
 
                 if (self.heigh_width_ratio_low_th  != -1 and
                     self.heigh_width_ratio_high_th != -1):
