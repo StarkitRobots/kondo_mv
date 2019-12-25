@@ -116,7 +116,7 @@ class BallApproach:
 
 		# shift,rotmat - coefficients of the rotation transformation
 		shift = traj[0]
-		rotmat = [[math.cos(yaw), math.sin(yaw)], [-1 * math.sin(yaw), math.cos(yaw)]]
+		rotmat = [[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]]
 	
 		rtraj = [self.lin_trans(rotmat, shift, point) for point in traj]
 		self.rtraj = rtraj
@@ -126,6 +126,7 @@ class BallApproach:
 	def make_decision(self):
 
 		rtraj = self.rtraj
+		traj = self.wtraj
 		min_dist = self.min_dist
 		ang_thres1 = self.ang_thres1 # - minimum allowed angle between robot walk direction and robot-to-ball direction
 		ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
@@ -135,12 +136,13 @@ class BallApproach:
 		# targvec - the vector from  center of the goal to the ball
 		# tv_ln - length of the targvec
 		# norm - the vector normal to the targvec with the length taken from data.json
+		wtargvec = (traj[1][0] - traj[2][0], traj[1][1] - traj[2][1])
 		targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
+		wtv_ln = math.sqrt(wtargvec[0] ** 2 + wtargvec[1] ** 2)
 		tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
 		norm = (self.step_before_strike * targvec[1] * 1.0 / tv_ln, -self.step_before_strike * targvec[0] * 1.0 / tv_ln)
-		rtraj[1][0] += norm[0]
-		rtraj[1][1] += norm[1]
-        
+		wnorm = (wtargvec[1] * 1.0 / wtv_ln, wtargvec[0] * 1.0 / wtv_ln)
+                
 		# path - vector from robot to ball
 		# vec1,vec2 - vectors, representing the first and the second parts of the trajectory
 		path = rtraj[1]
@@ -152,67 +154,67 @@ class BallApproach:
             
 		ang1 = math.acos(path[0] / pth_ln)
 		ang2 = math.pi - math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
+		self.ang2 = ang2
 		vec_prod = targvec[0] * path[1] - targvec[1] * path[0]
+        
+		R = pth_ln / 2.0 / math.sin(ang2)
+		self.R = R
+		circ_path = R * 2.0 * ang2
+		if vec_prod < 0:
+			self.circle_center = (traj[1][0] - wnorm[0] * R, -traj[1][1] - wnorm[1] * R)
+		elif vec_prod > 0:
+			self.circle_center = (traj[1][0] + wnorm[0] * R, -traj[1][1] + wnorm[1] * R)
+            
+		vec_shift = R - R * math.cos(ang2)
+		sup_point = (traj[0][0] / 2 + traj[1][0] / 2, -traj[0][1] / 2 + -traj[1][1] / 2)
+		s_c = self.circle_center
+		l_vec = (s_c[0] - sup_point[0], s_c[1] - sup_point[1])
+		l_vec_ln = math.sqrt(l_vec[0] ** 2 + l_vec[1] ** 2)
+		l_vec_n = (l_vec[0] / l_vec_ln, l_vec[1] / l_vec_ln)
+                
+		if ang2 < math.pi / 2:
+			move_point_w = (sup_point[0] - l_vec_n[0] * vec_shift, -sup_point[1] + l_vec_n[1] * vec_shift)
+		else:
+			move_point_w = (sup_point[0] + l_vec_n[0] * vec_shift, -sup_point[1] - l_vec_n[1] * vec_shift)
+                    
+		self.move_p = move_point_w
+        
+		shift = traj[0]
+		rotmat = [[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]]
+		move_point_loc = self.lin_trans(rotmat, shift, move_point_w)
+		move_p_dist = math.sqrt(move_point_loc[0] ** 2 + move_point_loc[1] ** 2)
+        
+		ang3 = math.acos(move_point_loc[0] / move_p_dist)
+         
 
         # making the decision, based on the distance and angles
 		if pth_ln < min_dist:            
 			if ang2 > ang_thres2:
-				if vec_prod < 0:
-					return "step left"
-				elif vec_prod > 0:
-					return "step right"
+				return "lateral step", path[1], 1
                 
 			if ang2 < ang_thres2:
 				if ang1 > ang_thres1:
-					if path[1] > 0:
-						return "turn left"
+					if path[1] < 0:
+						return "turn", ang1
 					else:
-						return "turn right"
+						return "turn", -ang1
 				else:
 					return "strike"
 
 		else:
-			if ang2 < ang_thres2:
-				if ang1 > ang_thres1:
-					if path[1] > 0:
-						self.turn_ang = ang1
-						return "turn left"
-					else:
-						self.turn_ang = ang1
-						return "turn right"
-				else:
-					return "step forward"
-                
-			elif pth_ln > 0.4:
-				if ang1 < ang_thres1:
-					return "step forwrd"
+			if pth_ln > 0.5:
+				
 				if path[1] > 0:
-					return "turn left"
+					return "walk", self.dist, -ang1
 				else:
-					return "turn right"
+					return "walk", self.dist, ang1
+			
                 
 			else:
 				if ang2 > math.pi - ang_thres2:
-					return "step right"
-				R = pth_ln / 2.0 / math.sin(ang2)
-				circ_path = R * 2.0 * ang2
-				if vec_prod > 0:
-					if path[1] < 0:
-						return "turn right"
-					elif ang1 < ang2 - math.pi / 10:
-						return "turn right"
-					elif ang1 > ang2 + math.pi / 10:
-						return "turn left"
-					else:
-						return "step forward"
-                        #return ("circle left", R, circ_path)
-				elif vec_prod < 0:
-					if path[1] > 0:
-						return "turn left"
-					elif ang1 < ang2 - math.pi / 10:
-						return "turn left"
-					elif ang1 > ang2 + math.pi / 10:
-						return "turn right"
-					else:
-						return "step forward"
-                        #return ("circle right", R, circ_path)
+					return "lateral step", 0.3
+                
+				if move_point_loc[1] > 0:
+					return "walk", move_p_dist, ang3
+				elif move_point_loc[1] < 0:
+					return "walk", move_p_dist, -ang3

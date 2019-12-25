@@ -78,9 +78,7 @@ class Strategy:
         self.turn_counter = 0
         ball_approach = BallApproach()
         xr, yr, yaw = loc.robot_position
-        print('robotposwrpd', xr, yr, yaw)
         xb, yb = loc.ball_position
-        print('ballposworld', xb, yb)
 
         ball_approach.get_data(xr, yr, xb, yb, -yaw, math.pi / 4)
 
@@ -95,8 +93,8 @@ class Strategy:
         traj = ball_approach.find_trajectory()
         rtraj = ball_approach.convert_trajectory()
         decision = ball_approach.make_decision()
-        dist = ball_approach.dist
 
+        #====================================================
         scale_factor = 20
         x0 = 160
         y0 = 120
@@ -107,27 +105,19 @@ class Strategy:
         for el in traj [1:]:
             img.draw_circle (int (el [1] * scale_factor) + x0, int (el [0]  * scale_factor) + y0,
                 5, (190, 100, 20), thickness=1, fill=True)
+        #====================================================
 
-        # making the choice according to the decision of BallApproach and the distance to the ball
-        if dist > d["min_dist"]:
-            if decision == "step forward":
-                return {"name" : "walk", "args" : (dist, 0)}
-            elif decision == "turn right":
-                ang = ball_approach.turn_ang
-                return {"name" : "turn", "args" : (ang)}
-            elif decision == "turn left":
-                ang = ball_approach.turn_ang
-                return {"name" : "turn", "args" : (-ang)}
-        elif decision == "turn left" or decision == "turn right":
-            ang = math.acos(rtraj[1][0] / dist)
-            if rtraj[1][1] > 0:
-                return {"name" : "turn", "args" : (-ang)}
-            else:
-                return {"name" : "turn", "args" : (ang)}
-        elif decision == "step left" or decision == "step right":
-            return {"name" : "lateral_step", "args" : (rtraj[1][1])}
-        elif decision == "strike":
-            return {"name" : "kick", "args" : (1)}
+        # making the choice according to the decision of BallApproach
+        if decision[0] == "strike":
+            return {"name" : "kick", "args" : 1}
+        elif decision[0] == "turn":
+            return {"name" : "turn", "args" : decision[1]}
+        elif decision[0] == "lateral step":
+            return {"name" : "lateral step", "args" : decision[1]}
+        elif decision[0] == "walk":
+            return {"name" : "walk", "args" : (decision[1], decision[2])}
+        else:
+            raise Exception("apply_ball_approach got unknown command")
 
 
     def generate_action(self, loc, img):
