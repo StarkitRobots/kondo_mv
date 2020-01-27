@@ -6,27 +6,30 @@ from ball_approach import BallApproach
 
 class Strategy:
     def __init__(self):
-        self.turn_counter = 0
-        pass
+        self.turn_counterFF = 0
+        self.turn_counterTF = 0
+
+        self.rtraj = []
 
     def searchball(self, loc):
         if not loc.localized:
+            self.turn_counterTF = 0
             # this is the case when the robot turnes in order to find the ball or to localize
 
             # checking if robot has already turned 3 times
-            if self.turn_counter < 3:
-                self.turn_counter += 1
+            if self.turn_counterFF < 3:
+                self.turn_counterFF += 1
                 return {"name" : "turn", "args" : (math.pi / 2)}
             else:
-                self.turn_counter = 0
-                return {"name" : "walk", "args" : (1, 0)}
+                self.turn_counterFF = 0
+                return {"name" : "walk", "args" : (0.5, 0)}
 
         else:
             # this is the case when the robot goes to the center of the field
-            self.turn_counter = 0
+            self.turn_counterFF = 0
 
             # x0,y0 - the position of the center of the field
-            x0, y0 = (0, 0)
+            x0, y0 = (0.0, 0.0)
 
             xr, yr, yaw = loc.robot_position
 
@@ -36,12 +39,18 @@ class Strategy:
             dist = math.sqrt(dx ** 2 + dy ** 2)
 
             # checking if the robot is already at the center
-            if dist == 0:
-                raise Exception('going to the center while already at the center')
+            if dist < 0.07:
+                if self.turn_counterTF < 3:
+                    self.turn_counterTF += 1
+                    return {"name" : "turn", "args" : (math.pi / 2)}
+                else:
+                    self.turn_counterTF = 0
+                    return {"name" : "walk", "args" : (0.5, 0)}
+
 
             # ang - the angle the robot needs to turn so as to walk to the center
             ang = math.acos(dx / dist)
-            if dy > 0:
+            if dy < 0:
                 ang = -ang
 
             return {"name" : "walk", "args" : (dist, ang - yaw)}
@@ -49,7 +58,8 @@ class Strategy:
 
     def walkball(self, loc):
         # this is the case when robot is not localized but sees the ball
-        self.turn_counter = 0
+        self.turn_counterFF = 0
+        self.turn_counterTF = 0
 
         # xb,yb - coords of the ball in the system of the robot
         xb = loc.ballPosSelf[0]
@@ -60,7 +70,7 @@ class Strategy:
         ang = math.acos(xb / dist)
 
         # making the choice according to the distance to the ball and the angle
-        if dist > 0.15:
+        if dist > 0.1:
             if yb > 0:
                 return {"name" : "walk", "args" : (dist, -ang)}
             else:
@@ -75,7 +85,9 @@ class Strategy:
 
     def apply_ball_approach(self, loc, img):
         # this is the case when the robot is localized and sees the ball
-        self.turn_counter = 0
+        self.turn_counterFF = 0
+        self.turn_counterTF = 0
+
         ball_approach = BallApproach()
         xr, yr, yaw = loc.robot_position
         xb, yb = loc.ball_position
@@ -92,6 +104,7 @@ class Strategy:
         # decision - action that BallApproach suggests
         traj = ball_approach.find_trajectory()
         rtraj = ball_approach.convert_trajectory()
+        self.rtraj = rtraj
         decision = ball_approach.make_decision()
 
         #====================================================
@@ -119,6 +132,26 @@ class Strategy:
         else:
             raise Exception("apply_ball_approach got unknown command")
 
+    def draw_trajectory(self, img, model):
+        rtraj = self.rtraj
+
+        if (len (rtraj) == 0):
+            return
+
+        ptraj = []
+        ptraj.append (model.r2pic (0.001, 0.001))
+
+        for el in rtraj [1:]:
+            ptraj.append (model.r2pic (el [0], el [1]))
+
+        lin_num = len (ptraj) - 1
+
+        for i in range (lin_num):
+            c = int (255.0 * i / lin_num)
+            color = (c, c, c)
+
+            img.draw_line (ptraj [i] [0], ptraj [i] [1], ptraj [i+1] [0],
+                ptraj [i+1] [1], color, thickness=3)
 
     def generate_action(self, loc, img):
         # general strategy

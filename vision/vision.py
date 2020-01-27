@@ -53,6 +53,7 @@ class ColoredObjectDetector(Detector):
         result = []
 
         for blob in blobs:
+            #print ("roundness ", blob.roundness())
             if (blob.roundness () > roundness_th):
                 result.append (blob)
 
@@ -138,12 +139,15 @@ class SurroundedObjectDetector(ColoredObjectDetector):
         else:
             res = self.blobs
 
+        #print ("interm res ", res)
+
         if (self.heigh_width_ratio_low_th  != -1 or
             self.heigh_width_ratio_high_th != -1):
             self.blobs = []
 
             for blob in res:
                 height_width_ratio = float (blob.h()) / blob.w()
+                #print ("heiw rat ", height_width_ratio)
 
                 if (self.heigh_width_ratio_low_th  != -1 and
                     self.heigh_width_ratio_high_th != -1):
@@ -158,6 +162,10 @@ class SurroundedObjectDetector(ColoredObjectDetector):
                 elif (self.heigh_width_ratio_high_th  != -1):
                     if (height_width_ratio < self.heigh_width_ratio_high_th):
                         self.blobs.append (blob)
+
+        else:
+            self.blobs = []
+            self.blobs = res
 
         #get candidates
         unchecked_result = self.get_k_first_sorted (self.blobs, self.sorting_func, self.objects_num)

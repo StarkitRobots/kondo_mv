@@ -16,7 +16,7 @@ from particle import Particle
 #TODO
 #TODO delete all unused functions
 class ParticleFilter():
-    def __init__(self, myrobot, field, landmarks,n = 150):
+    def __init__(self, myrobot, field, landmarks,n = 100):
 
         self.n = n
         self.myrobot = myrobot

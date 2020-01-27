@@ -24,7 +24,9 @@ class Model:
 
         # taking into account the case when the ball is behind the camera
         if xbi <= 0:
-            raise Exception('ball behind the camera')
+            print ("Ball behind the camera")
+            return (-1, -1)
+            #raise Exception('ball behind the camera')
 
         # alp - no real sense, used just for simplification
         # x,y - coords of the ball in the coordinate system, parallel to the camera screen

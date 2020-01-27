@@ -177,7 +177,7 @@ class Motion:
         self.step_len = 0.086
 
         # acceptable error in degrees
-        self.angle_error_treshold = 5. * math.pi / 180.
+        self.angle_error_treshold = 10. * math.pi / 180.
 
 
     def get_imu_yaw(self):

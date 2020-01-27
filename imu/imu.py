@@ -42,7 +42,7 @@ class IMU():
         yaw, _, _ = self.imu.euler()
         yaw *= -1
 
-        #print('yaw imu, self.yaw, init yaw', yaw, self.yaw, self.init_yaw)
+        print('yaw imu, self.yaw, init yaw', yaw, self.yaw, self.init_yaw)
 
         yaw_diff = self.yaw - yaw
         #self.yaw_diff = yaw_diff + self.
