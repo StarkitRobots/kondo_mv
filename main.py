@@ -76,8 +76,8 @@ while(ala==0):
 mass1 = [0,0,0,0,0,0]
 mass2 = [0,0]
 model.setParams(calib["cam_col"], robotHeight,mass1, mass2)
-#motion.move_head()
-#model.updateCameraPanTilt(0, -3.1415/6)
+motion.move_head()
+model.updateCameraPanTilt(0, -3.1415/6)
 
 vision_postprocessing = Vision.Vision_postprocessing ()
 t = 0
@@ -91,10 +91,10 @@ while(True):
     #print (curr_t - t)
     t = curr_t
     selfData = {}
-    for i in range(12):
+    for i in range(1):
         # motion part. Head movement.
-        a, b = motion.move_head()
-        model.updateCameraPanTilt(a,b)
+        #a, b = motion.move_head()
+        #model.updateCameraPanTilt(a,b)
         # vision part. Taking picture.
         img=sensor.snapshot()
 
@@ -147,6 +147,6 @@ while(True):
 
     #print(loc.pf.token)
 
-    odometry_results = motion.apply(action)
+    #odometry_results = motion.apply(action)
     #if odometry_results is not None:
         #loc.pf.move(odometry_results)

@@ -103,22 +103,10 @@ class Strategy:
         # rtraj - trajectory in the robot coords
         # decision - action that BallApproach suggests
         traj = ball_approach.find_trajectory()
+        self.traj = traj
         rtraj = ball_approach.convert_trajectory()
         self.rtraj = rtraj
         decision = ball_approach.make_decision()
-
-        #====================================================
-        scale_factor = 20
-        x0 = 160
-        y0 = 120
-
-        img.draw_circle (int (traj [0] [1] * scale_factor) + x0, int (traj [0] [0]  * scale_factor) + y0,
-            5, (251, 10, 200), thickness=1, fill=True)
-
-        for el in traj [1:]:
-            img.draw_circle (int (el [1] * scale_factor) + x0, int (el [0]  * scale_factor) + y0,
-                5, (190, 100, 20), thickness=1, fill=True)
-        #====================================================
 
         # making the choice according to the decision of BallApproach
         if decision[0] == "strike":
@@ -132,7 +120,11 @@ class Strategy:
         else:
             raise Exception("apply_ball_approach got unknown command")
 
-    def draw_trajectory(self, img, model):
+    def draw_trajectory(self, img, model, draw = True, scale_factor = 40, x0 = 160, y0 = 120,
+            field_x_sz = 2.6, field_y_sz = 3.6):
+        if (draw == False):
+            return
+        #camera view
         rtraj = self.rtraj
 
         if (len (rtraj) == 0):
@@ -152,6 +144,31 @@ class Strategy:
 
             img.draw_line (ptraj [i] [0], ptraj [i] [1], ptraj [i+1] [0],
                 ptraj [i+1] [1], color, thickness=3)
+
+        #bird view
+        pix_x_sz = int (field_x_sz * scale_factor)
+        pix_y_sz = int (field_y_sz * scale_factor)
+        img.draw_rectangle (x0 - pix_x_sz // 2, y0 - pix_y_sz // 2,
+            pix_x_sz, pix_y_sz, (20, 10, 140), thickness = 3)
+        #goals
+
+        traj = self.traj
+
+        img.draw_circle (int (traj [0] [1] * scale_factor) + x0, int (traj [0] [0]  * scale_factor) + y0,
+            5, (251, 10, 200), thickness=1, fill=True)
+
+        for i in range (lin_num + 1):
+            c = int (255.0 * i / lin_num)
+            color = (c, c, c)
+
+            if (i + 1 < len (traj)):
+                img.draw_line (x0 + int (traj [i] [1] * scale_factor),
+                               y0 + int (traj [i] [0] * scale_factor),
+                               x0 + int (traj [i+1] [1] * scale_factor),
+                               y0 + int (traj [i+1] [0] * scale_factor), color, thickness=3)
+
+            img.draw_circle (int (traj [i] [1] * scale_factor) + x0, int (traj [i] [0]  * scale_factor) + y0,
+                5, (190, 100, 20), thickness=1, fill=True)
 
     def generate_action(self, loc, img):
         # general strategy
