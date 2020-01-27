@@ -1,0 +1,91 @@
+import sys
+sys.path.append('../lowlevel')
+from kondo_controller import Rcb4BaseLib
+from machine import I2C
+from bno055 import BNO055, AXIS_P7
+from pyb import UART
+import json, math
+import time
+sys.path.append('motion')
+from motion import *
+
+class Motion:
+    def __init__(self):
+        # RCB4 controller init
+        self.kondo = Rcb4BaseLib()
+        _uart = UART(1, 115200, parity=0, timeout = 1000)
+        self.kondo.open(_uart)
+        print(self.kondo.checkAcknowledge())
+
+        # imu init
+        i2c = I2C(2)
+        self.imu = BNO055(i2c)
+
+        # loading motion dictionary
+
+        #self.motions = json.load("/motion/data_motion.json")
+
+        self.motions = {
+            "Soccer_WALK_FF" : {
+                "id"        : 8,
+                "time"      : (lambda c1 : 230 * c1 + 440),
+                "shift_x"   : (lambda c1, u1 : 4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
+                                math.sin(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
+                "shift_y"   : (lambda c1, u1 : -4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) +
+                                4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
+                                math.cos(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
+                "shift_turn": (lambda u1 : u1 * 0.028125)
+                },
+
+            "Soccer_Turn" : {
+                "id"        : 15,
+                "time"      : (lambda c1 : 220 * c1 + 80),
+                "shift_x"   : 0,
+                "shift_y"   : 0,
+                "shift_turn": (lambda c1, u1 : u1 * 0.12 * c1)
+                },
+
+            "Soccer_Side_Step_Left" : {
+                "id"        : 11,
+                "time"      : (lambda c1 : 180 * c1 + 360),
+                "shift_x"   : 0,
+                "shift_y"   : (lambda c1: -11. * c1 / 100.),
+                "shift_turn": 0
+                },
+
+            "Soccer_Side_Step_Right" : {
+                "id"        : 10,
+                "time"      : (lambda c1 : 180 * c1 + 360),
+                "shift_x"   : 0,
+                "shift_y"   : (lambda c1: 11. * c1 / 100.),
+                "shift_turn": 0
+                },
+
+            "Soccer_Small_Step_Left" : {
+                "id"        : 13,
+                "time"      : (lambda c1 : 1250 * c1 + 150),
+                "shift_x"   : 0,
+                "shift_y"   : (lambda c1: -3.3 * c1 / 100.),
+                "shift_turn": 0
+                },
+
+            "Soccer_Small_Step_Right" : {
+                "id"        : 12,
+                "time"      : (lambda c1 : 1250 * c1 + 150),
+                "shift_x"   : 0,
+                "shift_y"   : (lambda c1: 3.3 * c1 / 100.),
+                "shift_turn": 0
+                },
+
+            "Soccer_Take_Around_Left" : {
+                "id"        : 17,
+                "time"      : (lambda c1 : 1250 * c1 + 150),
+                "shift_x"   : (lambda c1 : 1.65 / math.sin(6.3 * math.pi / 180) *
+                                (1 - math.cos(12.6 * c1 * math.pi / 180)) / 100.),
+                "shift_y"   : (lambda c1 : -1.65 / math.sin(6.3 * math.pi / 180) *
+                                math.sin(12.6 * c1 * math.pi / 180) / 100.),
+                "shift_turn": (lambda c1 : -12.6 * c1)
+                },
+
+            "Soccer_Take_Around_Right" : {
+                "id"       
