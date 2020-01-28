@@ -171,13 +171,17 @@ class Motion:
         self.head_tilt = 0
         self.head_state = -1
 
+        # get config params
+        with open("motion/config.json", "r") as f:
+            self.motion_config = json.loads(f.read())
+
         # walk threshold
-        self.walk_threshold = 1.0
-        self.max_blind_distance = 0.4
-        self.step_len = 0.086
+        self.walk_threshold = self.motion_config['walk_threshold']
+        self.max_blind_distance = self.motion_config['max_blind_distance']
+        self.step_len = self.motion_config['step_len']
 
         # acceptable error in degrees
-        self.angle_error_treshold = 10. * math.pi / 180.
+        self.angle_error_treshold = self.motion_config['angle_error_treshold'] * math.pi / 180.
 
 
     def get_imu_yaw(self):
@@ -249,7 +253,7 @@ class Motion:
 
     # Free all servos (Almost similar to rhoban 'em' command)
     def em(self):
-        self.kondo.do_motion(self.motions['Free'])
+        self.do_motion(self.motions['Free'])
 
 
     # home position of robot (rhoban init position)
