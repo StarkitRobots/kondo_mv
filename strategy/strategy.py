@@ -92,7 +92,7 @@ class Strategy:
         xr, yr, yaw = loc.robot_position
         xb, yb = loc.ball_position
 
-        ball_approach.get_data(xr, yr, xb, yb, -yaw, math.pi / 4)
+        ball_approach.get_data(xr, yr, xb, yb, -yaw)
 
         with open('strategy/data.json') as f:
             d = json.load(f)
@@ -109,7 +109,9 @@ class Strategy:
         decision = ball_approach.make_decision()
 
         # making the choice according to the decision of BallApproach
-        if decision[0] == "strike":
+        if decision[0] == "left kick":
+            return {"name" : "kick", "args" : -1}
+        elif decision[0] == "right kick":
             return {"name" : "kick", "args" : 1}
         elif decision[0] == "turn":
             return {"name" : "turn", "args" : decision[1]}

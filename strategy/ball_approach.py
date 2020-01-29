@@ -7,13 +7,12 @@ class BallApproach:
     dist = 1
     turn_ang = 0.1 * math.pi
 
-    def get_data(self, xr, yr, xb, yb, yaw, half_ang):
+    def get_data(self, xr, yr, xb, yb, yaw):
         self.xr = xr
         self.yr = yr
         self.xb = xb
         self.yb = yb
         self.yaw = yaw
-        self.half_ang = half_ang
 
 
     def set_constants(self, consts):
@@ -26,6 +25,8 @@ class BallApproach:
         self.WIND_X = consts["WIND_X"]
         self.GOAL_POS = consts["GOAL_POS"]
         self.step_before_strike = consts["step_before_strike"]
+        self.medium_dist = consts["medium_dist"]
+        self.critical_lateral_step = consts["critical_lateral_step"]
 
 
     def get_diff(self):
@@ -100,6 +101,8 @@ class BallApproach:
 
         traj.append ((WIND_X, GOAL_POS + GOAL_LEN / 2))
 
+        traj[1] = (xb, yb )
+
         self.wtraj = traj
 
         return traj
@@ -132,9 +135,6 @@ class BallApproach:
         ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
         yaw = -self.yaw
 
-        print("ball dist approach = ", math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2))
-        if (math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2) < 0.2):
-            return "strike", 1
         # changing the strike point in rtraj to the point that is better for right foot kick
         # targvec - the vector from  center of the goal to the ball
         # tv_ln - length of the targvec
@@ -192,30 +192,37 @@ class BallApproach:
 
 
         # making the decision, based on the distance and angles
-        if pth_ln < min_dist:
+        ball_dist = math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2)
+        print("ball dist approach = ", ball_dist)
+        if (ball_dist < self.min_dist):
+            if path[1] > 0:
+                return "left kick", -1
+            else:
+                return "right kick", 1
+
+            #if pth_ln < min_dist:
             #print(ang2)
 
+            #sup_angle = rtraj[2][1] / 3.6
+            #if abs(sup_angle) > 0.3:
+            #    return "turn", sup_angle / 2, 1
 
-            sup_angle = rtraj[2][1] / 3.6
-            if abs(sup_angle) > 0.3:
-                return "turn", sup_angle / 2, 1
+            #if path[0] < 0.15 and abs(path[1]) > 0.03 and abs(path[1]) < 0.09:
+            #    return "strike", 1
 
-            if path[0] < 0.15 and abs(path[1]) > 0.03 and abs(path[1]) < 0.09:
-                return "strike", 1
+            #elif abs(path[1]) < 0.03:
+            #    return "lateral step", 0.04, 1
 
-            elif abs(path[1]) < 0.03:
-                return "lateral step", 0.04, 1
+            #elif abs(path[1]) > 0.09:
+            #    return "lateral step", path[1], 1
 
-            elif abs(path[1]) > 0.09:
-                return "lateral step", path[1], 1
-
-            else:
-                return "strike", 1
+            #else:
+            #    return "strike", 1
 
         else:
-            if pth_ln > 0.5:
+            if pth_ln > self.medium_dist:
 
-                if path[1] > 0:
+                if (self.xb - self.xr) > 0:
                     return "walk", self.dist, ang1
                 else:
                     return "walk", self.dist, -ang1
@@ -223,7 +230,7 @@ class BallApproach:
 
             else:
                 if ang2 > math.pi - ang_thres2:
-                    return "lateral step", 0.3
+                    return "lateral step", self.critical_lateral_step
 
                 if move_point_loc[1] > 0:
                     return "walk", move_p_dist, ang3

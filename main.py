@@ -43,8 +43,24 @@ sensor.set_auto_exposure(False, 6500) # must be turned off for color tracking
 vision = Vision.Vision ({})
 vision.load_detectors("vision/detectors_config.json")
 
+ala = 0
+side = False
+ala = 1
+while(ala==0):
+    if (pin9.value() == 0):   # нажатие на кнопку на голове
+        ala = 1
+        side = True
+        print("I will attack blue goal")
+        break
 
-loc=Localization(0.0, 0.0, 0.0)
+    if (pin3.value() == 0):
+        ala = 1
+        side = False
+        print("I will attack yellow goal")
+        break
+
+
+loc=Localization(0.0, 0.0, 0.0, side)
 strat=Strategy.Strategy()
 motion=Motion.Motion()
 model=Model()
@@ -55,29 +71,14 @@ with open("calibration/cam_col.json") as f:
     calib=json.load(f)
 
 
-ala = 0
-loc.side = False
-ala = 1
-while(ala==0):
-    if (pin9.value() == 0):   # нажатие на кнопку на голове
-        ala = 1
-        loc.side = True
-        print("I will attack blue goal")
-        break
-
-    if (pin3.value() == 0):
-        ala = 1
-        loc.side = False
-        print("I will attack yellow goal")
-        break
 
 
 # setting model parametrs
 mass1 = [0,0,0,0,0,0]
 mass2 = [0,0]
 model.setParams(calib["cam_col"], robotHeight,mass1, mass2)
-motion.move_head()
-model.updateCameraPanTilt(0, -3.1415/6)
+#motion.move_head()
+#model.updateCameraPanTilt(0, -3.1415/6)
 
 vision_postprocessing = Vision.Vision_postprocessing ()
 t = 0
@@ -91,10 +92,10 @@ while(True):
     #print (curr_t - t)
     t = curr_t
     selfData = {}
-    for i in range(1):
+    for i in range(12 ):
         # motion part. Head movement.
-        #a, b = motion.move_head()
-        #model.updateCameraPanTilt(a,b)
+        a, b = motion.move_head()
+        model.updateCameraPanTilt(a,b)
         # vision part. Taking picture.
         img=sensor.snapshot()
 
@@ -147,6 +148,6 @@ while(True):
 
     #print(loc.pf.token)
 
-    #odometry_results = motion.apply(action)
+    odometry_results = motion.apply(action)
     #if odometry_results is not None:
         #loc.pf.move(odometry_results)

@@ -8,7 +8,7 @@ from common import median
 import json
 import math
 class Localization:
-    def __init__(self, x, y, yaw):
+    def __init__(self, x, y, yaw, side):
         self.ballPosSelf = None
         self.ball_position = None
         self.robot_position = None
@@ -17,12 +17,22 @@ class Localization:
         self.side = False
         with open("localization/landmarks.json", "r") as f:
                 landmarks = json.loads(f.read())
+        #choice side
+        if side:
+            colors = []
+            for goal_color in landmarks:
+                colors.append(goal_color)
+            neutral = landmarks[colors[0]]
+            landmarks[colors[0]] = landmarks[colors[1]]
+            landmarks[colors[1]] = neutral
+
+
         self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks)
 
     def update(self, data):
         #self.ball_position = data["ball"]
         self.robot_position = updatePF(self.pf, data)
-        self.localized = True
+        #self.localized = True
 
 
     def update_ball(self, data):
