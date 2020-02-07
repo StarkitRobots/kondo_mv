@@ -28,12 +28,12 @@ class IMU():
 
         #print ('init yaw, yaw', self.init_yaw, self.yaw)
 
-    #def update(self):
-    #    yaw, roll, pitch = self.imu.euler()
-    #    #yaw = self.yaw - (yaw - self.init_yaw)
-    #    self.yaw = (self.yaw - yaw + 360)%360
-    #    print('self.yaw, yaw', self.yaw, yaw)
-    #    return yaw
+ #   def update(self):
+  #      yaw, roll, pitch = self.imu.euler()
+        #yaw = self.yaw - (yaw - self.init_yaw)
+  #      self.yaw = (self.yaw - yaw + 360)%360
+   #     print('self.yaw, yaw', self.yaw, yaw)
+ #       return yaw
 
     def update(self):
         #self.yaw - current yaw
