@@ -195,6 +195,7 @@ class BallApproach:
         ball_dist = math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2)
         print("ball dist approach = ", ball_dist)
         if (ball_dist < self.min_dist):
+            print("far ba")
             if path[1] > 0:
                 return "left kick", -1
             else:
@@ -222,7 +223,7 @@ class BallApproach:
         else:
             if pth_ln > self.medium_dist:
 
-                if (self.xb - self.xr) > 0:
+                if path[1] > 0:
                     return "walk", self.dist, ang1
                 else:
                     return "walk", self.dist, -ang1
