@@ -32,7 +32,10 @@ class Localization:
     def update(self, data):
         #self.ball_position = data["ball"]
         self.robot_position = updatePF(self.pf, data)
-        #self.localized = True
+        if self.pf.consistency > 0.5:
+            self.localized = True
+        else:
+            self.localized = False
 
 
     def update_ball(self, data):
@@ -49,7 +52,7 @@ class Localization:
 
             self.ballPosSelf = median(data["ball"])
             #min(data["ball"], key=lambda x: x[0]**2 + x[1]**2)
-            print("ballPosSelf = ", self.ballPosSelf)
+            #print("ballPosSelf = ", self.ballPosSelf)
 
             bx = self.ballPosSelf[0]
             by = self.ballPosSelf[1]
@@ -66,5 +69,5 @@ class Localization:
         #return 0
 
     def move(self, x, y, yaw):
-        self.pf.particles_move(x,y, yaw)
+        self.pf.particles_move(x, y, yaw)
 

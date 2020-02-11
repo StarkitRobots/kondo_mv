@@ -12,9 +12,6 @@ sys.path.append('localization')
 import Robot
 from particle import Particle
 
-
-#TODO
-#TODO delete all unused functions
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,n = 100):
 
@@ -33,11 +30,14 @@ class ParticleFilter():
         self.gauss_noise = constants['noise']['gauss_noise']
         self.yaw_noise = constants['noise']['yaw_noise']
 
+        self.number_of_res = constants['consistency']['number_of_res']
         self.consistency = constants['consistency']['consistency']
         self.goodObsGain = constants['consistency']['goodObsGain']
         self.badObsCost = constants['consistency']['badObsCost']
         self.stepCost = constants['consistency']['stepCost']
         self.dist_threshold = constants['consistency']['dist_threshold']
+        self.con_threshold = constants['consistency']['con_threshold']
+        self.spec_threshold = constants['consistency']['spec_threshold']
 
         self.token = str(Random.random()*10000)
         self.logs = open("localization/logs/logs"+ self.token + '.txt',"w")
@@ -92,20 +92,27 @@ class ParticleFilter():
                 if len(observations[color_landmarks]) != 0:
                     for observation in observations[color_landmarks]:
                 #calc posts coords in field for every mesurement
-                        x_posts = (self.myrobot.x + observation[0]*math.sin(-self.myrobot.yaw)
-                                   + observation[1]*math.cos(-self.myrobot.yaw))
-                        y_posts = (self.myrobot.y + observation[0]*math.cos(-self.myrobot.yaw)
-                                   - observation[1]*math.sin(-self.myrobot.yaw))
+                        x_posts = (self.myrobot.x + observation[0]*math.cos(-self.myrobot.yaw)
+                        + observation[1]*math.sin(-self.myrobot.yaw))
+                        y_posts = (self.myrobot.y - observation[0]*math.sin(-self.myrobot.yaw)
+                        + observation[1]*math.cos(-self.myrobot.yaw))
+
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
+                        print('dist, len =', dist, len(dists))
                     if min(dists) < self.dist_threshold:
                         stepConsistency += self.goodObsGain
+                        #print('good step', stepConsistency)
                     else:
                         stepConsistency -= self.badObsCost
+                        #print('bad step', stepConsistency)
                 else:
                     stepConsistency -= self.stepCost
-        #print(stepConsistency)
+        print('step cons', stepConsistency)
         self.consistency += stepConsistency
+        if math.fabs(self.consistency) > self.spec_threshold:
+            self.consistency = math.copysign(self.spec_threshold, self.consistency)
+        print('consistency', self.consistency)
 
 
     def particles_move(self, coord):
@@ -179,7 +186,7 @@ class ParticleFilter():
         return p_tmp
 
 
-    #TODO refactor
+
     def resampling(self, observations):
         self.logs =open('localization/logs/logs'+self.token+'.txt',"a")
         print('|resempling,step ', self.count, file=self.logs)
@@ -253,8 +260,11 @@ class ParticleFilter():
 
 
 
-def updatePF(pf, measurement):
-    for i in range(3):
+def updatePF( pf, measurement):
+    k = pf.number_of_res
+    if pf.consistency < pf.con_threshold:
+        k+=1
+    for i in range(k):
         pf.resampling(measurement)
     print('eto coord', pf.return_coord())
     return pf.return_coord()

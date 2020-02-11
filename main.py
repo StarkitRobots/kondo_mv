@@ -32,16 +32,24 @@ robotHeight = 0.42 #[m]
 #sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()
 
+#sensor.reset()
+#sensor.set_pixformat(sensor.RGB565)
+#sensor.set_framesize(sensor.QVGA)
+#sensor.skip_frames(time=2000)
+#sensor.set_auto_gain(False, 8.9)#9.1)  # must be turned off for color tracking
+#sensor.set_auto_whitebal(False, (-6.02073, -5.886325, 0.9007286))
+#sensor.set_auto_exposure(False, 6576) # must be turned off for color tracking
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.skip_frames(time=2000)
-sensor.set_auto_gain(False, 9.1)  # must be turned off for color tracking
-#sensor.set_auto_whitebal(False, (0.1343897, -6.02073, 2.716595))
-sensor.set_auto_exposure(False, 6500) # must be turned off for color tracking
-
+sensor.set_auto_exposure(False)
+sensor.set_auto_whitebal(False)
+sensor.skip_frames(time = 2000)
+sensor.set_auto_gain(False, gain_db = 0)
+sensor.set_auto_whitebal(False, (-6.02073, -5.11, 1.002))
+sensor.set_auto_exposure(False, 1800)
 vision = Vision.Vision ({})
-vision.load_detectors("vision/detectors_config.json")
+vision.load_detectors("vision/detectors_config1.json")
 
 ala = 0
 side = False
@@ -60,10 +68,10 @@ while(ala==0):
         break
 
 
-loc=Localization(0.0, 0.0, 0.0, side)
-strat=Strategy.Strategy()
-motion=Motion.Motion()
-model=Model()
+loc = Localization(0.0, 0.0, 0.0, side)
+strat = Strategy.Strategy()
+motion = Motion.Motion()
+model = Model()
 imu = IMU.IMU(0)
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
@@ -92,12 +100,14 @@ while(True):
     #print (curr_t - t)
     t = curr_t
     selfData = {}
-    for i in range(12 ):
+    for i in range(12):
         # motion part. Head movement.
         a, b = motion.move_head()
+
         model.updateCameraPanTilt(a,b)
         # vision part. Taking picture.
         img=sensor.snapshot()
+
 
         #img.save ("kekb.jpg", quality=100)
 
@@ -126,7 +136,7 @@ while(True):
     print ("eto self points", selfData['yellow_posts'])
 
     #break
-    print("eto loc baall", selfData['ball'] )
+    #print("eto loc baall", selfData['ball'] )
 
     loc.update(selfData)
     #print("posts number = ", len(selfData["yellow_posts"]))
@@ -148,6 +158,9 @@ while(True):
 
     #print(loc.pf.token)
 
+
+
     odometry_results = motion.apply(action)
+    #print("odometry = ", odometry_results)
     #if odometry_results is not None:
         #loc.pf.move(odometry_results)
