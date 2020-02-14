@@ -1,9 +1,5 @@
 import sys
 sys.path.append('../lowlevel')
-from kondo_controller import Rcb4BaseLib
-from machine import I2C
-from bno055 import BNO055, AXIS_P7
-from pyb import UART
 import json, math
 import time
 sys.path.append('motion')
@@ -22,16 +18,32 @@ def degrees_to_head(degrees):
 ###########################################################################################
 
 class Motion:
-    def __init__(self):
+    def __init__(self, unix=False, controller=True, imu=True):
+        self.unix = unix
+        
         # RCB4 controller init
-        self.kondo = Rcb4BaseLib()
-        _uart = UART(1, 115200, parity=0, timeout = 1000)
-        self.kondo.open(_uart)
-        print(self.kondo.checkAcknowledge())
+        if controller:
+            from kondo_controller import Rcb4BaseLib
+            from pyb import UART
+            
+            self.kondo = Rcb4BaseLib()
+            _uart = UART(1, 115200, parity=0, timeout = 1000)
+            self.kondo.open(_uart)
+            print(self.kondo.checkAcknowledge())
+        else:
+            self.kondo = None
+            print('no controller mode')
 
         # imu init
-        i2c = I2C(2)
-        self.imu = BNO055(i2c)
+        if imu:
+            from machine import I2C
+            from bno055 import BNO055, AXIS_P7
+            
+            i2c = I2C(2)
+            self.imu = BNO055(i2c)
+        else:
+            self.imu = None
+            print('no imu mode')
 
         # loading motion dictionary
 
@@ -43,7 +55,7 @@ class Motion:
                 "time"      : (lambda c1, u1 : 230 * c1 + 440),
                 "shift_x"   : (lambda c1, u1 : 4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
                                 math.sin(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
-                "shift_y"   : (lambda c1, u1 : -4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) +
+                "shift_y"   : (lambda c1, u1 : -4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) / 100 +
                                 4.3 / math.sin(u1 * 0.0140625 * math.pi / 180.) *
                                 math.cos(u1 * 0.028125 * c1 * math.pi / 180.) / 100.),
                 "shift_turn": (lambda c1, u1 : u1 * 0.028125)
@@ -154,6 +166,13 @@ class Motion:
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
+                },
+            "Empty" : {
+                "id"        : 100,
+                "time"      : (lambda c1, u1: 0),
+                "shift_x"   : (lambda c1, u1: 0),
+                "shift_y"   : (lambda c1, u1: 0),
+                "shift_turn": (lambda c1, u1: 0)
                 }
             }
 
@@ -167,7 +186,7 @@ class Motion:
             self.head_motion_states = json.loads(f.read())
         self.head_state_num = len(self.head_motion_states)
         self.head_enabled = True
-        self.head_pan = 0
+        self.head_pan = 0   
         self.head_tilt = 0
         self.head_state = -1
 
@@ -176,21 +195,29 @@ class Motion:
             self.motion_config = json.loads(f.read())
 
         # walk threshold
-        self.walk_threshold = self.motion_config['walk_threshold']
-        self.max_blind_distance = self.motion_config['max_blind_distance']
-        self.step_len = self.motion_config['step_len']
+        self.walk_threshold = self.motion_config['walk']['walk_threshold']
+        self.max_blind_distance = self.motion_config['walk']['max_blind_distance']
+        self.step_len = self.motion_config['walk']['step_len']
 
         # acceptable error in degrees
-        self.angle_error_treshold = self.motion_config['angle_error_treshold'] * math.pi / 180.
+        self.angle_error_treshold = self.motion_config['turn']['angle_error_treshold'] * math.pi / 180.
 
 
     def get_imu_yaw(self):
-        try:
-            yaw, pitch, roll = self.imu.euler()
-        except OSError:
-            time.sleep(CHANNEL_WAIT_TIME)
-            yaw, pitch, roll = self.imu.euler()
+        if self.imu is not None:
+            try:
+                yaw, pitch, roll = self.imu.euler()
+            except OSError:
+                time.sleep(CHANNEL_WAIT_TIME)
+                yaw, pitch, roll = self.imu.euler()
+        else:
+            print('No imu. Unable to get yaw')
+            yaw = 0
         return yaw
+
+    def get_odometry(self, motion, c1, u1, yaw_diff):
+        return {'shift_x': motion['shift_x'](c1, u1), 'shift_y': motion['shift_y'](c1, u1), 'shift_yaw': yaw_diff}
+        
 
 ###########################################################################################
 # timer methods
@@ -198,16 +225,31 @@ class Motion:
 
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
-        timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
+        if self.unix:
+            timer_check = self._motion_start_time + self._motion_duration <= time.time()
+        else:
+            timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
         motion_finished = False
         while not (motion_finished and timer_check):
             try:
-                time.sleep(100)
-                current_motion = self.kondo.getMotionPlayNum()
+                if self.unix:
+                    time.sleep(0.1)
+                    print('timer')
+                else:
+                    time.sleep(100)
+                if self.kondo is not None:
+                    current_motion = self.kondo.getMotionPlayNum()
             except OSError:
-                time.sleep(CHANNEL_WAIT_TIME)
-                current_motion = self.kondo.getMotionPlayNum()
-            motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
+                if self.unix:
+                    time.sleep(CHANNEL_WAIT_TIME / 1000)
+                else:
+                    time.sleep(CHANNEL_WAIT_TIME)
+                if self.kondo is not None:
+                    current_motion = self.kondo.getMotionPlayNum()
+            if self.kondo is not None:
+                motion_finished = current_motion == 0 or current_motion == 1 or current_motion == 2
+            else:
+                motion_finished = True
         return True
 
     def _get_timer_duration(self, motion, args):
@@ -215,9 +257,13 @@ class Motion:
 
     def _set_timer(self, duration):
         self._motion_duration = duration
-        self._motion_start_time = time.ticks()
+        if self.unix:
+            self._motion_start_time = time.time()
+            time.sleep(int(duration / 1000))
+        else:    
+            self._motion_start_time = time.ticks()
+            time.sleep(int(duration))
 
-        time.sleep(int(duration))
 
 
 ###########################################################################################
@@ -229,26 +275,35 @@ class Motion:
         c1 = 0
         u1 = 0
         if self._timer_permission_check():
+            print('timer enter')
             self.current_motion = target_motion
-            if args is not None:
+            yaw_before = self.get_imu_yaw()
+            if self.kondo is not None:
+                if args is not None:
+                    if args['c1'] != 0:
+                        c1 = args['c1']
+                        self.kondo.setUserCounter(1, c1)
+                    if args['u1'] != 0:
+                        u1 = args['u1']
+                        self.kondo.setUserParameter(1, u1)
+                try:
+                    self.kondo.motionPlay(self.current_motion['id'])
+                except OSError:
+                    time.sleep(CHANNEL_WAIT_TIME)
+                    self.kondo.motionPlay(self.current_motion['id'])
+                self._set_timer(self._get_timer_duration(self.current_motion, args))
+            else:
+                print('No controller. Unable to perform a motion. Calculating odometry')
                 if args['c1'] != 0:
-                    c1 = args['c1']
-                    self.kondo.setUserCounter(1, c1)
+                        c1 = args['c1']
                 if args['u1'] != 0:
                     u1 = args['u1']
-                    self.kondo.setUserParameter(1, u1)
-            yaw_before = self.get_imu_yaw()
-            try:
-                self.kondo.motionPlay(self.current_motion['id'])
-            except OSError:
-                time.sleep(CHANNEL_WAIT_TIME)
-                self.kondo.motionPlay(self.current_motion['id'])
-            self._set_timer(self._get_timer_duration(self.current_motion, args))
             yaw_after = self.get_imu_yaw()
         try:
-            return {'shift_x': target_motion['shift_x'](c1, u1), 'shift_y': target_motion['shift_y'](c1, u1), 'shift_yaw': yaw_after - yaw_before}
+            print('walk control, c1: ' + str(c1) + ', u1: ' + str(u1))
+            return self.get_odometry(self.current_motion, c1, u1, yaw_after - yaw_before)
         except KeyError:
-            pass
+            return self.get_odometry(self.motions['Empty'], 0, 0, 0)
 
 
     # Free all servos (Almost similar to rhoban 'em' command)
@@ -328,13 +383,16 @@ class Motion:
 
         if abs(rotation_angle) > self.angle_error_treshold:
             return self.do_motion(motion, {'c1': c1, 'u1': u1})
+        else:
+            return self.get_odometry(self.motions['Empty'], 0, 0, 0)
 
     def _walk_control(self, walk_args):
         distance = walk_args[0]
         rotation_angle = walk_args[1]
-        if abs(rotation_angle) > self.angle_error_treshold:
+        if abs(rotation_angle) > self.angle_error_treshold:    
             self._turn_control(rotation_angle)
         else:
+            print('turn control, c1: ' + str(distance) + ', u1: ' + str(rotation_angle))
             motion = self.motions['Soccer_WALK_FF']
             #distance = math.sqrt(x*x + y*y)
             if distance < self.max_blind_distance:
@@ -375,6 +433,4 @@ class Motion:
             elif action['name'] == 'take_around_right':
                 return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1, 'u1': 0})
         return 0
-
-
 
