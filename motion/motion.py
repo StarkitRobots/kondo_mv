@@ -195,12 +195,12 @@ class Motion:
             self.motion_config = json.loads(f.read())
 
         # walk threshold
-        self.walk_threshold = self.motion_config['walk']['walk_threshold']
-        self.max_blind_distance = self.motion_config['walk']['max_blind_distance']
-        self.step_len = self.motion_config['walk']['step_len']
+        self.walk_threshold = self.motion_config['walk_threshold']
+        self.max_blind_distance = self.motion_config['max_blind_distance']
+        self.step_len = self.motion_config['step_len']
 
         # acceptable error in degrees
-        self.angle_error_treshold = self.motion_config['turn']['angle_error_treshold'] * math.pi / 180.
+        self.angle_error_treshold = self.motion_config['angle_error_treshold'] * math.pi / 180.
 
 
     def get_imu_yaw(self):
@@ -211,7 +211,7 @@ class Motion:
                 time.sleep(CHANNEL_WAIT_TIME)
                 yaw, pitch, roll = self.imu.euler()
         else:
-            print('No imu. Unable to get yaw')
+            print('No imu. Unable to get yaw. Yaw is going to be zero')
             yaw = 0
         return yaw
 
@@ -234,7 +234,6 @@ class Motion:
             try:
                 if self.unix:
                     time.sleep(0.1)
-                    print('timer')
                 else:
                     time.sleep(100)
                 if self.kondo is not None:
@@ -275,7 +274,6 @@ class Motion:
         c1 = 0
         u1 = 0
         if self._timer_permission_check():
-            print('timer enter')
             self.current_motion = target_motion
             yaw_before = self.get_imu_yaw()
             if self.kondo is not None:
@@ -300,7 +298,6 @@ class Motion:
                     u1 = args['u1']
             yaw_after = self.get_imu_yaw()
         try:
-            print('walk control, c1: ' + str(c1) + ', u1: ' + str(u1))
             return self.get_odometry(self.current_motion, c1, u1, yaw_after - yaw_before)
         except KeyError:
             return self.get_odometry(self.motions['Empty'], 0, 0, 0)
@@ -390,9 +387,8 @@ class Motion:
         distance = walk_args[0]
         rotation_angle = walk_args[1]
         if abs(rotation_angle) > self.angle_error_treshold:    
-            self._turn_control(rotation_angle)
+            return self._turn_control(rotation_angle)
         else:
-            print('turn control, c1: ' + str(distance) + ', u1: ' + str(rotation_angle))
             motion = self.motions['Soccer_WALK_FF']
             #distance = math.sqrt(x*x + y*y)
             if distance < self.max_blind_distance:
@@ -404,16 +400,16 @@ class Motion:
 
     def _kick_control(self, kick_args):
         if kick_args == -1:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
 
     def _lateral_control(self, lateral_args):
         step_num = int(lateral_args / 0.033)
         if step_num > 0:
-            self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
 
 
 ###########################################################################################
@@ -433,4 +429,8 @@ class Motion:
             elif action['name'] == 'take_around_right':
                 return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1, 'u1': 0})
         return 0
+
+if __name__ == "__main__":
+    m = Motion(True, False, False)
+    print(m.apply({'name': 'walk', 'args':(0.3, 0.2)}))
 
