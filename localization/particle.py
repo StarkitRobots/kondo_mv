@@ -27,12 +27,15 @@ class Particle(Robot):
                 if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
                     #calc posts coords in field for every mesurement
-                        x_posts = self.x + observation[0]*math.cos(-self.yaw) + observation[1]*math.sin(-self.yaw)
-                        y_posts = self.y - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                        x_posts = self.x + observation[0]*math.cos(self.yaw) - observation[1]*math.sin(self.yaw)
+                        y_posts = self.y + observation[0]*math.sin(self.yaw) + observation[1]*math.cos(self.yaw)
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
+                        #print('x, y, yaw, ',self.x,self.y,self.yaw*180/math.pi )
+                        #print('x_posts, y_posts, observation[0], observation[1]', x_posts, y_posts, observation[0], observation[1])
                 if (dists!=[]):
                     prob *= Random.gaussian(min(dists), sense_noise)
+        #print('prob, x, y, yaw',prob,self.x,self.y,self.yaw*180/math.pi )
         return prob
 
 

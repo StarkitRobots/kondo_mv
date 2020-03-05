@@ -13,7 +13,7 @@ import Robot
 from particle import Particle
 
 class ParticleFilter():
-    def __init__(self, myrobot, field, landmarks,n = 100):
+    def __init__(self, myrobot, field, landmarks,n = 150):
 
         self.n = n
         self.myrobot = myrobot
@@ -92,14 +92,14 @@ class ParticleFilter():
                 if len(observations[color_landmarks]) != 0:
                     for observation in observations[color_landmarks]:
                 #calc posts coords in field for every mesurement
-                        x_posts = (self.myrobot.x + observation[0]*math.cos(-self.myrobot.yaw)
-                        + observation[1]*math.sin(-self.myrobot.yaw))
-                        y_posts = (self.myrobot.y - observation[0]*math.sin(-self.myrobot.yaw)
-                        + observation[1]*math.cos(-self.myrobot.yaw))
+                        x_posts = (self.myrobot.x + observation[0]*math.cos(self.myrobot.yaw)
+                        - observation[1]*math.sin(self.myrobot.yaw))
+                        y_posts = (self.myrobot.y + observation[0]*math.sin(self.myrobot.yaw)
+                        + observation[1]*math.cos(self.myrobot.yaw))
 
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
-                        print('dist, len =', dist, len(dists))
+                        #print('dist, len =', dist, len(dists))
                     if min(dists) < self.dist_threshold:
                         stepConsistency += self.goodObsGain
                         #print('good step', stepConsistency)
@@ -108,11 +108,11 @@ class ParticleFilter():
                         #print('bad step', stepConsistency)
                 else:
                     stepConsistency -= self.stepCost
-        print('step cons', stepConsistency)
+        #print('step cons', stepConsistency)
         self.consistency += stepConsistency
         if math.fabs(self.consistency) > self.spec_threshold:
             self.consistency = math.copysign(self.spec_threshold, self.consistency)
-        print('consistency', self.consistency)
+        #print('consistency', self.consistency)
 
 
     def particles_move(self, coord):
@@ -206,6 +206,8 @@ class ParticleFilter():
             S += p_tmp[i][1]
         for i in range(len(p_tmp)):
             p_tmp[i][1] /= S
+            if p_tmp[i][1] > 0.02:
+                print("x y yaw ", p_tmp[i][0].yaw*180/math.pi)
         self.update_coord(p_tmp)
         self.update_consistency(observations)
     #def rationing(weights, sum):
@@ -253,7 +255,7 @@ class ParticleFilter():
             orientation += particle[0].yaw * particle[1]
         self.myrobot.x = x
         self.myrobot.y = y
-        #self.myrobot.yaw = orientation % 2*math.pi
+        self.myrobot.yaw = orientation % 2*math.pi
 
     def return_coord(self):
         return self.myrobot.x, self.myrobot.y, self.myrobot.yaw
@@ -264,7 +266,7 @@ def updatePF( pf, measurement):
     k = pf.number_of_res
     if pf.consistency < pf.con_threshold:
         k+=1
-    for i in range(k):
+    for i in range(5):
         pf.resampling(measurement)
-    print('eto coord', pf.return_coord())
+    print('eto coord', pf.return_coord(), pf.myrobot.yaw*180/math.pi)
     return pf.return_coord()

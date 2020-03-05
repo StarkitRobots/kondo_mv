@@ -72,7 +72,7 @@ loc = Localization(0.0, 0.0, 0.0, side)
 strat = Strategy.Strategy()
 motion = Motion.Motion()
 model = Model()
-imu = IMU.IMU(0)
+imu = IMU.IMU(0.0)
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:
@@ -106,7 +106,7 @@ while(True):
 
         model.updateCameraPanTilt(a,b)
         # vision part. Taking picture.
-        img=sensor.snapshot()
+        img=sensor.snapshot().lens_corr(strength=1.2, zoom = 1.0)
 
 
         #img.save ("kekb.jpg", quality=100)
@@ -125,10 +125,17 @@ while(True):
             if observationType not in selfData.keys():
                 selfData[observationType] = []
             selfPoints = []
+
+            #if (len (cameraDataProcessed[observationType]) > 0):
+            #    print ("obser", cameraDataProcessed[observationType] [0])
+
             for observation in cameraDataProcessed[observationType]:
-                selfPoints.append(
-                    model.pic2r(observation[0] + observation[2]/2,
-                    observation[1] + observation[3]))
+                cx = observation [5]
+                cy = observation [6]
+                w  = observation [2]
+                h  = observation [3]
+
+                selfPoints.append(model.pic2r(cx, cy + (w+h)/4))
             selfData[observationType]+=selfPoints
 
         #print("keys = ", selfData.keys())
@@ -146,7 +153,7 @@ while(True):
     #loc.ball_position = (1.2, 0.0)
     #loc.robot_position = (0.0, 0.0, 0.0)
     loc.localized = True
-    #loc.seeBall = True
+    #loc.seeBall = False
     #print(loc.ballPosSelf)
     #loc.robot_position = (0.75, 0, 0)
     #loc.ball_position = (1.25, 0)
@@ -160,7 +167,7 @@ while(True):
 
 
 
-    odometry_results = motion.apply(action)
+    #odometry_results = motion.apply(action)
     #print("odometry = ", odometry_results)
     #if odometry_results is not None:
-        #loc.pf.move(odometry_results)
+        #loc.pf.particles_move(odometry_results)

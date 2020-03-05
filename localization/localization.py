@@ -56,8 +56,8 @@ class Localization:
 
             bx = self.ballPosSelf[0]
             by = self.ballPosSelf[1]
-            x_ball = self.pf.myrobot.x + bx*math.cos(-self.pf.myrobot.yaw) + by*math.sin(-self.pf.myrobot.yaw)
-            y_ball = self.pf.myrobot.y - bx*math.sin(-self.pf.myrobot.yaw) + by*math.cos(-self.pf.myrobot.yaw)
+            x_ball = self.pf.myrobot.x + bx*math.cos(self.pf.myrobot.yaw) - by*math.sin(self.pf.myrobot.yaw)
+            y_ball = self.pf.myrobot.y + bx*math.sin(self.pf.myrobot.yaw) + by*math.cos(self.pf.myrobot.yaw)
             self.ball_position = (x_ball, y_ball)
             #self.ball_position = ()
 
