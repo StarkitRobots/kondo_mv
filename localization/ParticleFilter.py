@@ -56,7 +56,13 @@ class ParticleFilter():
             x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise)
             y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise)
             yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
-            yaw %= 2 * math.pi
+            #print('yaw'+str(i),yaw*180/math.pi)
+            if yaw < 0:
+                yaw = 2*math.pi + yaw
+            #print('yaw'+str(i),yaw*180/math.pi)
+            if yaw > 2*math.pi:
+                yaw%= (2 * math.pi*180/math.pi)
+            #print('yaw'+str(i),yaw*180/math.pi)
             self.p.append([Particle(x_coord, y_coord, yaw), 0])
             print(x_coord, ' ', y_coord, ' ', yaw, file=self.logs)
         #print('|', file = self.logs)
@@ -68,7 +74,10 @@ class ParticleFilter():
             x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise*3)
             y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise*3)
             yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
-            yaw %= 2 * math.pi
+            if yaw < 0:
+                yaw = 2*math.pi + yaw
+            if yaw > 2*math.pi:
+                yaw%= (2 * math.pi)
             p.append([Particle(x_coord, y_coord, yaw), 0])
         return p
 
@@ -92,14 +101,14 @@ class ParticleFilter():
                 if len(observations[color_landmarks]) != 0:
                     for observation in observations[color_landmarks]:
                 #calc posts coords in field for every mesurement
-                        x_posts = (self.myrobot.x + observation[0]*math.cos(-self.myrobot.yaw)
-                        + observation[1]*math.sin(-self.myrobot.yaw))
-                        y_posts = (self.myrobot.y - observation[0]*math.sin(-self.myrobot.yaw)
-                        + observation[1]*math.cos(-self.myrobot.yaw))
+                        x_posts = (self.myrobot.x + observation[0]*math.cos(self.myrobot.yaw)
+                        - observation[1]*math.sin(self.myrobot.yaw))
+                        y_posts = (self.myrobot.y + observation[0]*math.sin(self.myrobot.yaw)
+                        + observation[1]*math.cos(self.myrobot.yaw))
 
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
-                        print('dist, len =', dist, len(dists))
+                        #print('dist, len =', dist, len(dists))
                     if min(dists) < self.dist_threshold:
                         stepConsistency += self.goodObsGain
                         #print('good step', stepConsistency)
@@ -108,11 +117,11 @@ class ParticleFilter():
                         #print('bad step', stepConsistency)
                 else:
                     stepConsistency -= self.stepCost
-        print('step cons', stepConsistency)
+        #print('step cons', stepConsistency)
         self.consistency += stepConsistency
         if math.fabs(self.consistency) > self.spec_threshold:
             self.consistency = math.copysign(self.spec_threshold, self.consistency)
-        print('consistency', self.consistency)
+        #print('consistency', self.consistency)
 
 
     def particles_move(self, coord):
@@ -139,7 +148,10 @@ class ParticleFilter():
             x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise*3)
             y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise*3)
             yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
-            yaw %= 2 * math.pi
+            if yaw < 0:
+                yaw = 2*math.pi + yaw
+            if yaw > 2*math.pi:
+                yaw%= (2 * math.pi)
             p.append([Particle(x_coord, y_coord, yaw), 0])
         return p
 
@@ -206,6 +218,8 @@ class ParticleFilter():
             S += p_tmp[i][1]
         for i in range(len(p_tmp)):
             p_tmp[i][1] /= S
+            #if p_tmp[i][1] > 0.02:
+                #print("x y yaw ", p_tmp[i][0].x, p_tmp[i][0].y, p_tmp[i][0].yaw*180/math.pi)
         self.update_coord(p_tmp)
         self.update_consistency(observations)
     #def rationing(weights, sum):
@@ -247,13 +261,20 @@ class ParticleFilter():
         x = 0.0
         y = 0.0
         orientation = 0.0
+        adding = 0.0
+        if (self.myrobot.yaw < math.pi/2) or (self.myrobot.yaw > math.pi*3/2):
+            adding = math.pi*2
         for particle in particles:
             x += particle[0].x * particle[1]
             y += particle[0].y * particle[1]
-            orientation += particle[0].yaw * particle[1]
+            if (particle[0].yaw < math.pi):
+                culc_yaw = particle[0].yaw + adding
+            else:
+                culc_yaw = particle[0].yaw
+            orientation += culc_yaw * particle[1]
         self.myrobot.x = x
         self.myrobot.y = y
-        #self.myrobot.yaw = orientation % 2*math.pi
+        self.myrobot.yaw = orientation % (2*math.pi)
 
     def return_coord(self):
         return self.myrobot.x, self.myrobot.y, self.myrobot.yaw
@@ -264,7 +285,7 @@ def updatePF( pf, measurement):
     k = pf.number_of_res
     if pf.consistency < pf.con_threshold:
         k+=1
-    for i in range(k):
+    for i in range(3):
         pf.resampling(measurement)
-    print('eto coord', pf.return_coord())
+    print('eto coord', pf.return_coord(), pf.myrobot.yaw*180/math.pi)
     return pf.return_coord()

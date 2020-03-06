@@ -25,18 +25,23 @@ class Particle(Robot):
             for landmark in landmarks[color_landmarks]:
                 dists = []
                 if observations[color_landmarks]:
+
                     for observation in observations[color_landmarks]:
                     #calc posts coords in field for every mesurement
-                        x_posts = self.x + observation[0]*math.cos(-self.yaw) + observation[1]*math.sin(-self.yaw)
-                        y_posts = self.y - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
+                        x_posts = self.x + observation[0]*math.cos(self.yaw) - observation[1]*math.sin(self.yaw)
+                        y_posts = self.y + observation[0]*math.sin(self.yaw) + observation[1]*math.cos(self.yaw)
                         dist = math.sqrt((x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
+                        #print('x, y, yaw, ',self.x,self.y,self.yaw*180/math.pi )
+                        #print('x_posts, y_posts, observation[0], observation[1]', x_posts, y_posts, observation[0], observation[1])
+                        #print('dist', dist)
                 if (dists!=[]):
                     prob *= Random.gaussian(min(dists), sense_noise)
+        #print('prob, x, y, yaw',prob,self.x,self.y,self.yaw*180/math.pi )
         return prob
 
 
-def set_noise(self, new_forward_noise, new_turn_noise, new_sense_noise):
+    def set_noise(self, new_forward_noise, new_turn_noise, new_sense_noise):
         self.forward_noise = float(new_forward_noise)
         self.turn_noise = float(new_turn_noise)
         self.sense_noise = float(new_sense_noise)

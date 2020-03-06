@@ -40,14 +40,14 @@ class IMU():
         #yaw_diff - yaw_difference))0)
 
         yaw, _, _ = self.imu.euler()
-        yaw *= -1
+        #yaw *= -1
 
-        print('yaw imu, self.yaw, init yaw', yaw, self.yaw, self.init_yaw)
+        #print('yaw imu, self.yaw, init yaw', yaw, self.yaw, self.init_yaw)
 
-        yaw_diff = self.yaw - yaw
+        #yaw_diff = self.yaw - yaw
         #self.yaw_diff = yaw_diff + self.
 
-        self.yaw = (self.yaw - yaw_diff + self.init_angle + 360)%360
-
-        #print('self.yaw, yaw', self.yaw, yaw_diff)
+        #self.yaw = (self.yaw - yaw_diff + self.init_angle + 360)%360
+        self.yaw = (360 - yaw + self.init_angle) % 360
+        #print('self.yaw, yaw', self.yaw, yaw)
         return self.yaw
