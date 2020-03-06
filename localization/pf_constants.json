@@ -2,9 +2,9 @@
     "noise": {
         "forward_noise": 0.025,
         "turn_noise": 0.1,
-        "sense_noise": 0.1,
+        "sense_noise": 0.2,
         "gauss_noise": 0.4,
-        "yaw_noise": 0.01
+        "yaw_noise": 0.1
         },
 
     "consistency":{
