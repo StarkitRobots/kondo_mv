@@ -117,6 +117,10 @@ class Strategy:
             return {"name" : "turn", "args" : decision[1]}
         elif decision[0] == "lateral step":
             return {"name" : "lateral step", "args" : decision[1]}
+        elif decision[0] == "take around right":
+            return {"name" : "take_around_right", "args" : (1)}
+        elif decision[0] == "take around left":
+            return {"name" : "take_around_left", "args" : (1)}
         elif decision[0] == "walk":
             return {"name" : "walk", "args" : (decision[1], decision[2])}
         else:

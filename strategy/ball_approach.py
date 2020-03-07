@@ -32,8 +32,6 @@ class BallApproach:
     def get_diff(self):
         return self.xr - self.xb
 
-
-
     def find_trajectory (self):
         xr = self.xr
         yr = self.yr
@@ -62,20 +60,20 @@ class BallApproach:
         #alpha = math.asin (r / leng)
 
         #if (xb < xr):# + CIRCLE_RADIUS):
-        #	sx = 0
-        #	sy = 0
+        #   sx = 0
+        #   sy = 0
 
-        #	if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
-        #		sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #		sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
+        #   if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
+        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
+        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
 
-        #	else:
-        #		alpha = - alpha
+        #   else:
+        #       alpha = - alpha
         #
-        #		sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #		sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
+        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
+        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
 
-        #	traj.append ((sx, sy))
+        #   traj.append ((sx, sy))
 
         #-----------------------------------------------------------
         #find kick point on the circle
@@ -135,43 +133,43 @@ class BallApproach:
         ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
         yaw = -self.yaw
 
-        # changing the strike point in rtraj to the point that is better for right foot kick
         # targvec - the vector from  center of the goal to the ball
         # tv_ln - length of the targvec
         # norm - the vector normal to the targvec with the length taken from data.json
         wtargvec = (traj[1][0] - traj[2][0], traj[1][1] - traj[2][1])
-        targvec = (rtraj[1][0] - rtraj[2][0], rtraj[1][1] - rtraj[2][1])
+        targvec = (rtraj[2][0] - rtraj[1][0], rtraj[2][1] - rtraj[1][1])
         wtv_ln = math.sqrt(wtargvec[0] ** 2 + wtargvec[1] ** 2)
         tv_ln = math.sqrt(targvec[0] ** 2 + targvec[1] ** 2)
-        norm = (self.step_before_strike * targvec[1] * 1.0 / tv_ln, -self.step_before_strike * targvec[0] * 1.0 / tv_ln)
-        wnorm = (wtargvec[1] * 1.0 / wtv_ln, wtargvec[0] * 1.0 / wtv_ln)
+        #norm = (self.step_before_strike * targvec[1] * 1.0 / tv_ln, -self.step_before_strike * targvec[0] * 1.0 / tv_ln)
+        #wnorm = (wtargvec[1] * 1.0 / wtv_ln, wtargvec[0] * 1.0 / wtv_ln)
 
         # path - vector from robot to ball
-        # vec1,vec2 - vectors, representing the first and the second parts of the trajectory
+        # pth_ln - length of path
         path = rtraj[1]
         pth_ln = math.sqrt(path[0] ** 2 + path[1] ** 2)
         self.dist = pth_ln
-        # checking if the robot is too close to the ball
-        if pth_ln == 0:
-            raise Exception('robot too close to the kick point')
 
+        # ang1 - angle between robot walk direction and robot-to-ball direction
+        # ang2 - angle between the two parts of the trajectory
         ang1 = math.acos(path[0] / pth_ln)
-        ang2 = math.pi - math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
+        ang2 = math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
         self.ang2 = ang2
         print("rtraj:", rtraj)
-        vec_prod = targvec[0] * path[1] - targvec[1] * path[0]
+        vec_prod = targvec[1] * path[0] - targvec[0] * path[1]
 
+        # calculating the proprties of the circle, that smoothes the movement of the robot
         R = pth_ln / 2.0 / math.sin(ang2)
         self.R = R
         circ_path = R * 2.0 * ang2
-        if vec_prod < 0:
-            self.circle_center = (traj[1][0] - wnorm[0] * R, -traj[1][1] - wnorm[1] * R)
-        elif vec_prod > 0:
-            self.circle_center = (traj[1][0] + wnorm[0] * R, -traj[1][1] + wnorm[1] * R)
+        #if vec_prod < 0:
+        #    self.circle_center = (traj[1][0] - wnorm[0] * R, -traj[1][1] - wnorm[1] * R)
+        #elif vec_prod > 0:
+        #    self.circle_center = (traj[1][0] + wnorm[0] * R, -traj[1][1] + wnorm[1] * R)
 
+        # calculating the current point on the circle the robot should go towards
         vec_shift = R - R * math.cos(ang2)
         sup_point = (traj[0][0] / 2 + traj[1][0] / 2, -traj[0][1] / 2 + -traj[1][1] / 2)
-        s_c = self.circle_center
+        #s_c = self.circle_center
         l_vec = (s_c[0] - sup_point[0], s_c[1] - sup_point[1])
         l_vec_ln = math.sqrt(l_vec[0] ** 2 + l_vec[1] ** 2)
         l_vec_n = (l_vec[0] / l_vec_ln, l_vec[1] / l_vec_ln)
@@ -180,9 +178,8 @@ class BallApproach:
             move_point_w = (sup_point[0] - l_vec_n[0] * vec_shift, -sup_point[1] + l_vec_n[1] * vec_shift)
         else:
             move_point_w = (sup_point[0] + l_vec_n[0] * vec_shift, -sup_point[1] - l_vec_n[1] * vec_shift)
-
+        
         self.move_p = move_point_w
-
         shift = traj[0]
         rotmat = [[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]]
         move_point_loc = self.lin_trans(rotmat, shift, move_point_w)
@@ -193,32 +190,18 @@ class BallApproach:
 
         # making the decision, based on the distance and angles
         ball_dist = math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2)
-        print("ball dist approach = ", ball_dist)
+        # print("ball dist approach = ", ball_dist)
         if (ball_dist < self.min_dist):
-            print("far ba")
+            if ang2 > ang_thres2:
+                if vec_prod > 0:
+                    return "take around right", 1
+                else:
+                    return "take around left", -1
+
             if path[1] > 0:
                 return "left kick", -1
             else:
                 return "right kick", 1
-
-            #if pth_ln < min_dist:
-            #print(ang2)
-
-            #sup_angle = rtraj[2][1] / 3.6
-            #if abs(sup_angle) > 0.3:
-            #    return "turn", sup_angle / 2, 1
-
-            #if path[0] < 0.15 and abs(path[1]) > 0.03 and abs(path[1]) < 0.09:
-            #    return "strike", 1
-
-            #elif abs(path[1]) < 0.03:
-            #    return "lateral step", 0.04, 1
-
-            #elif abs(path[1]) > 0.09:
-            #    return "lateral step", path[1], 1
-
-            #else:
-            #    return "strike", 1
 
         else:
             if pth_ln > self.medium_dist:
@@ -228,9 +211,8 @@ class BallApproach:
                 else:
                     return "walk", self.dist, -ang1
 
-
             else:
-                if ang2 > math.pi - ang_thres2:
+                if ang2 > ang_thres2:
                     return "lateral step", self.critical_lateral_step
 
                 if move_point_loc[1] > 0:
