@@ -130,9 +130,11 @@ class Rcb4BaseLib:
     class RamAddr:
         ConfigRamAddress = 0x0000
         ProgramCounterRamAddress = 0x0002
-        UserParameterRamAddress = 0x0462
+        UserParameterRamAddress  = 0x0462
         CounterRamAddress        = 0x0457
         AdcRamAddress            = 0x0022
+        PioModeAddres	         = 0x0038 
+        PioAddress               = 0x003A
 
     class RomAddr:
         StartupCmdRomAddress = 0x0444
@@ -742,7 +744,7 @@ class Rcb4BaseLib:
 
         return 0xffff
 
-    # get analog  data from all ports
+    # get analog data from all ports
     def getAllAdData(self):
         retf,retbuf = self.moveRamToComCmdSynchronize(Rcb4BaseLib.RamAddr.AdcRamAddress  ,self.AdcDataCount)
         redate = []
@@ -750,6 +752,24 @@ class Rcb4BaseLib:
             for i in range(self.AdcCount):
                 redate.append( retbuf[1+ i*2] * 256 + retbuf[0+ i*2])
         return retf,redate
+
+    # get digital port data
+    def getPio(self):
+        retf,rxbuf = self.moveRamToComCmdSynchronize(self.RamAddr.PioAddress ,2)
+        if(retf == True) and (len(rxbuf) == 2):
+            return ((rxbuf[1] & 0x03) * 256) + rxbuf[0]
+        else:
+            return -1
+
+    # set digital port data
+    def setPio (self, pioData):
+        buf=[pioData & 0xff,(pioData >> 8) & 0x03]
+        return self.moveComToRamCmdSynchronize(self.RamAddr.PioAddress, buf)
+
+    # change digital port mode (input is 0 or output is 1)
+    def setPioMode (self, pioModeData):
+        buf=[pioModeData & 0xff,(pioModeData >> 8) & 0x03]
+        return self.moveComToRamCmdSynchronize(self.RamAddr.PioModeAddres, buf)
 
 
     #sets potitions of several servos using ServoData class
