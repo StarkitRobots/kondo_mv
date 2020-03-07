@@ -25,8 +25,8 @@ class Robot:
         if orientation < 0:
             orientation += (math.pi*2)
         orientation %= (2 * math.pi)
-        self.x += x
-        self.y += y
+        self.x += x*math.cos(self.yaw)
+        self.y += x*math.sin(self.yaw)
         self.yaw = orientation
 
 

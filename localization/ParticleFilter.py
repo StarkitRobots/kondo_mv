@@ -45,6 +45,9 @@ class ParticleFilter():
         self.logs.close()
         print('scence noise', self.sense_noise)
 
+    def return_coord(self):
+        return self.myrobot.x, self.myrobot.y, self.myrobot.yaw
+
 
     def gen_particles(self):
         print('initial,step ', self.count, file=self.logs)
@@ -121,12 +124,13 @@ class ParticleFilter():
         self.consistency += stepConsistency
         if math.fabs(self.consistency) > self.spec_threshold:
             self.consistency = math.copysign(self.spec_threshold, self.consistency)
-        #print('consistency', self.consistency)
+        print('consistency', self.consistency)
 
 
     def particles_move(self, coord):
         self.logs = open('localization/logs/logs'+self.token+'.txt',"a")
         self.myrobot.move(coord['shift_x'], coord['shift_y'], coord['shift_yaw'])
+        print('eto coord after mooving', self.return_coord(), self.myrobot.yaw*180/math.pi)
         print('|moving,step ', self.count, file=self.logs)
         print('$$', file=self.logs)
         print("position ", self.myrobot.x, ' ',
