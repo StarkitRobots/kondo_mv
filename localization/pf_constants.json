@@ -2,7 +2,7 @@
     "noise": {
         "forward_noise": 0.025,
         "turn_noise": 0.1,
-        "sense_noise": 0.2,
+        "sense_noise": 0.4,
         "gauss_noise": 0.4,
         "yaw_noise": 0.1
         },
@@ -13,7 +13,7 @@
         "goodObsGain":0.2,
         "badObsCost":0.1,
         "stepCost":0.1,
-        "dist_threshold":0.2,
+        "dist_threshold":0.15,
         "con_threshold": 0.0,
         "spec_threshold":1.5
         }

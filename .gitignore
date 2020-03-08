@@ -1,3 +1,7 @@
 calibration/images/*
 logs/*
 localisation/logs/*
+calibration\images\*
+logs\*
+localization\logs\*
+.*

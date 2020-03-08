@@ -68,7 +68,7 @@ while(ala==0):
         break
 
 
-loc = Localization(0.0, 0.0, 0.0, side)
+loc = Localization(0.0, -1.3, math.pi/2, side)
 strat = Strategy.Strategy()
 motion = Motion.Motion()
 model = Model()
@@ -111,8 +111,8 @@ while(True):
 
         #img.save ("kekb.jpg", quality=100)
 
-        cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "ball"],
-                                      drawing_list=["yellow_posts", "ball"])
+        cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "blue_posts", "ball"],
+                                      drawing_list=["yellow_posts", "blue_posts", "ball"])
 
         #cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "ball", "white_posts_support"],
         #                          drawing_list=["yellow_posts", "ball", "white_posts_support"])
@@ -140,7 +140,7 @@ while(True):
 
         #print("keys = ", selfData.keys())
 
-    print ("eto self points", selfData['yellow_posts'])
+    print ("eto self points", selfData['yellow_posts'], selfData["blue_posts"])
 
     #break
     #print("eto loc baall", selfData['ball'] )
@@ -152,14 +152,14 @@ while(True):
     loc.update_ball(selfData)
     #loc.ball_position = (1.2, 0.0)
     #loc.robot_position = (0.0, 0.0, 0.0)
-    loc.localized = True
+    #loc.localized = True
     #loc.seeBall = False
     #print(loc.ballPosSelf)
     #loc.robot_position = (0.75, 0, 0)
     #loc.ball_position = (1.25, 0)
 
     action = strat.generate_action(loc, img)
-    print(action)
+    #print(action)
 
     strat.draw_trajectory (img, model)
 
@@ -167,7 +167,7 @@ while(True):
 
 
 
-    #odometry_results = motion.apply(action)
-    #print("odometry = ", odometry_results)
-    #if odometry_results is not None:
-        #loc.pf.particles_move(odometry_results)
+    odometry_results = motion.apply(action)
+    print("odometry = ", odometry_results['shift_x'], odometry_results['shift_y'],odometry_results['shift_yaw']*180/math.pi)
+    if odometry_results is not None:
+        loc.pf.particles_move(odometry_results)
