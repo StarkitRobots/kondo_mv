@@ -1,8 +1,8 @@
 {
     "max_step": 0.01,
-    "min_dist": 0.12,
+    "min_dist": 0.17,
     "ang_thres1": 0.31415000000000004,
-    "ang_thres2": 0.30943333333333333,
+    "ang_thres2": 0.52,
     "CIRCLE_RADIUS": 0.05,
     "GOAL_LEN": 1.1,
     "WIND_X": 1.8,

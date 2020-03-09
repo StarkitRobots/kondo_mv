@@ -6,6 +6,8 @@ import pyb
 from pyb import Pin
 from pyb import LED
 
+#sys.path.append('/')
+from common import median
 sys.path.append('model')
 from model import Model
 sys.path.append('localization')
@@ -47,7 +49,7 @@ sensor.set_auto_whitebal(False)
 sensor.skip_frames(time = 2000)
 sensor.set_auto_gain(False, gain_db = 0)
 sensor.set_auto_whitebal(False, (-6.02073, -5.11, 1.002))
-sensor.set_auto_exposure(False, 1800)
+sensor.set_auto_exposure(False, 2000)
 vision = Vision.Vision ({})
 vision.load_detectors("vision/detectors_config1.json")
 
@@ -68,7 +70,7 @@ while(ala==0):
         break
 
 
-loc = Localization(0.0, 0.0, 0.0, side)
+loc = Localization(-0.7, -1.3, math.pi/2, side)
 strat = Strategy.Strategy()
 motion = Motion.Motion()
 model = Model()
@@ -84,9 +86,9 @@ with open("calibration/cam_col.json") as f:
 # setting model parametrs
 mass1 = [0,0,0,0,0,0]
 mass2 = [0,0]
-model.setParams(calib["cam_col"], robotHeight,mass1, mass2)
-#motion.move_head()
-#model.updateCameraPanTilt(0, -3.1415/6)
+model.setParams(calib["cam_col"], robotHeight, mass1, mass2)
+motion.move_head()
+model.updateCameraPanTilt(0, -math.pi/6)
 
 vision_postprocessing = Vision.Vision_postprocessing ()
 t = 0
@@ -95,7 +97,7 @@ t = 0
 while(True):
     clock.tick()
     imu.update()
-    loc.pf.myrobot.yaw = imu.yaw/180*math.pi
+    #loc.pf.myrobot.yaw = imu.yaw/180*math.pi
     curr_t = pyb.millis()
     #print (curr_t - t)
     t = curr_t
@@ -106,13 +108,11 @@ while(True):
 
         model.updateCameraPanTilt(a,b)
         # vision part. Taking picture.
-        img=sensor.snapshot().lens_corr(strength=1.2, zoom = 1.0)
+        img=sensor.snapshot().lens_corr(
+        strength=1.2, zoom = 1.0)
 
-
-        #img.save ("kekb.jpg", quality=100)
-
-        cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "ball"],
-                                      drawing_list=["yellow_posts", "ball"])
+        cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "blue_posts", "ball"],
+                                      drawing_list=["yellow_posts", "blue_posts", "ball"])
 
         #cameraDataRaw=vision.get(img, objects_list=["yellow_posts", "ball", "white_posts_support"],
         #                          drawing_list=["yellow_posts", "ball", "white_posts_support"])
@@ -139,24 +139,45 @@ while(True):
             selfData[observationType]+=selfPoints
 
         #print("keys = ", selfData.keys())
+    print ("eto self yello points", selfData['yellow_posts'], "eto self blue points", selfData["blue_posts"])
 
-    print ("eto self points", selfData['yellow_posts'])
+    if len(selfData['yellow_posts'])!=0:
+        general = []
+        first_side = []
+        second_side = []
+        k = selfData['yellow_posts'][0]
+        for pep in selfData['yellow_posts']:
+            if math.fabs(math.atan(pep[0]/pep[1]) - math.atan(k[0]/k[1])) < 0.3:
+                first_side.append(list(pep))
+            else:
+                second_side.append(list(pep))
+        if len(first_side)!=1:
+            first_side = median(first_side)
+        else:
+            first_side = first_side[0]
 
-    #break
+        if second_side!=0 and len(second_side)!=1:
+            second_side = median(second_side)
+        elif len(second_side) == 1:
+            second_side = second_side[0]
+
+
+        general.append(first_side)
+        if len(second_side)!=0:
+            general.append(second_side)
+        selfData['yellow_posts'] = general
+    print ("eto self yello points", selfData['yellow_posts'], "eto self blue points", selfData["blue_posts"])
+    #for kek in selfData['yellow_posts']:
+        #print('angle', math.atan(kek[0]/kek[1] ))
     #print("eto loc baall", selfData['ball'] )
 
     loc.update(selfData)
     #print("posts number = ", len(selfData["yellow_posts"]))
-    #
-    #print("my_pose", loc.robot_position)
     loc.update_ball(selfData)
     #loc.ball_position = (1.2, 0.0)
     #loc.robot_position = (0.0, 0.0, 0.0)
     loc.localized = True
-    #loc.seeBall = False
     #print(loc.ballPosSelf)
-    #loc.robot_position = (0.75, 0, 0)
-    #loc.ball_position = (1.25, 0)
 
     action = strat.generate_action(loc, img)
     print(action)
@@ -167,7 +188,7 @@ while(True):
 
 
 
-    #odometry_results = motion.apply(action)
-    #print("odometry = ", odometry_results)
-    #if odometry_results is not None:
-        #loc.pf.particles_move(odometry_results)
+    odometry_results = motion.apply(action)
+    print("odometry = ", odometry_results['shift_x'], odometry_results['shift_y'],odometry_results['shift_yaw']*180/math.pi)
+    if odometry_results is not None:
+        loc.pf.particles_move(odometry_results)

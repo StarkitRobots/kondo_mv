@@ -20,12 +20,12 @@ def degrees_to_head(degrees):
 class Motion:
     def __init__(self, unix=False, controller=True, imu=True):
         self.unix = unix
-        
+
         # RCB4 controller init
         if controller:
             from kondo_controller import Rcb4BaseLib
             from pyb import UART
-            
+
             self.kondo = Rcb4BaseLib()
             _uart = UART(1, 115200, parity=0, timeout = 1000)
             self.kondo.open(_uart)
@@ -38,7 +38,7 @@ class Motion:
         if imu:
             from machine import I2C
             from bno055 import BNO055, AXIS_P7
-            
+
             i2c = I2C(2)
             self.imu = BNO055(i2c)
         else:
@@ -186,7 +186,7 @@ class Motion:
             self.head_motion_states = json.loads(f.read())
         self.head_state_num = len(self.head_motion_states)
         self.head_enabled = True
-        self.head_pan = 0   
+        self.head_pan = 0
         self.head_tilt = 0
         self.head_state = -1
 
@@ -195,12 +195,12 @@ class Motion:
             self.motion_config = json.loads(f.read())
 
         # walk threshold
-        self.walk_threshold = self.motion_config['walk']['walk_threshold']
-        self.max_blind_distance = self.motion_config['walk']['max_blind_distance']
-        self.step_len = self.motion_config['walk']['step_len']
+        self.walk_threshold = self.motion_config['walk_threshold']
+        self.max_blind_distance = self.motion_config['max_blind_distance']
+        self.step_len = self.motion_config['step_len']
 
         # acceptable error in degrees
-        self.angle_error_treshold = self.motion_config['turn']['angle_error_treshold'] * math.pi / 180.
+        self.angle_error_treshold = self.motion_config['angle_error_treshold'] * math.pi / 180.
 
 
     def get_imu_yaw(self):
@@ -211,13 +211,13 @@ class Motion:
                 time.sleep(CHANNEL_WAIT_TIME)
                 yaw, pitch, roll = self.imu.euler()
         else:
-            print('No imu. Unable to get yaw')
+            print('No imu. Unable to get yaw. Yaw is going to be zero')
             yaw = 0
-        return yaw
+        return -(yaw / 180. * math.pi)
 
     def get_odometry(self, motion, c1, u1, yaw_diff):
         return {'shift_x': motion['shift_x'](c1, u1), 'shift_y': motion['shift_y'](c1, u1), 'shift_yaw': yaw_diff}
-        
+
 
 ###########################################################################################
 # timer methods
@@ -234,7 +234,6 @@ class Motion:
             try:
                 if self.unix:
                     time.sleep(0.1)
-                    print('timer')
                 else:
                     time.sleep(100)
                 if self.kondo is not None:
@@ -260,7 +259,7 @@ class Motion:
         if self.unix:
             self._motion_start_time = time.time()
             time.sleep(int(duration / 1000))
-        else:    
+        else:
             self._motion_start_time = time.ticks()
             time.sleep(int(duration))
 
@@ -275,7 +274,6 @@ class Motion:
         c1 = 0
         u1 = 0
         if self._timer_permission_check():
-            print('timer enter')
             self.current_motion = target_motion
             yaw_before = self.get_imu_yaw()
             if self.kondo is not None:
@@ -292,6 +290,8 @@ class Motion:
                     time.sleep(CHANNEL_WAIT_TIME)
                     self.kondo.motionPlay(self.current_motion['id'])
                 self._set_timer(self._get_timer_duration(self.current_motion, args))
+                while not self._timer_permission_check():
+                    time.sleep(100)
             else:
                 print('No controller. Unable to perform a motion. Calculating odometry')
                 if args['c1'] != 0:
@@ -299,8 +299,8 @@ class Motion:
                 if args['u1'] != 0:
                     u1 = args['u1']
             yaw_after = self.get_imu_yaw()
+
         try:
-            print('walk control, c1: ' + str(c1) + ', u1: ' + str(u1))
             return self.get_odometry(self.current_motion, c1, u1, yaw_after - yaw_before)
         except KeyError:
             return self.get_odometry(self.motions['Empty'], 0, 0, 0)
@@ -386,13 +386,12 @@ class Motion:
         else:
             return self.get_odometry(self.motions['Empty'], 0, 0, 0)
 
-    def _walk_control(self, walk_args):
+    def _walk_control_motions(self, walk_args):
         distance = walk_args[0]
         rotation_angle = walk_args[1]
-        if abs(rotation_angle) > self.angle_error_treshold:    
-            self._turn_control(rotation_angle)
+        if abs(rotation_angle) > self.angle_error_treshold:
+            return self._turn_control(rotation_angle)
         else:
-            print('turn control, c1: ' + str(distance) + ', u1: ' + str(rotation_angle))
             motion = self.motions['Soccer_WALK_FF']
             #distance = math.sqrt(x*x + y*y)
             if distance < self.max_blind_distance:
@@ -402,18 +401,46 @@ class Motion:
 
             return self.do_motion(motion, {'c1': step_num, 'u1': 1})
 
+    """def _walk_control_engine(self)
+        for stop_point in range (len(destination)):
+            x1, y1, z1 = motion.Dummy_HData[len(motion.Dummy_HData)-1]
+            x1 = 1000* x1
+            y1 = 1000* y1
+            u1 = motion.euler_angle[0]
+            x2,y2,u2 = destination[stop_point]
+            x2 = 1000* x2
+            y2 = 1000* y2
+            step_Seq, walk_Direction = steps( x1 ,y1,u1,x2,y2,u2)
+            for i in range (len(step_Seq)):
+                motion.walk_Initial_Pose()
+                stepLength, sideLength, rotation, cycleNumber = step_Seq[i]
+                for cycle in range(cycleNumber):
+                    rotation1 = rotation
+                    if rotation == 0:
+                        rotation1 = (walk_Direction - motion.euler_angle[0])*1
+                        if rotation1 > 180 : rotation1 = rotation1 - 360
+                        if rotation1 < -180 : rotation1 = rotation1 + 360
+                        if rotation1 > 12 : rotation1 = 12
+                        if rotation1 < -12 : rotation1 = -12
+
+                    motion.walk_Cycle(stepLength, sideLength,rotation1,cycle,cycleNumber)
+                motion.walk_Final_Pose()
+            motion.turn_To_Course(u2)
+
+    def placer(self, destination)
+"""
     def _kick_control(self, kick_args):
         if kick_args == -1:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Kick_Forward_Left_leg'], {'c1': 0, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Kick_Forward_Right_leg'], {'c1': 0, 'u1': 0})
 
     def _lateral_control(self, lateral_args):
         step_num = int(lateral_args / 0.033)
         if step_num > 0:
-            self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Small_Step_Left'], {'c1': step_num, 'u1': 0})
         else:
-            self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
+            return self.do_motion(self.motions['Soccer_Small_Step_Right'], {'c1': abs(step_num), 'u1': 0})
 
 
 ###########################################################################################
@@ -423,7 +450,7 @@ class Motion:
     def apply(self, action):
         if self._timer_permission_check():
             if action['name'] == 'walk':
-                return self._walk_control(action['args'])
+                return self._walk_control_motions(action['args'])
             elif action['name'] == 'turn':
                 return self._turn_control(action['args'])
             elif action['name'] == 'kick':
@@ -432,5 +459,13 @@ class Motion:
                 return  self._lateral_control(action['args'])
             elif action['name'] == 'take_around_right':
                 return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1, 'u1': 0})
-        return 0
+            elif action['name'] == 'take_around_left':
+                return self.do_motion(self.motions['Soccer_Take_Around_Left'] , {'c1': 1, 'u1': 0})
+
+        return self.get_odometry(self.motions['Empty'], 0, 0, 0)
+
+if __name__ == "__main__":
+    m = Motion(True, False, False)
+    print(m.apply({'name': 'turn', 'args':(0.2)}))
+    print(m.apply({'name': 'walk', 'args':(0.3, 0.1)}))
 
