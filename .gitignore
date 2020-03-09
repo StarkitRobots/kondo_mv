@@ -7,4 +7,6 @@ logs\
 localization\logs\
 localization\experiments\logs\
 localization\experiments\
+.DS_Store
 .*
+.DS_Store
