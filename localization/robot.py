@@ -1,10 +1,11 @@
 import math
 
+
 class Robot:
-    def __init__(self, x = 0, y = 0, yaw = 0):
+    def __init__(self, x=0, y=0, yaw=0):
         self.x = x          # robot's x coordinate
-        self.y = y
-        self.yaw = yaw      # robot's y coordinate
+        self.y = y          # robot's y coordinate
+        self.yaw = yaw      # robot's angle
 
     def set_coord(self, new_x, new_y, new_orientation):
         self.x = float(new_x)
@@ -29,7 +30,6 @@ class Robot:
         self.y += x*math.sin(self.yaw)
         self.yaw = orientation
 
-
     def observation_to_predict(self, observations, landmarks):
         predicts = []
         for color_landmarks in landmarks:
@@ -37,10 +37,11 @@ class Robot:
                 continue
 
             for landmark in landmarks[color_landmarks]:
-                x_posts = self.x - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
-                y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                x_posts = self.x - \
+                    observation[0]*math.sin(-self.yaw) + \
+                    observation[1]*math.cos(-self.yaw)
+                y_posts = self.y + \
+                    observation[0]*math.cos(-self.yaw) - \
+                    observation[1]*math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
-
-
-
