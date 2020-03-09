@@ -52,8 +52,10 @@ class Strategy:
             ang = math.acos(dx / dist)
             if dy < 0:
                 ang = -ang
-
-            return {"name" : "walk", "args" : (dist, ang - yaw)}
+            res_ang = int((ang - yaw) * 180 / math.pi)
+            res_ang = res_ang % 360
+            res_ang = res_ang * math.pi / 180.0
+            return {"name" : "walk", "args" : (dist, res_ang)}
 
 
     def walkball(self, loc):
@@ -117,10 +119,6 @@ class Strategy:
             return {"name" : "turn", "args" : decision[1]}
         elif decision[0] == "lateral step":
             return {"name" : "lateral step", "args" : decision[1]}
-        elif decision[0] == "take around right":
-            return {"name" : "take_around_right", "args" : (1)}
-        elif decision[0] == "take around left":
-            return {"name" : "take_around_left", "args" : (1)}
         elif decision[0] == "walk":
             return {"name" : "walk", "args" : (decision[1], decision[2])}
         else:
