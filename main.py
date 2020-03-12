@@ -6,7 +6,6 @@ import math
 import json
 import os
 import pyb
-from pyb import Pin
 from pyb import LED
 
 from common import median
@@ -43,30 +42,12 @@ vision = Vision.Vision({})
 vision.load_detectors("vision/detectors_config.json")
 
 
-ala = 0
-side = False
-ala = 1
-while(ala == 0):
-    if (pin9.value() == 0):   # нажатие на кнопку на голове
-        ala = 1
-        side = True
-        print("I will attack blue goal")
-        break
-
-    if (pin3.value() == 0):
-        ala = 1
-        side = False
-        print("I will attack yellow goal")
-        break
-
 
 loc = Localization(-0.7, -1.3, math.pi/2, side)
 strat = Strategy.Strategy()
 motion = Motion.Motion()
 model = Model()
 imu = IMU.IMU(0.0)
-pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
-pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:
     calib = json.load(f)
 

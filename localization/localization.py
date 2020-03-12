@@ -1,7 +1,8 @@
 import math
 import json
 import sys
- 
+from pyb import Pin
+
 sys.path.append('/')
 
 from robot import Robot
@@ -9,12 +10,34 @@ from field import Field
 from common import median
 from ParticleFilter import updatePF, ParticleFilter
 
-
-
+pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
+pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
+pin2 = Pin('P2', Pin.IN, Pin.PULL_UP)
 
 class Localization:
 
     def __init__(self, x, y, yaw, side):
+        ala = 0
+        side = False
+        ala = 1
+        while(ala == 0):
+            if (pin9.value() == 0):   # нажатие на кнопку на голове
+                ala = 1
+                side = True
+                print("I will attack blue goal")
+                break
+        if (pin3.value() == 0):
+            ala = 1
+            side = False
+            print("I will attack yellow goal")
+            break
+
+        if (pin2.value() == 0):
+            ala = 1
+            side = False
+            print("I will attack yellow goal")
+            break
+
         self.ballPosSelf = None
         self.ball_position = None
         self.robot_position = None
@@ -36,8 +59,7 @@ class Localization:
             "localization/parfield.json"), landmarks)
 
     def update(self, data):
-        #self.ball_position = data["ball"]
-        self.robot_position = updatePF(self.pf, data)
+         self.robot_position = updatePF(self.pf, data)
         if self.pf.consistency > 0.5:
             self.localized = True
         else:
@@ -45,15 +67,7 @@ class Localization:
 
     def update_ball(self, data):
         if len(data['ball']) != 0:
-            #ballX = 0
-            #ballY = 0
-            # for el in data["ball"]:
-            #    ballX+=el[0]
-            #    ballY+=el[1]
             self.seeBall = True
-            #self.ballPosSelf = (ballX/len(data['ball']), ballY/len(data['ball']))
-            #bx = ballX/len(data['ball'])
-            #by = ballY/len(data['ball'])
 
             self.ballPosSelf = median(data["ball"])
             #min(data["ball"], key=lambda x: x[0]**2 + x[1]**2)
