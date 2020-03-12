@@ -1,8 +1,10 @@
 import math
 
 class Model:
-    cameraPan = 0
-    cameraTilt = 0
+    def __init__(self):
+        self.cameraPan = 0
+        self.cameraTilt = 0
+        self.active_servos = {}
 
     def updateCameraPanTilt(self, cameraPan, cameraTilt):
         self.cameraPan = cameraPan
@@ -47,8 +49,7 @@ class Model:
         u = -x_cor * self.A[0][0] + self.A[0][2]
         v = y_cor * self.A[1][1] + self.A[1][2]
         return (int(u), int(v))
-
-
+    
     def pic2r(self, u, v):
         # u,v - pixel coords of the ball in the screen system
 
