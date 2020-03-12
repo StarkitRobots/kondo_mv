@@ -20,7 +20,7 @@ class IMU():
     
     @staticmethod
     def _change_orientation(yaw, roll, pitch):
-        return yaw % 360, roll % 360, pitch % 360
+        return 360 - yaw, 360 - roll, 360 - pitch
     
     @staticmethod
     def to_radians(yaw, roll, pitch):
@@ -37,14 +37,20 @@ class IMU():
     def get_transformed_data(self):
         yaw, roll, pitch = self.get_raw_data()
         yaw, roll, pitch = self._change_orientation(yaw, roll, pitch)
+        if yaw > 180: 
+            yaw -= 360
+        if roll > 180: 
+            roll -= 360
+        if pitch > 180: 
+            pitch -= 360
         return self.to_radians(yaw, roll, pitch)
 
     def update(self):
-        self.yaw, self.roll, self.pitch = self.get_transformed_data()
-
-        self.yaw = self.yaw - self.init_yaw
-        self.roll = self.roll - self.init_roll
-        self.pitch = self.pitch - self.init_pitch
+        yaw, roll, pitch = self.get_transformed_data()
+        
+        self.yaw = yaw - self.init_yaw
+        self.roll = roll - self.init_roll
+        self.pitch = pitch - self.init_pitch
         return self.yaw, self.roll, self.pitch 
 
     def get_yaw(self):
