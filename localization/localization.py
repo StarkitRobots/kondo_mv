@@ -88,5 +88,5 @@ class Localization:
         else:
             self.seeBall = False
 
-    def move(self, x, y, yaw):
-        self.pf.particles_move(x, y, yaw)
+    def move(self, odometry):
+        self.pf.particles_move(odometry)

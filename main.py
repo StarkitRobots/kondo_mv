@@ -24,7 +24,7 @@ from localization import Localization
 from model import Model
 
 # robotHeight = 0.37 #[m]
-robotHeight = 0.42  # [m]
+ROBOT_HEIGHT = 0.42
 
 clock = time.clock()
 sensor.reset()
@@ -37,34 +37,28 @@ sensor.set_auto_gain(False, gain_db=0)
 sensor.set_auto_whitebal(False, (-6.02073, -5.11, 1.002))
 sensor.set_auto_exposure(False, 2000)
 
-
-
-
-
 vision = Vision({})
 loc = Localization(-0.7, -1.3, math.pi/2, side)
 strat = Strategy()
 motion = Motion()
 model = Model()
-
+vision_postprocessing = Vision_postprocessing()
+vision.load_detectors("vision/detectors_config.json")
 with open("calibration/cam_col.json") as f:
     calib = json.load(f)
-vision.load_detectors("vision/detectors_config.json")
 
 # setting model parametrs
 mass1 = [0, 0, 0, 0, 0, 0]
 mass2 = [0, 0]
-model.setParams(calib["cam_col"], robotHeight, mass1, mass2)
-motion.move_head()
-model.updateCameraPanTilt(0, -math.pi/6)
+model.setParams(calib["cam_col"], ROBOT_HEIGHT, mass1, mass2)
 
-vision_postprocessing = Vision_postprocessing()
+#motion.move_head()
+#model.updateCameraPanTilt(0, -math.pi/6)
+
 t = 0
-
 # main loop
 while(True):
     clock.tick()
-    #loc.pf.myrobot.yaw = imu.yaw/180*math.pi
     curr_t = pyb.millis()
     #print (curr_t - t)
     t = curr_t
@@ -151,4 +145,4 @@ while(True):
     print("odometry = ", odometry_results['shift_x'],
           odometry_results['shift_y'], odometry_results['shift_yaw']*180/math.pi) #can be turned off, but now thats needs for debug
     if odometry_results is not None:
-        loc.pf.particles_move(odometry_results)
+        loc.move(odometry_results)

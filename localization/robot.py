@@ -1,8 +1,7 @@
 import math
 
-
 class Robot:
-    def __init__(self, x=0, y=0, yaw=0):
+    def __init__(self, x = 0, y = 0, yaw = 0):
         self.x = x          # robot's x coordinate
         self.y = y          # robot's y coordinate
         self.yaw = yaw      # robot's angle
@@ -24,7 +23,7 @@ class Robot:
         # turn, and add randomomness to the turning command
         orientation = self.yaw + float(yaw)
         if orientation < 0:
-            orientation += (math.pi*2)
+            orientation += (math.pi * 2)
         orientation %= (2 * math.pi)
         self.x += x*math.cos(self.yaw)
         self.y += x*math.sin(self.yaw)
@@ -38,10 +37,10 @@ class Robot:
 
             for landmark in landmarks[color_landmarks]:
                 x_posts = self.x - \
-                    observation[0]*math.sin(-self.yaw) + \
-                    observation[1]*math.cos(-self.yaw)
+                    observation[0] * math.sin(-self.yaw) + \
+                    observation[1] * math.cos(-self.yaw)
                 y_posts = self.y + \
-                    observation[0]*math.cos(-self.yaw) - \
-                    observation[1]*math.sin(-self.yaw)
+                    observation[0] * math.cos(-self.yaw) - \
+                    observation[1] * math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
