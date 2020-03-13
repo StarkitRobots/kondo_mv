@@ -4,8 +4,8 @@ import json
 
 class BallApproach:
 
-    dist = 1
-    turn_ang = 0.1 * math.pi
+    #dist = 1
+    #turn_ang = 0.1 * math.pi
 
     def get_data(self, xr, yr, xb, yb, yaw):
         self.xr = xr
@@ -17,6 +17,8 @@ class BallApproach:
 
     def set_constants(self, consts):
         self.max_step = consts["max_step"]
+        self.min_step = consts["min_step"]
+        self.turn_step = consts["turn_step"]
         self.min_dist = consts["min_dist"]
         self.ang_thres1 = consts["ang_thres1"]
         self.ang_thres2 = consts["ang_thres2"]
@@ -32,76 +34,13 @@ class BallApproach:
     def get_diff(self):
         return self.xr - self.xb
 
-    def find_trajectory (self):
-        xr = self.xr
-        yr = self.yr
-        xb = self.xb
-        yb = self.yb
-        #max_step = self.max_step
-        CIRCLE_RADIUS = self.CIRCLE_RADIUS
-        GOAL_LEN = self.GOAL_LEN
-        WIND_X = self.WIND_X
-        GOAL_POS = self.GOAL_POS
+    def find_trajectory (self, xr, yr, xb, yb):
 
         traj = []
 
-        traj.append ((xr, yr))
-
-        #-----------------------------------------------------------
-        #find starting point on the circle
-
-        xbr = xb - xr #x ball relative
-        ybr = yb - yr #y ball relative
-
-        r    = CIRCLE_RADIUS
-        leng = math.sqrt (xbr**2 + ybr**2)
-
-        #beta  = math.asin (ybr / leng)
-        #alpha = math.asin (r / leng)
-
-        #if (xb < xr):# + CIRCLE_RADIUS):
-        #   sx = 0
-        #   sy = 0
-
-        #   if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
-        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
-
-        #   else:
-        #       alpha = - alpha
-        #
-        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
-
-        #   traj.append ((sx, sy))
-
-        #-----------------------------------------------------------
-        #find kick point on the circle
-        gbx = xb - WIND_X                        #goal-ball x
-        gby = yb - GOAL_POS - int (GOAL_LEN / 2) #goal-ball y
-
-        length_gb =  math.sqrt (gbx**2 + gby**2)
-
-        kpx = xb + CIRCLE_RADIUS * gbx / length_gb #kick point x
-        kpy = yb + CIRCLE_RADIUS * gby / length_gb #kick point y
-
-        traj.append ((kpx, kpy))
-
-        #move with proper steps on the circle
-
-        #if (xr < xb):
-        #    traj.append ((xr, yr))
-        #    traj.append ((xb - CIRCLE_RADIUS, yb))
-
-        #else:
-        #    if (yr < yb):
-        #    else:
-
-        traj.append ((WIND_X, GOAL_POS + GOAL_LEN / 2))
-
-        traj[1] = (xb, yb )
-
-        self.wtraj = traj
+        traj.append((xr, yr))
+        traj.append((xb, yb))
+        traj.append((self.WIND_X, 0.0))
 
         return traj
 
@@ -111,11 +50,8 @@ class BallApproach:
         return res
 
 
-    def convert_trajectory(self):
-        traj = self.wtraj
-        yaw = -self.yaw
-
-        # shift,rotmat - coefficients of the rotation transformation
+    def convert_trajectory(self, traj, yaw):
+        # shift,rotmat - parameters of the rotation transformation
         shift = traj[0]
         rotmat = [[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]]
 
@@ -124,14 +60,14 @@ class BallApproach:
         return rtraj
 
 
-    def make_decision(self):
+    def make_decision(self, robot_pos, ball_pos):
 
-        rtraj = self.rtraj
-        traj = self.wtraj
+        traj = self.find_trajectory(robot_pos[0], robot_pos[1], ball_pos[0], ball_pos[1])
+        yaw = robot_pos[2]
+        rtraj = self.convert_trajectory(traj, yaw)
         min_dist = self.min_dist
         ang_thres1 = self.ang_thres1 # - minimum allowed angle between robot walk direction and robot-to-ball direction
         ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
-        yaw = -self.yaw
 
         # targvec - the vector from  center of the goal to the ball
         # tv_ln - length of the targvec
@@ -143,8 +79,8 @@ class BallApproach:
         #norm = (self.step_before_strike * targvec[1] * 1.0 / tv_ln, -self.step_before_strike * targvec[0] * 1.0 / tv_ln)
         #wnorm = (wtargvec[1] * 1.0 / wtv_ln, wtargvec[0] * 1.0 / wtv_ln)
 
-        # path - vector from robot to ball
-        # pth_ln - length of path
+        #path - vector from robot to ball
+        #pth_ln - length of path
         path = rtraj[1]
         pth_ln = math.sqrt(path[0] ** 2 + path[1] ** 2)
         self.dist = pth_ln
@@ -154,7 +90,7 @@ class BallApproach:
         ang1 = math.acos(path[0] / pth_ln)
         ang2 = math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
         self.ang2 = ang2
-        print("rtraj:", rtraj)
+        #print("rtraj:", rtraj)
         vec_prod = targvec[1] * path[0] - targvec[0] * path[1]
 
         # calculating the proprties of the circle, that smoothes the movement of the robot
@@ -189,15 +125,22 @@ class BallApproach:
 
 
         # making the decision, based on the distance and angles
-        ball_dist = math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2)
+        ball_dist = pth_ln
         # print("ball dist approach = ", ball_dist)
         if (ball_dist < self.min_dist):
+            
+            if ang1 > ang_thres1:
+                if path[1] > 0:
+                    return "turn", ang1
+                else:
+                    return "turn", -ang1
+            
             if ang2 > ang_thres2:
                 if vec_prod > 0:
                     return "take around right", 1
                 else:
                     return "take around left", -1
-
+          
             if path[1] > 0:
                 return "left kick", -1
             else:
@@ -219,3 +162,77 @@ class BallApproach:
                     return "walk", move_p_dist, ang3
                 elif move_point_loc[1] < 0:
                     return "walk", move_p_dist, -ang3
+                
+    def generate_chain_element(self, current_pos, ball_pos):
+        dec = self.make_decision(current_pos, ball_pos)
+        
+        if dec[0] == "walk":
+            turn_ang = dec[2]
+            if abs(turn_ang) > self.ang_thres1:
+                if abs(turn_ang) < self.turn_step:
+                    pass
+                elif turn_ang > 0:
+                    turn_ang = self.turn_step
+                else:
+                    turn_ang = -self.turn_step
+                    
+                chain_elem = [0.0, 0.0, turn_ang]
+            else:
+                if dec[1] > 3 * self.max_step:
+                    step_l = self.max_step
+                else:
+                    step_l = self.min_step
+                chain_elem = [step_l, 0.0, 0.0]
+                           
+        elif dec[0] == "lateral step":
+            chain_elem = [0.0, dec[1], 0.0]
+                       
+        elif dec[0] == "take around right":
+            R = self.max_step / self.turn_step
+            chain_elem = [R * (1 - math.cos(self.turn_step)), -R * math.sin(self.turn_step), self.turn_step]
+        
+        elif dec[0] == "take around left":
+            R = self.max_step / self.turn_step
+            chain_elem = [R * (1 - math.cos(self.turn_step)), R * math.sin(self.turn_step), -self.turn_step]
+        
+        elif dec[0] == "turn":
+            if dec[1] > 3 * self.turn_step:
+                turn_ang = self.turn_step
+            else:
+                turn_ang = dec[1]
+            new_yaw = (current_pos[2] + turn_ang) % (2 * math.pi)
+            chain_elem = [0.0, 0.0, turn_ang]
+            new_pos = [current_pos[0], current_pos[1], new_yaw]
+            return new_pos, ball_pos, chain_elem
+            
+        elif dec[0] == "right kick" or dec[0] == "left kick":
+            return None, None, None
+        else:
+            return None, None, None
+        
+        new_x = current_pos[0] + chain_elem[0] * math.cos(current_pos[2]) - chain_elem[1] * math.sin(current_pos[2])
+        
+        new_y = current_pos[1] + chain_elem[1] * math.cos(current_pos[2]) + chain_elem[0] * math.sin(current_pos[2])
+        
+        new_yaw = (current_pos[2] + chain_elem[2]) % (2 * math.pi)
+        
+        
+        new_pos = [new_x, new_y, new_yaw]
+        
+        return new_pos, ball_pos, chain_elem
+                
+    def generate_chain(self, robot_pos, ball_pos):
+        chain = []
+        current_pos = robot_pos
+        count = 0
+        while(True):
+            count += 1
+            current_pos, ball_pos, chain_element = self.generate_chain_element(current_pos, ball_pos)
+            
+            if current_pos is None:
+                break
+            if count > 100:
+                break
+            chain.append(chain_element)
+        
+        return chain
