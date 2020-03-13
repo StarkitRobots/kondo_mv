@@ -11,12 +11,13 @@ class Walk(Move):
         super().__init__()
         self.enabled = False
         # Use walk engine or not
-        self._use_engine = use_engine
-        if self._use_engine:
+        if use_engine:
             if model is not None:
                 self.engine = WalkEngine(model)
             else:
                 raise Exception('No model')
+        else:
+            self.is_kondo_motion = True
         self.walk_step = 0
         self.lateral_step = 0
         self.walk_turn = 0
@@ -29,22 +30,39 @@ class Walk(Move):
         self.max_lateral = self._walk_config['max_lateral']
         self.max_turn = self._walk_config['max_turn'] * math.pi / 180.
 
-    def enter(self):
+    def update(self, walk_step=None, lateral_step=None, walk_turn=None, cycle=None, cycles_num=None):
+        if walk_step is not None:
+            self.walk_step = walk_step
+        if lateral_step is not None:
+            self.lateral_step = lateral_step
+        if walk_turn is not None:
+            self.walk_turn = walk_turn
+        if cycle is not None:
+            self.cycle = cycle
+        if cycles_num is not None:
+            self.cycles_num = cycles_num
+
+    def start(self):
         self.enabled = True
-        if self._use_engine:
-            return self.engine.enter()
+        if not self.is_kondo_motion:
+            self.frames_to_process = self.engine.enter()
+            return self.frames_to_process
         else: 
             return {} 
 
     def tick(self):
+        data = []
         if self.enabled:
-            if self._use_engine:
+            if not self.is_kondo_motion:
                 self.engine.update(self.walk_step, 
                                     self.lateral_step, 
                                     self.walk_turn, 
                                     self.cycle, 
                                     self.cycles_num)
-                return self.engine.tick()
+
+                data = self.engine.tick()
+                self.frames_to_process += data
+                return data
             else:
                 step_num = int(self.lateral_step / self.max_lateral)
                 if step_num > 0:
@@ -91,12 +109,11 @@ class Walk(Move):
                 else:
                     step_num = 3
                 return {'motion': 'Soccer_WALK_FF', 'args':{'c1': step_num, 'u1': 1}}
-        else:
-            return {}    
+        return data
 
-    def exit(self):
+    def stop(self):
         self.enabled = False
-        if self._use_engine:
+        if not self.is_kondo_motion:
             return self.engine.exit()
         else:
             return {}

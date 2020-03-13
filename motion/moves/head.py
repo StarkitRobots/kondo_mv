@@ -1,4 +1,6 @@
 import json
+import sys
+sys.path.append('motion/moves')
 from move import Move
 
 class Head(Move):
@@ -12,19 +14,19 @@ class Head(Move):
         self.tilt = 0
         self.state = ['', -1]
 
-    def enter(self):
+    def start(self):
         data = []
         #state_num = len(self.head_motion_states['enter'])
-        if self.enabled:
+        if self.frames_to_process == []:    
+            self.enabled = True
             #self.state = ['enter', (self.state[1] + 1) % state_num]
             for state in self.head_motion_states['enter'].values():
                 self.servos['head_yaw'] = -state['head_yaw']
                 self.servos['head_pitch'] = state['head_pitch']
                 data.append(self.servos)
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-            return data
-        else:
-            return []
+            self.frames_to_process = data
+        return data
 
     # discrete head motion that understands its position and does next step:
     def tick(self):
@@ -39,11 +41,10 @@ class Head(Move):
                 data.append(servos)
                 
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-            return data
-        else:
-            return []
+            self.frames_to_process = data
+        return data
             
-    def exit(self):
+    def stop(self):
         data = []
         #state_num = len(self.head_motion_states['exit'])
         if self.enabled:
@@ -53,6 +54,12 @@ class Head(Move):
                 self.servos['head_pitch'] = state['head_pitch']
                 data.append(self.servos)
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
-            return data
-        else:
-            return []
+            self.frames_to_process = data
+            self.enabled = False
+        return data
+
+if __name__ == "__main__":
+    head = Head()
+    print(Head.__bases__)
+    print(isinstance(head, Move))
+    print(type(head))
