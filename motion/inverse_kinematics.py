@@ -3,7 +3,16 @@ import math, time
 def compute_leg_ik(target, orientation, model):
 
     # get model leg sizes (distances between joints)
-    a5, b5, c5, a6, a7, a8, a9, a10, b10, c10 = model.sizes.values()
+    a5 = model.sizes['a5']
+    b5 = model.sizes['b5']
+    c5 = model.sizes['c5']
+    a6 = model.sizes['a6']
+    a7 = model.sizes['a7']
+    a8 = model.sizes['a8']
+    a9 = model.sizes['a9']
+    a10 = model.sizes['a10']
+    b10 = model.sizes['b10']
+    c10 = model.sizes['c10']
 
     c5 = 0
     
@@ -14,9 +23,9 @@ def compute_leg_ik(target, orientation, model):
     angle5 = orientation.w
     cos5 = math.cos(angle5)
     sin5 = math.sin(angle5)
-
     target.x = target.x * cos5 + (target.y + a5) * sin5
-    target.y = (target.y + a5) * cos5 - target.x * sin5
+    tmp = target.y
+    target.y = (tmp + a5) * cos5 - target.x * sin5
     target.z = target.z
 
     orientation.x =  orientation.x * cos5 + orientation.y * sin5
@@ -38,7 +47,6 @@ def compute_leg_ik(target, orientation, model):
     # divide limits segment into 10 parts to get 11 probable points
     calculation_step = (angle6_limits[1] - angle6_limits[0]) / 10
     node_points = []
-
     # calculate the value of F function for each probable point
     for i in range(11):
         angle6 = angle6_limits[0] + i * calculation_step
@@ -72,28 +80,32 @@ def compute_leg_ik(target, orientation, model):
                 solution_segments.append(k-1)
             else: solution_segments.append(k)
 
-    # look in each solution_segment in the same way to find more precised solution
+    # look into each solution_segment in the same way to find more precised solution
     angle6_solutions = []
     ind = 1
+    flag = 0
     for segment in range(len(solution_segments)):
         # define the boundaries of the segment
         bound1 =  angle6_limits[0] + solution_segments[segment] * calculation_step
         bound2 = bound1 + calculation_step
-
         while bound2 - bound1 > 0.00025 or ind > angle6_limits[1] - angle6_limits[0]:
             step = (bound2 - bound1) / 10
             node_points = []
             for i in range (11):
                 angle6 = bound1 + i * step
+                
                 cos = math.cos(angle6)
                 sin = math.sin(angle6)
                 tmp1 = orientation.y * cos + orientation.z * sin
                 tmp2 = orientation.z * cos - orientation.y * sin
+                
                 node_points.append(((target.y + b5) * cos + target.z * sin - c10) * (tmp1**2 - 
                     tmp2**2 - orientation.x**2) - a10 - b10 * tmp1 / math.sqrt(tmp2**2 + orientation.x**2))
             k = 0
+                
+                
             for i in range(11):
-                if math.fabs(node_points[i]) < math.fabs(node_points[k]): 
+                if abs(node_points[i]) < abs(node_points[k]): 
                     k = i
             # k is one bound point of new solution segment and k2 is another.
             if k == 0: 
@@ -101,14 +113,13 @@ def compute_leg_ik(target, orientation, model):
             elif k == 10: 
                 k2 = 9
             else:
-                if math.fabs(node_points[k-1]) < math.fabs(node_points[k+1]):
+                if abs(node_points[k-1]) < abs(node_points[k+1]):
                     k2 = k - 1
                 else: 
                     k2 = k + 1
 
             # calculate more precised value of angle6
             angle6 = bound1 + k * step
-
             # narrow the boundaries
             if k > k2:
                 bound1 += k2 * step
@@ -120,7 +131,6 @@ def compute_leg_ik(target, orientation, model):
             ind += 1
         # add calculated solution
         angle6_solutions.append(angle6)
-    
     # calculate angle10 (ankle_roll) for each angle6 as it depends on angle6
     angle10_solutions = []
     k = 0
@@ -155,7 +165,6 @@ def compute_leg_ik(target, orientation, model):
             target.x * sin987 + b10 / math.cos(angle10_solutions[i-k]) + ((target.y + b5) * cos6 + \
             target.z * sin6 - c10) * math.tan(angle10_solutions[i-k])
         m = (k1**2 + k2**2 + a8**2 - a7**2) / a8 / 2
-
         temp1 = k1**2 * m**2 - (k1**2 + k2**2) * (m**2 - k2**2)
         if temp1 >= 0:
             temp2 = (-k1 * m + math.sqrt(temp1)) / (k1**2 + k2**2)
@@ -183,7 +192,6 @@ def compute_leg_ik(target, orientation, model):
         # calculate angle7
         angle7_solutions.append(angle9_solutions[0] + angle8_solutions[0] - angle987)
         angle7_solutions.append(angle9_solutions[1] + angle8_solutions[1] - angle987)
-        
         # check each solution to fit the limits
         temp71 = angle7_solutions[0] < angle7_limits[0] or angle7_solutions[0] > angle7_limits[1]
         temp72 = angle7_solutions[1] < angle7_limits[0] or angle7_solutions[1] > angle7_limits[1]

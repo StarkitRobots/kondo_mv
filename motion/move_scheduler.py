@@ -67,13 +67,13 @@ class MoveScheduler:
                     if servos[servo] is not None:
                         active_servos[servo] = servos[servo]
             new_frames_list.append(active_servos)
-            for servo in servos.values():
+            for servo in servos:
                 servo = None
         return new_frames_list
 
     def _combine_frames(self, frames):
-        servos = self.servos
-        for servo in servos:
+        servos = {}
+        for servo in self.servos:
             servos[servo] = None
         for servo in servos:
             for frame in frames:
@@ -126,9 +126,12 @@ class MoveScheduler:
                     else:
                         if move.enabled:
                             move.tick()
-                frame_to_update = self._combine_frames(frames)
-                frame_to_update = self.add_zeros(frame_to_update)
-                self.update_servos(frame_to_update)
+                if frames != []:
+                    frame_to_update = self._combine_frames(frames)
+                    
+                    frame_to_update = self.add_zeros(frame_to_update)
+                    print(self.servos)
+                    self.update_servos(frame_to_update)
             for move in self.active_moves:
                 if not move.enabled and move.frames_to_process == []:
                     self.active_moves.pop(self.active_moves.index(move))
