@@ -2,7 +2,7 @@ import sys
 sys.path.append('../lowlevel')
 from kondo_controller import Rcb4BaseLib
 from pyb import UART
-import json, time
+import json, time, math
 
 CHANNEL_WAIT_TIME = 10
 
@@ -77,7 +77,7 @@ class ControllerManager:
     def set_servos(self, servo_data):
         bus = []
         for data in servo_data:
-            pos = round(servo_data[data] * 1698 + 7500)
+            pos = round(servo_data[data] / 180 * math.pi * 1698 + 7500)
             bus.append(
                 self.kondo.ServoData(self.servos[data]['id'], self.servos[data]['sio'], pos))
 

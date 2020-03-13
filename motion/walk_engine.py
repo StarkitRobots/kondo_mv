@@ -13,7 +13,7 @@ class WalkEngine:
         # (maximum distance between most right and most left position of Center of Mass) 53.4*2
         self.amplitude = 0.032
         # Distance between Center of mass and floor in walk pose
-        self.gait_height = 0.018         
+        self.gait_height = 0.18         
         # elevation of sole over floor
         self.step_height = 0.032       
         
@@ -48,7 +48,6 @@ class WalkEngine:
         data = {}
         right_leg_angles=[]
         left_leg_angles=[]
-
         # compute inversed kinematics 
         right_leg_solutions = compute_leg_ik(right_foot_target_point, 
                                 right_foot_orientation, self._model)
@@ -87,11 +86,11 @@ class WalkEngine:
                 data['right_elbow_pitch'] = -1.745
                 data['right_elbow_yaw'] = 0.0
                 data['right_shoulder_roll'] = 0.0
-                data['right_shoulder_pitch'] = 0.524 - self.left_foot_target_point.x / 0.0573
+                data['right_shoulder_pitch'] = 0.524 - self.left_foot_target_point.x / 57.3
                 data['left_elbow_pitch'] = 1.745
                 data['left_elbow_yaw'] = 0.0
                 data['left_shoulder_roll'] = 0.0
-                data['left_shoulder_pitch'] = -0.524 + self.right_foot_target_point.x / 0.0573
+                data['left_shoulder_pitch'] = -0.524 + self.right_foot_target_point.x / 57.3
             else:
                 data['right_elbow_pitch'] = 0.0
                 data['right_elbow_yaw'] = 0.0
@@ -111,11 +110,11 @@ class WalkEngine:
                 data['right_elbow_pitch'] = -1.745
                 data['right_elbow_yaw'] = 0.0
                 data['right_shoulder_roll'] = 0.0
-                data['right_shoulder_pitch'] = 0.524 - self.right_foot_target_point.x / 0.0573
+                data['right_shoulder_pitch'] = 0.524 - self.right_foot_target_point.x / 57.3
                 data['left_elbow_pitch'] = 1.745
                 data['left_elbow_yaw'] = 0.0
                 data['left_shoulder_roll'] = 0.0
-                data['left_shoulder_pitch'] = -0.524 + self.left_foot_target_point.x / 0.0573
+                data['left_shoulder_pitch'] = -0.524 + self.left_foot_target_point.x / 57.3
             else:
                 data['right_elbow_pitch'] = 0.0
                 data['right_elbow_yaw'] = 0.0
@@ -134,10 +133,14 @@ class WalkEngine:
         #else: self.right_first = True
         data = []
         for i in range(self._init_poses):
-            self.right_foot_target_point.z = -0.223 + i * (0.223 - self.gait_height) / self._init_poses
-            self.left_foot_target_point.z = -0.223 + i * (0.223 - self.gait_height) / self._init_poses
-            self.right_foot_target_point.y = -0.0534 - i * self.amplitude / 2 / self._init_poses
-            self.left_foot_target_point.y =  0.0534 - i * self.amplitude / 2 / self._init_poses
+            self.right_foot_target_point.z = -0.223 + i * \
+                (0.223 - self.gait_height) / self._init_poses 
+            self.left_foot_target_point.z = -0.223 + i * \
+                (0.223 - self.gait_height) / self._init_poses
+            self.right_foot_target_point.y = -0.0534 - i * \
+                self.amplitude / 2 / self._init_poses
+            self.left_foot_target_point.y =  0.0534 - i * \
+                self.amplitude / 2 / self._init_poses
             leg_angles_frame = self.compute_angles(
                 self.right_foot_target_point, 
                 self.right_foot_orientation,
@@ -181,13 +184,13 @@ class WalkEngine:
                 alpha = alpha01 * ((frame - self._frame_swing_phase) / 2 + 1)
                 S = (self.amplitude / 2 + self.lateral_step / 2) * math.cos(alpha)
                 self.right_foot_target_point.y = S - 0.0534 - self.lateral_step / 2
-                self.left_foot_target_point.y = S + -0.0534 + self.lateral_step / 2
+                self.left_foot_target_point.y = S + 0.0534 + self.lateral_step / 2
                 self.left_foot_target_point.z = -self.gait_height
                 self.right_foot_target_point.z = -self.gait_height
                 dx0 = self.walk_step / \
                     (2 * self._frame_stand_phase + self._frame_swing_phase + 4) * 2  
-                self.left_foot_target_point.x = self.left_foot_target_point.x - dx0
-                self.right_foot_target_point.x = self.right_foot_target_point.x - dx0
+                self.left_foot_target_point.x -= dx0
+                self.right_foot_target_point.x -= dx0
             if self._frame_stand_phase <= frame < self._frame_stand_phase + self._frame_swing_phase:
                 self.right_foot_target_point.z = -self.gait_height + self.step_height
                 #self.right_foot_target_point.y = S - 64

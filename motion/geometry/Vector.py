@@ -15,3 +15,5 @@ class Vector:
         self.y /= norm
         self.z /= norm
         return self
+    def __repr__(self):
+        return '({0}, {1}, {2})'.format(self.x, self.y, self.z)

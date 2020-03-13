@@ -130,7 +130,6 @@ class MoveScheduler:
                     frame_to_update = self._combine_frames(frames)
                     
                     frame_to_update = self.add_zeros(frame_to_update)
-                    print(self.servos)
                     self.update_servos(frame_to_update)
             for move in self.active_moves:
                 if not move.enabled and move.frames_to_process == []:
