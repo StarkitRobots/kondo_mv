@@ -9,18 +9,16 @@ import pyb
 from pyb import Pin
 from pyb import LED
 
-from common import median
-
+sys.path.append('tools')
 sys.path.append('model')
 sys.path.append('localization')
 sys.path.append('motion')
 sys.path.append('strategy')
 sys.path.append('lowlevel')
 sys.path.append('vision')
-sys.path.append('imu')
 
-from imu import IMU
-from vision import Vision
+from median import median
+from vision import Vision, Vision_postprocessing
 from strategy import Strategy
 from motion import Motion
 from localization import Localization
@@ -39,8 +37,8 @@ sensor.skip_frames(time=2000)
 sensor.set_auto_gain(False, gain_db=0)
 sensor.set_auto_whitebal(False, (-6.02073, -5.11, 1.002))
 sensor.set_auto_exposure(False, 2000)
-vision = Vision.Vision({})
-vision.load_detectors("vision/detectors_config.json")
+
+
 
 
 ala = 0
@@ -60,16 +58,16 @@ while(ala == 0):
         break
 
 
+vision = Vision({})
 loc = Localization(-0.7, -1.3, math.pi/2, side)
-strat = Strategy.Strategy()
-motion = Motion.Motion()
+strat = Strategy()
+motion = Motion()
 model = Model()
-imu = IMU.IMU(0.0)
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:
     calib = json.load(f)
-
+vision.load_detectors("vision/detectors_config.json")
 
 # setting model parametrs
 mass1 = [0, 0, 0, 0, 0, 0]
@@ -78,13 +76,12 @@ model.setParams(calib["cam_col"], robotHeight, mass1, mass2)
 motion.move_head()
 model.updateCameraPanTilt(0, -math.pi/6)
 
-vision_postprocessing = Vision.Vision_postprocessing()
+vision_postprocessing = Vision_postprocessing()
 t = 0
 
 # main loop
 while(True):
     clock.tick()
-    imu.update()
     #loc.pf.myrobot.yaw = imu.yaw/180*math.pi
     curr_t = pyb.millis()
     #print (curr_t - t)
@@ -154,7 +151,7 @@ while(True):
             general.append(second_side)
         selfData['yellow_posts'] = general
     print("eto self yello points", #can be turned off, but now thats needs for debug
-          selfData['yellow_posts'], "eto self blue points", selfData["blue_posts"]) 
+          selfData['yellow_posts'], "eto self blue points", selfData["blue_posts"])
 
     loc.update(selfData)
     loc.update_ball(selfData)

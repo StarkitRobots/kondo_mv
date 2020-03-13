@@ -2,7 +2,7 @@ import math
 import sys
 
 sys.path.append('localization')
-sys.path.append('localization/tools')
+sys.path.append('../tools')
 
 from random import Random
 from robot import Robot
