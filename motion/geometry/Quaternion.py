@@ -1,27 +1,13 @@
 import math
 
-class Vector:
-    def __init__(self, x, y, z):
+class Quaternion:
+    def __init__(self, x, y, z, w):
         self.x = x
         self.y = y
         self.z = z
-
-    def norm(self):
-        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
-
-    def normalize(self):
-        norm = self.norm()
-        self.x /= norm
-        self.y /= norm
-        self.z /= norm
-        return self
-
-class Quaternion(Vector):
-    def __init__(self, x, y, z, w):
-        super().__init__(x, y, z)
         self.w = w
     def normalize_vector(self):
-        norm = super().norm()
+        norm = math.sqrt(self.x**2 + self.y**2 + self.z**2)
         self.x /= norm
         self.y /= norm
         self.z /= norm

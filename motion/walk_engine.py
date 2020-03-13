@@ -1,6 +1,7 @@
 import math
-from utils.Vector import Vector, Quaternion
 from inverse_kinematics import compute_leg_ik
+from geometry.Vector import Vector
+from geometry.Quaternion import Quaternion
 
 
 

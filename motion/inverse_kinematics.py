@@ -4,6 +4,8 @@ def compute_leg_ik(target, orientation, model):
 
     # get model leg sizes (distances between joints)
     a5, b5, c5, a6, a7, a8, a9, a10, b10, c10 = model.sizes.values()
+
+    c5 = 0
     
     # Normalize orientation quaternion
     orientation = orientation.normalize_vector()
@@ -31,7 +33,7 @@ def compute_leg_ik(target, orientation, model):
     angle9_limits = model.servos[(9,1)]['limits']
     angle10_limits = model.servos[(10,1)]['limits']
 
-    # calculate angle6 with numerical method
+    # calculate angle6 (hip_roll) with numerical method
     # first attempt to find angle6
     # divide limits segment into 10 parts to get 11 probable points
     calculation_step = (angle6_limits[1] - angle6_limits[0]) / 10
@@ -119,7 +121,7 @@ def compute_leg_ik(target, orientation, model):
         # add calculated solution
         angle6_solutions.append(angle6)
     
-    # calculate angle10 for each angle6 as it depends on angle6
+    # calculate angle10 (ankle_roll) for each angle6 as it depends on angle6
     angle10_solutions = []
     k = 0
     for i in range(len(angle6_solutions)):
@@ -133,7 +135,7 @@ def compute_leg_ik(target, orientation, model):
         else:
             angle6_solutions.pop(i-k)
             k += 1
-    # now time to calculate angle7, angle8, angle9
+    # now time to calculate angle7 (hip_pitch), angle8 (knee), angle9 (ankle_pitch)
     k = 0
     for i in range(len(angle6_solutions)):
         
