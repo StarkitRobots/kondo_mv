@@ -199,7 +199,7 @@
     "head_pitch": 
     {
         "id": 12, 
-        "sio": 1,
+        "sio": 2,
         "simulation_joint_name" : "head12",
         "zero": 0,
         "limits": [-180, 180],
