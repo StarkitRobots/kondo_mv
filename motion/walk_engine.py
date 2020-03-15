@@ -86,11 +86,11 @@ class WalkEngine:
                 data['right_elbow_pitch'] = -1.745
                 data['right_elbow_yaw'] = 0.0
                 data['right_shoulder_roll'] = 0.0
-                data['right_shoulder_pitch'] = 0.524 - self.left_foot_target_point.x / 57.3
+                data['right_shoulder_pitch'] = 0.524 - self.left_foot_target_point.x / 0.0573
                 data['left_elbow_pitch'] = 1.745
                 data['left_elbow_yaw'] = 0.0
                 data['left_shoulder_roll'] = 0.0
-                data['left_shoulder_pitch'] = -0.524 + self.right_foot_target_point.x / 57.3
+                data['left_shoulder_pitch'] = -0.524 + self.right_foot_target_point.x / 0.0573
             else:
                 data['right_elbow_pitch'] = 0.0
                 data['right_elbow_yaw'] = 0.0

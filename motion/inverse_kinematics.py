@@ -14,7 +14,8 @@ def compute_leg_ik(target, orientation, model):
     b10 = model.sizes['b10']
     c10 = model.sizes['c10']
 
-    c5 = 0
+    if c5 == 1:
+        pass
     
     # Normalize orientation quaternion
     orientation = orientation.normalize_vector()
@@ -35,10 +36,10 @@ def compute_leg_ik(target, orientation, model):
     angles = {}
     solutions = [] 
 
-    # get servos' limits. limitsX for servo X
+    # get servos' limits. limitsX for servo X    
     angle6_limits = model.servos[(6,1)]['limits']
     for i in range(len(angle6_limits)):
-        angle6_limits[i] = angle6_limits[i] / 180. * math.pi 
+        angle6_limits[i] = angle6_limits[i] / 180. * math.pi
     angle7_limits = model.servos[(7,1)]['limits']
     for i in range(len(angle7_limits)):
         angle7_limits[i] = angle7_limits[i] / 180. * math.pi 
@@ -74,7 +75,6 @@ def compute_leg_ik(target, orientation, model):
         if (node_points[i] > 0 and node_points[i+1] < 0) or \
         (node_points[i] < 0 and node_points[i+1] > 0): 
             solution_segments.append(i)
-    
     # if there is no zero solution segments
     if len(solution_segments) == 0:
         k = 0
@@ -89,17 +89,19 @@ def compute_leg_ik(target, orientation, model):
             if math.fabs(node_points[k-1]) < math.fabs(node_points[k+1]): 
                 solution_segments.append(k-1)
             else: solution_segments.append(k)
-
+    
     # look into each solution_segment in the same way to find more precised solution
     angle6_solutions = []
-    for segment in range(len(solution_segments)):
+
+    for segment in solution_segments:
         # define the boundaries of the segment
-        bound1 =  angle6_limits[0] + solution_segments[segment] * calculation_step
+        bound1 =  angle6_limits[0] + segment * calculation_step
         bound2 = bound1 + calculation_step
-        while bound2 - bound1 > 0.0000025:
-            step = (bound2 - bound1) / 10
+        step = calculation_step
+        while step > 0.00025:
+            step /= 10
             node_points = []
-            for i in range (11):
+            for i in range(11):
                 angle6 = bound1 + i * step
                 cos = math.cos(angle6)
                 sin = math.sin(angle6)
@@ -111,7 +113,8 @@ def compute_leg_ik(target, orientation, model):
             k = 0
                 
             for i in range(11):
-                if abs(node_points[i]) < abs(node_points[k]): 
+                if math.fabs(node_points[i]) < math.fabs(node_points[k]): 
+                    print(k)
                     k = i
             # k is one bound point of new solution segment and k2 is another.
             if k == 0: 
@@ -119,13 +122,17 @@ def compute_leg_ik(target, orientation, model):
             elif k == 10: 
                 k2 = 9
             else:
-                if abs(node_points[k-1]) < abs(node_points[k+1]):
+                if math.fabs(node_points[k-1]) < math.fabs(node_points[k+1]):
                     k2 = k - 1
                 else: 
                     k2 = k + 1
-
             # calculate more precised value of angle6
             angle6 = bound1 + k * step
+            print('------------')
+            print(k)
+            print(step)
+            print(bound1, bound2)
+            print(angle6)
             # narrow the boundaries
             if k > k2:
                 bound1 += k2 * step
@@ -168,7 +175,7 @@ def compute_leg_ik(target, orientation, model):
         k2 = a9 + a6 * cos987 + (target.z * cos6 - (target.y + b5) * sin6) * cos987 - \
             target.x * sin987 + b10 / math.cos(angle10_solutions[i-k]) + ((target.y + b5) * cos6 + \
             target.z * sin6 - c10) * math.tan(angle10_solutions[i-k])
-        m = (k1**2 + k2**2 + a8**2 - a7**2) / a8 / 2
+        m = (k1**2 + k2**2 + a8**2 - a7**2) / (a8 * 2)
         temp1 = k1**2 * m**2 - (k1**2 + k2**2) * (m**2 - k2**2)
         if temp1 >= 0:
             temp2 = (-k1 * m + math.sqrt(temp1)) / (k1**2 + k2**2)
@@ -214,20 +221,20 @@ def compute_leg_ik(target, orientation, model):
         else:
             # add suitable solution. Can return 0, 1 or 2 packs of angles
             if not (temp71 or temp81 or temp91):
-                angles['hip_yaw'] = angle5 * 180. / math.pi
-                angles['hip_roll'] = angle6_solutions[i-k] * 180. / math.pi
-                angles['hip_pitch'] = angle7_solutions[0] * 180. / math.pi
-                angles['knee'] = angle8_solutions[0] * 180. / math.pi
-                angles['ankle_pitch'] = angle9_solutions[0] * 180. / math.pi
-                angles['ankle_roll'] = angle10_solutions[i-k] * 180. / math.pi
+                angles['hip_yaw'] = angle5
+                angles['hip_roll'] = angle6_solutions[i-k]
+                angles['hip_pitch'] = angle7_solutions[0]
+                angles['knee'] = angle8_solutions[0]
+                angles['ankle_pitch'] = angle9_solutions[0]
+                angles['ankle_roll'] = angle10_solutions[i-k]
                 solutions.append(angles)
             if not (temp72 or temp82 or temp92):
-                angles['hip_yaw'] = angle5 * 180. / math.pi
-                angles['hip_roll'] = angle6_solutions[i-k] * 180. / math.pi
-                angles['hip_pitch'] = angle7_solutions[1] * 180. / math.pi
-                angles['knee'] = angle8_solutions[1] * 180. / math.pi
-                angles['ankle_pitch'] = angle9_solutions[1] * 180. / math.pi
-                angles['ankle_roll'] = angle10_solutions[i-k] * 180. / math.pi
+                angles['hip_yaw'] = angle5
+                angles['hip_roll'] = angle6_solutions[i-k]
+                angles['hip_pitch'] = angle7_solutions[1]
+                angles['knee'] = angle8_solutions[1]
+                angles['ankle_pitch'] = angle9_solutions[1]
+                angles['ankle_roll'] = angle10_solutions[i-k]
                 solutions.append(angles)
     return solutions
 
@@ -237,4 +244,4 @@ if __name__ == "__main__":
     from geometry.Quaternion import Quaternion
     sys.path.append('model')
     from KondoMVModel import KondoMVModel
-    print(compute_leg_ik(Vector(0, -0.0543, -0.2), Quaternion(0,0,-1, 0), KondoMVModel()))
+    print(compute_leg_ik(Vector(0, -0.0319, -0.200), Quaternion(0,0,-1, 0), KondoMVModel()))

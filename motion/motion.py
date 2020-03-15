@@ -60,11 +60,11 @@ if __name__ == "__main__":
     #walk.update(0.05, 0.0, 0, 0, 2)
     ms.start_move(walk)
     ms.start_move(head)
-    while True:
+    while len(walk.frames_to_process) > 0:
         if len(walk.frames_to_process) == 0:
             ms.stop_move(walk)
         ms.tick()
-        #print(ms.servos)
+        #print(walk.frames_to_process)
         if m.cm is not None:
             m.cm.set_servos(ms.servos)
         
