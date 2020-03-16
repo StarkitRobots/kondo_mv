@@ -7,7 +7,7 @@ CHANNEL_WAIT_TIME = 10
 class IMU():
     def __init__(self):
         self.i2c = I2C(2)
-        self.imu = BNO055(self.i2c)
+        self.imu = BNO055(self.i2c, mode=0x08)
 
         #init position yaw, roll, pitch
         self.init_yaw, self.init_roll, self.init_pitch = self.tare()  

@@ -17,7 +17,7 @@ class ServoDict:
         self.container[key] = item
 
     def __iter__(self):
-        return self.container.__iter__()
+        return iter(self.container)
 
     def __contains__(self, item):
         return self.container.__contains__(item)
@@ -29,3 +29,9 @@ class ServoDict:
 
     def __repr__(self):
         return self.container
+
+if __name__ == "__main__":
+    d = {'a': 0, 'b': 1}
+    servos = ServoDict(d)
+    for servo in servos:
+        print(servo, servos[servo])

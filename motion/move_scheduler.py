@@ -67,20 +67,20 @@ class MoveScheduler:
                     if servos[servo] is not None:
                         active_servos[servo] = servos[servo]
             new_frames_list.append(active_servos)
-            for servo in servos.values():
+            for servo in servos:
                 servo = None
         return new_frames_list
 
     def _combine_frames(self, frames):
-        servos = self.servos
-        for servo in servos.values():
-            servo = None
+        servos = {}
+        for servo in self.servos:
+            servos[servo] = None
         for servo in servos:
             for frame in frames:
                 try:
                     if servo in frame:
                         if servos[servo] is None:
-                            servos[servo] = 0
+                            servos[servo] = 0.0
                         servos[servo] += frame[servo]
                 except IndexError:
                     pass
@@ -111,55 +111,30 @@ class MoveScheduler:
 
     def tick(self):
         if self.active_moves != []:
-            print('active moves not empty')
             frames = []
             if any([move.is_kondo_motion for move in self.active_moves]):
-                print('any kondo motion')
                 for move in self.active_moves:
                     if not move.is_kondo_motion:
                         self.stop_move(move)
             
             if all([move.is_kondo_motion for move in self.active_moves]):
-                print('all kondo')
                 self.kondo_motions_to_apply = [move.tick() for move in self.active_moves]
             if self.kondo_motions_to_apply == []:
-                print('frames mode')
                 for move in self.active_moves:
-                    print(move.frames_to_process)
                     if move.frames_to_process != []:
-                        print('frames not empty')
                         frames.append(move.get_frame())
-                frame_to_update = self._combine_frames(frames)
-                frame_to_update = self.add_zeros(frame_to_update)
-                self.update_servos(frame_to_update)
+                    else:
+                        if move.enabled:
+                            move.tick()
+                if frames != []:
+                    frame_to_update = self._combine_frames(frames)
+                    
+                    frame_to_update = self.add_zeros(frame_to_update)
+                    self.update_servos(frame_to_update)
             for move in self.active_moves:
-                if move.enabled == False and move.frames_to_process == []:
+                if not move.enabled and move.frames_to_process == []:
                     self.active_moves.pop(self.active_moves.index(move))
             
     def update_servos(self, frame):
         for servo in frame:
             self.servos[servo] = frame[servo]
-
-if __name__ == "__main__":
-    import sys
-    sys.path.append('model')
-    sys.path.append('model/utils')
-    sys.path.append('motion/moves')
-    from KondoMVModel import KondoMVModel
-    from moves.head import Head
-    from moves.walk import Walk
-    head = Head()
-
-    model = KondoMVModel()
-    walk = Walk(True, model)
-    ms = MoveScheduler(model)
-    walk.enabled = True
-    head.enabled = True
-    walk.update(0, 0.05, 0, 1, 2)
-    ms.start_move(walk)
-    ms.start_move(head)
-    while True:
-    #while walk.frames_to_process != []:
-        print(len(walk.frames_to_process))
-        print(ms.servos)
-        ms.tick()

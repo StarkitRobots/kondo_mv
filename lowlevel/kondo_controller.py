@@ -148,25 +148,24 @@ class Rcb4BaseLib:
         EnableReferenceTable = (0x0008)
 
     class ServoData:
-        Id = 0
-        Sio = 0
-        Data = 0
-
-        def __init__(self, id, sio, data):
-            self.Id = id
-            self.Sio = sio
-            self.Data = data
+        def __init__(self, id=0, sio=0, data=0):
+            self.id = id
+            self.sio = sio
+            self.data = data
 
         def icsNum2id(self):
-            return self.Id * 2 + (self.Sio - 1)
+            return self.id * 2 + (self.sio - 1)
 
         def itemAdd(self, x, y, z):
-            self.Id = x
-            self.Sio = y
-            self.Data = z
+            self.id = x
+            self.sio = y
+            self.data = z
 
         def __lt__(self, other):
-            return (self.Id * 2 + (self.Sio - 1)) < (other.Id * 2 + (other.Sio - 1))
+            return (self.id * 2 + (self.sio - 1)) < (other.id * 2 + (other.sio - 1))
+        
+        def __repr__(self):
+            return "({0}, {1}, {2})".format(self.id, self.sio, self.data)
 
     class DeviceAddrOffset:
         CategoryAddressOffset      = 0x00
@@ -442,7 +441,7 @@ class Rcb4BaseLib:
       ret = 0
 
       for idat in servoDatas:
-        no = Rcb4BaseLib.icsNum2id(idat.Id, idat.Sio)
+        no = Rcb4BaseLib.icsNum2id(idat.id, idat.sio)
         sf = 0x1
         ret |=  (sf << no)
       return ret << 24
@@ -477,8 +476,8 @@ class Rcb4BaseLib:
         buf.append (frame)
         servoDatas = sorted(sDatas)
         for idat in servoDatas:
-          buf.append(idat.Data & 0xff)
-          buf.append((idat.Data >> 8)& 0xff)
+          buf.append(idat.data & 0xff)
+          buf.append((idat.data >> 8)& 0xff)
         buf.append(Rcb4BaseLib.CheckSum(buf))
         return 4,buf
 
@@ -592,8 +591,8 @@ class Rcb4BaseLib:
         buf.append(servoParameter)
         servoDatas = sorted(sDatas)
         for idat in sDatas:
-            if 0 < idat.Data < 128:
-                buf.append(idat.Data & 0xff)
+            if 0 < idat.data < 128:
+                buf.append(idat.data & 0xff)
             else:
                 buf = []
                 return 0, buf

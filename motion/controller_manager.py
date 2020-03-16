@@ -2,7 +2,7 @@ import sys
 sys.path.append('../lowlevel')
 from kondo_controller import Rcb4BaseLib
 from pyb import UART
-import json, time
+import json, time, math
 
 CHANNEL_WAIT_TIME = 10
 
@@ -77,9 +77,24 @@ class ControllerManager:
     def set_servos(self, servo_data):
         bus = []
         for data in servo_data:
-            pos = int(servo_data[data] * 1698 + 7500)
+            pos = round(servo_data[data] * 1698 + 7500)
             bus.append(
                 self.kondo.ServoData(self.servos[data]['id'], self.servos[data]['sio'], pos))
 
         self.kondo.setServoPos(bus, 2)
+
+    def falling_test(self):
+        falling_flag = 0
+        pitch = self.kondo.getAdData(3)
+        roll = self.kondo.getAdData(4)
+        if pitch < 200:
+            falling_flag = 1     # on stomach
+        if pitch > 450:
+            falling_flag = -1    # face up
+        if roll > 400:
+            falling_flag = -2    # on right side
+        if roll < 160:
+            falling_flag = 2     # on left side
+
+        return falling_flag
 

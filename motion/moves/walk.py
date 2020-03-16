@@ -10,6 +10,7 @@ class Walk(Move):
     def __init__(self, use_engine=False, model=None):
         super().__init__()
         self.enabled = False
+        self.name = 'walk'
         # Use walk engine or not
         if use_engine:
             if model is not None:
