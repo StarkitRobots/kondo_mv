@@ -83,3 +83,18 @@ class ControllerManager:
 
         self.kondo.setServoPos(bus, 2)
 
+    def falling_test(self):
+        falling_flag = 0
+        pitch = self.kondo.getAdData(3)
+        roll = self.kondo.getAdData(4)
+        if pitch < 200:
+            falling_flag = 1     # on stomach
+        if pitch > 450:
+            falling_flag = -1    # face up
+        if roll > 400:
+            falling_flag = -2    # on right side
+        if roll < 160:
+            falling_flag = 2     # on left side
+
+        return falling_flag
+

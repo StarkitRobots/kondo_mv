@@ -128,14 +128,14 @@ class Odometry:
 
             "Standup_front" : {
                 "id"        : 6,
-                "time"      : (lambda c1, u1: 1500),
+                "time"      : (lambda c1, u1: 5000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)
                 },
             "Standup_back" : {
                 "id"        : 7,
-                "time"      : (lambda c1, u1: 1500),
+                "time"      : (lambda c1, u1: 5000),
                 "shift_x"   : (lambda c1, u1: 0),
                 "shift_y"   : (lambda c1, u1: 0),
                 "shift_turn": (lambda c1, u1: 0)

@@ -33,10 +33,13 @@ class Motion:
         else:
             self.imu = None
             print('no imu mode')
-
+        self.model = KondoMVModel()
+        self.move_scheduler = MoveScheduler(self.model)
 
     '''def apply(self, action):
         if action['name'] == 'walk':
+            
+            #if  self.move_scheduler.has_active_move('walk')
             return self._walk_control_motions(action['args'])
         elif action['name'] == 'turn':
             return self._turn_control(action['args'])
@@ -50,21 +53,24 @@ class Motion:
 
 if __name__ == "__main__":
     m = Motion(True, False, False)
-    head = Head()
-
+    
     model = KondoMVModel()
+    head = Head()
     walk = Walk(True, model)
     ms = MoveScheduler(model)
     walk.enabled = True
     head.enabled = True
-    #walk.update(0.05, 0.0, 0, 0, 2)
+    strategy_bus = [[0.05, 0.0, 0], [0.03, 0.0, 0], [0.02, 0.0, 0]]
+    walk.update(0.05, 0.0, 0, 0, 2)
     ms.start_move(walk)
     ms.start_move(head)
     while len(walk.frames_to_process) > 0:
         if len(walk.frames_to_process) == 0:
             ms.stop_move(walk)
         ms.tick()
-        print(walk.frames_to_process)
+        #print(walk.frames_to_process)
+        for servo in ms.servos.values():
+            print(round(servo * 1698 + 7500))
         if m.cm is not None:
             m.cm.set_servos(ms.servos)
         

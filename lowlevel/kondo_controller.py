@@ -476,8 +476,8 @@ class Rcb4BaseLib:
         buf.append (frame)
         servoDatas = sorted(sDatas)
         for idat in servoDatas:
-          buf.append(idat.Data & 0xff)
-          buf.append((idat.Data >> 8)& 0xff)
+          buf.append(idat.data & 0xff)
+          buf.append((idat.data >> 8)& 0xff)
         buf.append(Rcb4BaseLib.CheckSum(buf))
         return 4,buf
 
@@ -591,8 +591,8 @@ class Rcb4BaseLib:
         buf.append(servoParameter)
         servoDatas = sorted(sDatas)
         for idat in sDatas:
-            if 0 < idat.Data < 128:
-                buf.append(idat.Data & 0xff)
+            if 0 < idat.data < 128:
+                buf.append(idat.data & 0xff)
             else:
                 buf = []
                 return 0, buf
