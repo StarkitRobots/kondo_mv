@@ -48,15 +48,18 @@ class WalkEngine:
         data = {}
         right_leg_angles=[]
         left_leg_angles=[]
+
         # compute inversed kinematics
-        print(right_foot_target_point, right_foot_orientation)
         right_leg_solutions = compute_leg_ik(right_foot_target_point, 
                                 right_foot_orientation, self._model)
+        
+        left_foot_target_point.y = -left_foot_target_point.y
+        left_foot_orientation.y = -left_foot_orientation.y
+
         left_leg_solutions = compute_leg_ik(left_foot_target_point, 
                                 left_foot_orientation, self._model)
 
         #print('time elapsed in compute_Alpha:', clock1.avg())
-
         if len(right_leg_solutions) == 2:
             if right_leg_solutions[0]['8'] < right_leg_solutions[1]['8']: 
                 right_leg_angles = right_leg_solutions[0]

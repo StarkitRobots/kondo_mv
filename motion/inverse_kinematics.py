@@ -1,7 +1,6 @@
 import math, time
 
-def compute_leg_ik(target, orientation, model):
-
+def compute_leg_ik(foot_target, foot_orientation, model):
     # get model leg sizes (distances between joints)
     a5 = model.sizes['a5']
     b5 = model.sizes['b5']
@@ -18,40 +17,45 @@ def compute_leg_ik(target, orientation, model):
         pass
     
     # Normalize orientation quaternion
+    orientation = foot_orientation
     orientation = orientation.normalize_vector()
-    
+    target = foot_target
     # angle5 is hip_yaw. Turn the leg first
     angle5 = orientation.w 
     cos5 = math.cos(angle5)
     sin5 = math.sin(angle5)
-    target.x = target.x * cos5 + (target.y + a5) * sin5
+    target.x = foot_target.x * cos5 + (foot_target.y + a5) * sin5
     tmp = target.y
-    target.y = (tmp + a5) * cos5 - target.x * sin5
-    target.z = target.z
+    target.y = (tmp + a5) * cos5 - foot_target.x * sin5
+    target.z = foot_target.z
 
-    orientation.x =  orientation.x * cos5 + orientation.y * sin5
+    orientation.x =  foot_orientation.x * cos5 + orientation.y * sin5
     orientation.y = orientation.y * cos5 - orientation.x * sin5
     orientation.z = orientation.z
     
     angles = {}
     solutions = [] 
 
-    # get servos' limits. limitsX for servo X    
-    angle6_limits = model.servos[(6,1)]['limits']
-    for i in range(len(angle6_limits)):
-        angle6_limits[i] = angle6_limits[i] / 180. * math.pi
-    angle7_limits = model.servos[(7,1)]['limits']
-    for i in range(len(angle7_limits)):
-        angle7_limits[i] = angle7_limits[i] / 180. * math.pi 
-    angle8_limits = model.servos[(8,1)]['limits']
-    for i in range(len(angle8_limits)):
-        angle8_limits[i] = angle8_limits[i] / 180. * math.pi 
-    angle9_limits = model.servos[(9,1)]['limits']
-    for i in range(len(angle9_limits)):
-        angle9_limits[i] = angle9_limits[i] / 180. * math.pi 
-    angle10_limits = model.servos[(10,1)]['limits']
-    for i in range(len(angle10_limits)):
-        angle10_limits[i] = angle10_limits[i] / 180. * math.pi 
+    # get servos' limits. angleX_limits for servo X    
+    angle6_limits = []
+    angle6_limits.append(model.servos[(6,1)]['limits'][0] / 180. * math.pi)
+    angle6_limits.append(model.servos[(6,1)]['limits'][1] / 180. * math.pi)
+
+    angle7_limits = []
+    angle7_limits.append(model.servos[(7,1)]['limits'][0] / 180. * math.pi)
+    angle7_limits.append(model.servos[(7,1)]['limits'][1] / 180. * math.pi)
+
+    angle8_limits = []
+    angle8_limits.append(model.servos[(8,1)]['limits'][0] / 180. * math.pi)
+    angle8_limits.append(model.servos[(8,1)]['limits'][1] / 180. * math.pi)
+
+    angle9_limits = []
+    angle9_limits.append(model.servos[(9,1)]['limits'][0] / 180. * math.pi)
+    angle9_limits.append(model.servos[(9,1)]['limits'][1] / 180. * math.pi)
+
+    angle10_limits = []
+    angle10_limits.append(model.servos[(10,1)]['limits'][0] / 180. * math.pi)
+    angle10_limits.append(model.servos[(10,1)]['limits'][1] / 180. * math.pi)
 
     # calculate angle6 (hip_roll) with numerical method
     # first attempt to find angle6
@@ -68,7 +72,6 @@ def compute_leg_ik(target, orientation, model):
         # F functon looks like
         node_points.append(((target.y + b5) * cos + target.z * sin - c10) * (tmp1**2 -
             tmp2**2 - orientation.x**2) - a10 - b10 * tmp1 / math.sqrt(tmp2**2 + orientation.x**2))
-
     # find all segments with zero solutions for the equation F(angle6)=0
     solution_segments = []
     for i in range(10):
@@ -89,7 +92,6 @@ def compute_leg_ik(target, orientation, model):
             if math.fabs(node_points[k-1]) < math.fabs(node_points[k+1]): 
                 solution_segments.append(k-1)
             else: solution_segments.append(k)
-    
     # look into each solution_segment in the same way to find more precised solution
     angle6_solutions = []
 
@@ -97,9 +99,8 @@ def compute_leg_ik(target, orientation, model):
         # define the boundaries of the segment
         bound1 =  angle6_limits[0] + segment * calculation_step
         bound2 = bound1 + calculation_step
-        step = calculation_step
-        while step > 0.00025:
-            step /= 10
+        while bound2 - bound1 > 0.00025:
+            step = (bound2 - bound1) / 10
             node_points = []
             for i in range(11):
                 angle6 = bound1 + i * step
@@ -238,8 +239,4 @@ if __name__ == "__main__":
     from geometry.Quaternion import Quaternion
     sys.path.append('model')
     from KondoMVModel import KondoMVModel
-<<<<<<< HEAD
-    print(compute_leg_ik(Vector(0, -0.0534, -0.223), Quaternion(0,0,-1, 0), KondoMVModel()))
-=======
-    print(compute_leg_ik(Vector(0, -0.0319, -0.200), Quaternion(0,0,-1, 0), KondoMVModel()))
->>>>>>> 72ecda77b4f566e3b8ea885e8d52ee86a7b9bbfb
+    print(compute_leg_ik(Vector(0, -0.054200000000000005, -0.22085), Quaternion(0,0,-1.0000000001, 0), KondoMVModel()))
