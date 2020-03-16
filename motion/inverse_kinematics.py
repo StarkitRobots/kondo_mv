@@ -238,4 +238,8 @@ if __name__ == "__main__":
     from geometry.Quaternion import Quaternion
     sys.path.append('model')
     from KondoMVModel import KondoMVModel
+<<<<<<< HEAD
     print(compute_leg_ik(Vector(0, -0.0534, -0.223), Quaternion(0,0,-1, 0), KondoMVModel()))
+=======
+    print(compute_leg_ik(Vector(0, -0.0319, -0.200), Quaternion(0,0,-1, 0), KondoMVModel()))
+>>>>>>> 72ecda77b4f566e3b8ea885e8d52ee86a7b9bbfb

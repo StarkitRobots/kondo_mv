@@ -48,9 +48,8 @@ class WalkEngine:
         data = {}
         right_leg_angles=[]
         left_leg_angles=[]
-        # compute inversed kinematics 
-        print(right_foot_target_point, 
-                                right_foot_orientation)
+        # compute inversed kinematics
+        print(right_foot_target_point, right_foot_orientation)
         right_leg_solutions = compute_leg_ik(right_foot_target_point, 
                                 right_foot_orientation, self._model)
         left_leg_solutions = compute_leg_ik(left_foot_target_point, 
