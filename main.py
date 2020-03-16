@@ -70,6 +70,9 @@ while(ala==0):
 
 loc = Localization(0.0, -1.3, math.pi/2, side)
 strat = Strategy.Strategy()
+with open('strategy/strat_conf.json') as f:
+    conf = json.loads(f.read())
+    strat.strat_set_conf(conf)
 motion = Motion.Motion()
 model = Model()
 imu = IMU.IMU(0.0)
@@ -168,6 +171,6 @@ while(True):
 
 
     odometry_results = motion.apply(action)
-    print("odometry = ", odometry_results['shift_x'], odometry_results['shift_y'],odometry_results['shift_yaw']*180/math.pi)
-    if odometry_results is not None:
-        loc.pf.particles_move(odometry_results)
+    #print("odometry = ", odometry_results['shift_x'], odometry_results['shift_y'],odometry_results['shift_yaw']*180/math.pi)
+    #if odometry_results is not None:
+    #    loc.pf.particles_move(odometry_results)
