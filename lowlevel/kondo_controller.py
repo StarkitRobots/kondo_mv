@@ -165,7 +165,7 @@ class Rcb4BaseLib:
             return (self.id * 2 + (self.sio - 1)) < (other.id * 2 + (other.sio - 1))
         
         def __repr__(self):
-            return "({0}, {1}, {2})".format(self.id, self.sio, self.pos)
+            return "({0}, {1}, {2})".format(self.id, self.sio, self.data)
 
     class DeviceAddrOffset:
         CategoryAddressOffset      = 0x00
@@ -441,7 +441,7 @@ class Rcb4BaseLib:
       ret = 0
 
       for idat in servoDatas:
-        no = Rcb4BaseLib.icsNum2id(idat.Id, idat.Sio)
+        no = Rcb4BaseLib.icsNum2id(idat.id, idat.sio)
         sf = 0x1
         ret |=  (sf << no)
       return ret << 24

@@ -64,7 +64,7 @@ if __name__ == "__main__":
         if len(walk.frames_to_process) == 0:
             ms.stop_move(walk)
         ms.tick()
-        #print(walk.frames_to_process)
+        print(walk.frames_to_process)
         if m.cm is not None:
             m.cm.set_servos(ms.servos)
         
