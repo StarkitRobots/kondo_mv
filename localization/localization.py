@@ -2,12 +2,14 @@ import math
 import json
 import sys
 from pyb import Pin
+import utime
 
-sys.path.append('/')
+sys.path.append('/Localization')
+sys.path.append('/tools')
 
 from robot import Robot
 from field import Field
-from common import median
+from median import median
 from ParticleFilter import updatePF, ParticleFilter
 
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
@@ -17,30 +19,42 @@ pin2 = Pin('P2', Pin.IN, Pin.PULL_UP)
 class Localization:
 
     def __init__(self, x, y, yaw, side):
-        ala = 0
+        b_time = utime.ticks_ms()
+        print(b_time)
+        side_loop = 0
         side = False
-        ala = 1
-        while(ala == 0):
+        while(side_loop == 0):
             if (pin9.value() == 0):   # нажатие на кнопку на голове
-                ala = 1
+                side_loop = 1
                 side = True
                 print("I will attack blue goal")
                 break
-        if (pin3.value() == 0):
-            ala = 1
-            side = False
-            print("I will attack yellow goal")
-            break
-
-        if (pin2.value() == 0):
-            ala = 1
-            side = False
-            print("I will attack yellow goal")
-            break
-
+            if (utime.ticks_ms() - b_time) > 1500:
+                print("I will attack yellow goal")
+                break
+        b_time = utime.ticks_ms()
+        side_loop = 0
+        s_coord = 0
+        while(side_loop == 0):
+            if (pin3.value() == 0):
+                side_loop
+                s_coord = 2
+                print("right")
+                break
+            if (pin2.value() == 0):
+                side_loop
+                s_coord = 1
+                print("left")
+                break
+            if (utime.ticks_ms() - b_time) > 1500:
+                print("centr")
+                break
+        with open("localization/start_coord.json", "r") as f:
+            start_coord = json.loads(f.read())
+        self.robot_position = tuple(start_coord[str(s_coord)])
+        print(self.robot_position[2])
         self.ballPosSelf = None
         self.ball_position = None
-        self.robot_position = None
         self.localized = False
         self.seeBall = False
         self.side = False
@@ -54,12 +68,11 @@ class Localization:
             neutral = landmarks[colors[0]]
             landmarks[colors[0]] = landmarks[colors[1]]
             landmarks[colors[1]] = neutral
-
-        self.pf = ParticleFilter(Robot(x, y, yaw), Field(
-            "localization/parfield.json"), landmarks)
+        x, y, yaw = self.robot_position
+        self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks)
 
     def update(self, data):
-         self.robot_position = updatePF(self.pf, data)
+        self.robot_position = updatePF(self.pf, data)
         if self.pf.consistency > 0.5:
             self.localized = True
         else:
@@ -90,3 +103,7 @@ class Localization:
 
     def move(self, odometry):
         self.pf.particles_move(odometry)
+
+if __name__ == "__main__":
+    loc = Localization(0,0,0,False)
+
