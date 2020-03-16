@@ -30,7 +30,7 @@ class Strategy:
                 for i in range(20):
                     move_chain.append([0.05, 0.0, 0.0])
                 
-            return move_chain
+            return {"name" : "walk", "args" : move_chain}
 
         else:
 
@@ -76,7 +76,7 @@ class Strategy:
                     move_chain.append([step_l, 0.0, 0.0])
 
 
-            return move_chain
+            return {"name" : "walk", "args" : move_chain}
 
 
     def walkball(self, loc):
@@ -108,7 +108,7 @@ class Strategy:
             chain_elem = [dist * (1 - math.cos(turn_ang)), -dist * math.sin(turn_ang), turn_ang]
             move_chain = [chain_elem]
         
-        return move_chain
+        return {"name" : "walk", "args" : move_chain}
 
     def apply_ball_approach(self, loc):
         self.turn_counter = 0
@@ -122,10 +122,14 @@ class Strategy:
 
         ba.set_constants(d)
 
-
-        move_chain = ba.generate_chain(r_pos, b_pos)
-
-        return move_chain
+        dec = ba.make_decision(r_pos, b_pos)
+        if dec[0] == "right kick":
+            return {"name" : "kick", "args" : 1}
+        elif dec[0] == "left kick":
+            return {"name" : "kick", "args" : -1}
+        else:
+            move_chain = ba.generate_chain(r_pos, b_pos)
+            return {"name" : "walk", "args" : move_chain}
 
 
     def generate_action(self, loc):
