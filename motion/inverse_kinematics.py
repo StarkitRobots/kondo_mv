@@ -114,7 +114,6 @@ def compute_leg_ik(target, orientation, model):
                 
             for i in range(11):
                 if math.fabs(node_points[i]) < math.fabs(node_points[k]): 
-                    print(k)
                     k = i
             # k is one bound point of new solution segment and k2 is another.
             if k == 0: 
@@ -128,11 +127,6 @@ def compute_leg_ik(target, orientation, model):
                     k2 = k + 1
             # calculate more precised value of angle6
             angle6 = bound1 + k * step
-            print('------------')
-            print(k)
-            print(step)
-            print(bound1, bound2)
-            print(angle6)
             # narrow the boundaries
             if k > k2:
                 bound1 += k2 * step
