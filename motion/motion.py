@@ -6,11 +6,13 @@ sys.path.append('lowlevel')
 
 sys.path.append('model')
 sys.path.append('model/utils')
-from KondoMVModel import KondoMVModel
-
+from model.KondoMVModel import KondoMVModel
+sys.path.append('odometry')
+from odometry.odometry import Odometry
 sys.path.append('motion/moves')
 from moves.head import Head
 from moves.walk import Walk
+from moves.kick import Kick
 
 from move_scheduler import MoveScheduler
 
@@ -21,7 +23,7 @@ class Motion:
         # RCB4 controller init
         if controller:
             from controller_manager import ControllerManager
-            self.cm = ControllerManager()
+            self.controller_manager = ControllerManager()
         else:
             self.cm = None
             print('no controller mode')
@@ -35,43 +37,48 @@ class Motion:
             print('no imu mode')
         self.model = KondoMVModel()
         self.move_scheduler = MoveScheduler(self.model)
-
-    '''def apply(self, action):
+        self.walk = Walk(True, self.model)
+        self.head = Head()
+        self.kick = Kick()
+        self.head.enabled = True
+        self.odometry = Odometry(self.imu)
+    
+    def apply(self, action):
         if action['name'] == 'walk':
-            
-            #if  self.move_scheduler.has_active_move('walk')
-            return self._walk_control_motions(action['args'])
-        elif action['name'] == 'turn':
-            return self._turn_control(action['args'])
+            if not self.move_scheduler.has_active_move('walk'):
+                self.walk.enabled = True
+                self.move_scheduler.start_move(self.walk)
+                self.walk.cycle = 0
+            else:
+                strategy_bus = action['args']
+                step_params = strategy_bus[0]
+                cycles_num = len(strategy_bus)
+                self.walk.update(walk_step=step_params[0], 
+                                    lateral_step=step_params[1], 
+                                    walk_turn=step_params[2], 
+                                    cycle=self.walk.cycle, 
+                                    cycles_num=cycles_num)
+                self.walk.cycle += 1
         elif action['name'] == 'kick':
-            return self._kick_control(action['args'])
-        elif action['name'] == 'lateral_step':
-            return  self._lateral_control(action['args'])
-        elif action['name'] == 'take_around_right':
-            return self.do_motion(self.motions['Soccer_Take_Around_Right'] , {'c1': 1, 'u1': 0})
-        return 0'''
+            if self.move_scheduler.has_active_move('walk'):
+                self.move_scheduler.stop_move(self.walk)
+            self.move_scheduler.start_move(self.kick)
+            self.kick.side = action['args']
+        self.move_scheduler.tick()
+        motion = self.move_scheduler.get_kondo_motion()
+        if self.move_scheduler._is_motion(motion):
+            motion_to_apply = self.odometry.motions[motion['name']]
+            self.controller_manager.do_motion(motion_to_apply, motion['args'])
+        else:
+            if not self.head.enabled:
+                self.move_scheduler.start_move(self.head)
+            self.controller_manager.servos(self.move_scheduler.servos)
+        return 0
 
 if __name__ == "__main__":
     m = Motion(True, False, False)
-    
     model = KondoMVModel()
-    head = Head()
-    walk = Walk(True, model)
     ms = MoveScheduler(model)
-    walk.enabled = True
-    head.enabled = True
-    strategy_bus = [[0.05, 0.0, 0], [0.03, 0.0, 0], [0.02, 0.0, 0]]
-    walk.update(0.05, 0.0, 0, 0, 2)
-    ms.start_move(walk)
-    ms.start_move(head)
-    while len(walk.frames_to_process) > 0:
-        if len(walk.frames_to_process) == 0:
-            ms.stop_move(walk)
-        ms.tick()
-        #print(walk.frames_to_process)
-        for servo in ms.servos.values():
-            print(round(servo * 1698 + 7500))
-        if m.cm is not None:
-            m.cm.set_servos(ms.servos)
+        
         
 

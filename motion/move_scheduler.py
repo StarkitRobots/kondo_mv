@@ -20,6 +20,9 @@ class MoveScheduler:
         else:
             return False
 
+    def has_active_move(self, move_name):
+        return any(move_name == move.name in self.active_moves)
+            
     def add_zeros(self, frame):
         for servo in frame:
             frame[servo] += self.servos_zero[servo]
@@ -97,8 +100,7 @@ class MoveScheduler:
             return {}
 
     def start_move(self, move):
-        for active_move in self.active_moves:
-            if type(move) == type(active_move):
+        if self.has_active_move(move.name):
                 return
         # isinstance is very sensitive to module name so import influences too much on it
         #if isinstance(move, Move):
