@@ -18,7 +18,7 @@ pin2 = Pin('P2', Pin.IN, Pin.PULL_UP)
 
 class Localization:
 
-    def __init__(self, x, y, yaw, side):
+    def __init__(self, x, y, yaw, side, button = True):
         b_time = utime.ticks_ms()
         print(b_time)
         side_loop = 0
@@ -68,7 +68,8 @@ class Localization:
             neutral = landmarks[colors[0]]
             landmarks[colors[0]] = landmarks[colors[1]]
             landmarks[colors[1]] = neutral
-        x, y, yaw = self.robot_position
+        if button:
+            x, y, yaw = self.robot_position
         self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks)
 
     def update(self, data):
