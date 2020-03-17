@@ -1,14 +1,17 @@
-import sys
-sys.path.append('../lowlevel')
-from kondo_controller import Rcb4BaseLib
-from pyb import UART
-import json, time, math
+import json
+import time
+import math
+from lowlevel import KondoController
+try:
+    from pyb import UART
+except Exception:
+    raise Exception("Try to import MicroPython library using Python3")
 
 CHANNEL_WAIT_TIME = 10
 
 class ControllerManager:
     def __init__(self):    
-        self.kondo = Rcb4BaseLib()
+        self.kondo = KondoController()
         _uart = UART(1, 115200, parity=0, timeout=1000)
         self.kondo.open(_uart)
         print('ControllerManager: Controller acknowledge ', self.kondo.checkAcknowledge())

@@ -3,8 +3,12 @@
 openmv = True
 
 import time
-from pyb import UART
 import struct
+try:
+    from pyb import UART
+except Exception:
+    print("Try to import MicroPython library using Python3")
+    exit()
 
 
 # from micropython import const

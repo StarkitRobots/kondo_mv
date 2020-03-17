@@ -37,8 +37,8 @@ class Robot:
                 continue
 
             for landmark in landmarks[color_landmarks]:
-                x_posts = self.x - observation[0]*math.sin(-self.yaw) + observation[1]*math.cos(-self.yaw)
-                y_posts = self.y + observation[0]*math.cos(-self.yaw) - observation[1]*math.sin(-self.yaw)
+                x_posts = self.x - observations[0]*math.sin(-self.yaw) + observations[1]*math.cos(-self.yaw)
+                y_posts = self.y + observations[0]*math.cos(-self.yaw) - observations[1]*math.sin(-self.yaw)
                 predicts.append([x_posts, y_posts])
         return predicts
 

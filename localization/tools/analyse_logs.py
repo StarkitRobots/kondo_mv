@@ -1,4 +1,3 @@
-
 logs = open('logs/logs.txt','r')
 log = logs.read()
 logi = log.split('|')

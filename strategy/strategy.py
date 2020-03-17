@@ -1,8 +1,7 @@
 import sys
 import math
 import json
-
-from ball_approach import BallApproach
+from .ball_approach import BallApproach
 
 class Strategy:
     def __init__(self):
@@ -171,11 +170,11 @@ class gk_Strategy:
     def gk_generate_action(self, loc):
         if loc.localized:
             if loc.seeBall:
-                return gk_ball_approach(loc)
+                return self.gk_ball_approach(loc)
             else:
-                return take_def_pos(loc)
+                return self.take_def_pos(loc)
         else:
             if loc.seeBall:
-                return gk_ball_approach(loc)
+                return self.gk_ball_approach(loc)
             else:
                 pass

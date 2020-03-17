@@ -1,4 +1,5 @@
-import math, time
+import math
+import time
 
 def compute_leg_ik(foot_target, foot_orientation, model):
     # get model leg sizes (distances between joints)
@@ -234,9 +235,6 @@ def compute_leg_ik(foot_target, foot_orientation, model):
     return solutions
 
 if __name__ == "__main__":
-    import sys
-    from geometry.Vector import Vector
-    from geometry.Quaternion import Quaternion
-    sys.path.append('model')
+    from .geometry import Vector, Quaternion
     from KondoMVModel import KondoMVModel
     print(compute_leg_ik(Vector(0, -0.054200000000000005, -0.22085), Quaternion(0,0,-1.0000000001, 0), KondoMVModel()))

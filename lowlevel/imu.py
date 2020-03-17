@@ -1,5 +1,8 @@
-from machine import I2C
-from bno055 import BNO055, AXIS_P7
+try:
+    from machine import I2C
+except Exception:
+    raise Exception("Try to import MicroPython library using Python3")
+from .bno055 import BNO055, AXIS_P7
 import time, math
 
 CHANNEL_WAIT_TIME = 10

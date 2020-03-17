@@ -1,4 +1,4 @@
-from moves.move import Move
+from .moves import Move
 
 class MoveScheduler:
     def __init__(self, model):

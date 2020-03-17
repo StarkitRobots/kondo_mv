@@ -1,9 +1,7 @@
-import sys
 import json 
 import math
-sys.path.append('..')
-from walk_engine import WalkEngine
-from move import Move
+from ..walk_engine import WalkEngine
+from .move import Move
 
 
 class Walk(Move):

@@ -1,20 +1,11 @@
-import sys
 import json
 import math
 import time
-sys.path.append('lowlevel')
-
-sys.path.append('model')
-sys.path.append('model/utils')
 from model.KondoMVModel import KondoMVModel
-sys.path.append('odometry')
 from odometry.odometry import Odometry
-sys.path.append('motion/moves')
-from moves.head import Head
-from moves.walk import Walk
-from moves.kick import Kick
 
-from move_scheduler import MoveScheduler
+from .moves import Head, Walk, Kick
+from .move_scheduler import MoveScheduler
 
 class Motion:
     def __init__(self, unix=False, controller=True, imu=True):
@@ -30,7 +21,7 @@ class Motion:
 
         # imu init
         if imu:
-            from imu import IMU
+            from lowlevel import IMU
             self.imu = IMU()
         else:
             self.imu = None

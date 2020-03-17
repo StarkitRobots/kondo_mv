@@ -1,16 +1,13 @@
 
 import time
-
 import math
 import json
 import os
-import sys
 import uio
-sys.path.append('localization/tools/')
-from random import Random
-sys.path.append('localization')
-import Robot
-from particle import Particle
+from .field import Field
+from .tools import Random
+from .robot import Robot
+from .particle import Particle
 
 class ParticleFilter():
     def __init__(self, myrobot, field, landmarks,n = 100):
@@ -18,6 +15,7 @@ class ParticleFilter():
         self.n = n
         self.myrobot = myrobot
         self.landmarks = landmarks
+        self.field = field
         self.count = 0
         self.p = []
 
@@ -39,7 +37,7 @@ class ParticleFilter():
         self.con_threshold = constants['consistency']['con_threshold']
         self.spec_threshold = constants['consistency']['spec_threshold']
 
-        self.token = str(Random.random()*10000)
+        self.token = str(Random().random()*10000)
         self.logs = open("localization/logs/logs"+ self.token + '.txt',"w")
         self.gen_particles()
         self.logs.close()
@@ -56,9 +54,9 @@ class ParticleFilter():
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         self.p = []
         for i in range(self.n):
-            x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise)
-            y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise)
-            yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
+            x_coord = self.myrobot.x + Random().gauss(0, self.sense_noise)
+            y_coord = self.myrobot.y + Random().gauss(0, self.sense_noise)
+            yaw = self.myrobot.yaw + Random().gauss(0, self.yaw_noise)*math.pi
             #print('yaw'+str(i),yaw*180/math.pi)
             if yaw < 0:
                 yaw = 2*math.pi + yaw
@@ -74,9 +72,9 @@ class ParticleFilter():
     def gen_n_particles_robot(self, n):
         p = []
         for i in range(n):
-            x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise*3)
-            y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise*3)
-            yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
+            x_coord = self.myrobot.x + Random().gauss(0, self.sense_noise*3)
+            y_coord = self.myrobot.y + Random().gauss(0, self.sense_noise*3)
+            yaw = self.myrobot.yaw + Random().gauss(0, self.yaw_noise)*math.pi
             if yaw < 0:
                 yaw = 2*math.pi + yaw
             if yaw > 2*math.pi:
@@ -87,7 +85,9 @@ class ParticleFilter():
     def uniform_reset(self):
         self.p=[]
         for i in range(self.n):
-            x = Robot((random()-0.5)*field.w_width, (random()-0.5)*field.w_length, random()*math.pi*2)
+            x = Robot((Random().random()-0.5)*\
+            self.field.w_width, (Random().random()-0.5)*\
+            self.field.w_length, Random().random()*math.pi*2)
             #x.set_noise(forward_noise, turn_noise, 0)
             self.p.append([x,0])
         self.myrobot.update_coord(self.p)
@@ -145,13 +145,12 @@ class ParticleFilter():
         self.count += 1
         self.logs.close()
 
-
     def gen_n_particles_robot(self, n):
         p = []
         for i in range(n):
-            x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise*3)
-            y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise*3)
-            yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
+            x_coord = self.myrobot.x + Random().gauss(0, self.sense_noise*3)
+            y_coord = self.myrobot.y + Random().gauss(0, self.sense_noise*3)
+            yaw = self.myrobot.yaw + Random().gauss(0, self.yaw_noise)*math.pi
             if yaw < 0:
                 yaw = 2*math.pi + yaw
             if yaw > 2*math.pi:
@@ -162,7 +161,7 @@ class ParticleFilter():
     def gen_n_particles(self, n):
         tmp = []
         for i in range(n):
-            x = Robot((random()-0.5)*field.w_width, (random()-0.5)*field.w_length, random()*math.pi*2)
+            x = Robot((Random().random()-0.5)*self.field.w_width, (Random().random()-0.5)*self.field.w_length, Random().random()*math.pi*2)
             tmp.append([x,0])
         return tmp
 
@@ -183,12 +182,12 @@ class ParticleFilter():
 
     def resampling_wheel(self, weights, p_tmp):
         new_particles = {}
-        index = int(Random.random() * self.n)
+        index = int(Random().random() * self.n)
         beta = 0.0
         mw = max(weights)
         #print(mw)
         for i in range(self.n):
-            beta += Random.random() * 2.0 * mw
+            beta += Random().random() * 2.0 * mw
             while beta > weights[index]:
                 beta -= weights[index]
                 index = (index + 1) % self.n
@@ -247,7 +246,7 @@ class ParticleFilter():
         self.myrobot.x = x
         self.myrobot.y = y
         self.myrobot.yaw = yaw
-        self.p = gen_n_particles_robot(self.n)
+        self.p = self.gen_n_particles_robot(self.n)
 
 
     # ------------------------------
@@ -255,9 +254,9 @@ class ParticleFilter():
     # ------------------------------
     def fall_reset(self, observations):
         self.update_consistency(observations)
-        self.custom_reset(self.myrobot.x + Random.gauss(0, self.sense_noise),
-                         self.myrobot.y + Random.gauss(0, self.sense_noise),
-                         self.myrobot.y  + Random.gauss(0, self.sense_noise))
+        self.custom_reset(self.myrobot.x + Random().gauss(0, self.sense_noise),
+                         self.myrobot.y + Random().gauss(0, self.sense_noise),
+                         self.myrobot.y  + Random().gauss(0, self.sense_noise))
         self.resampling(observations)
 
 

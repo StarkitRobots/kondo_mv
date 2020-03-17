@@ -1,8 +1,6 @@
 import json
-import sys
 import math
-sys.path.append('motion/moves')
-from move import Move
+from .move import Move
 
 class Head(Move):
     def __init__(self):

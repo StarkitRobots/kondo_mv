@@ -1,7 +1,6 @@
 import math
 import json
 
-
 class BallApproach:
 
     #dist = 1

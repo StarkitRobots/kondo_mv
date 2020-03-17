@@ -1,5 +1,9 @@
 import struct
-import pyb
+try:
+    import pyb
+except Exception:
+    raise Exception("Try to import MicroPython library using Python3")
+	
 CONFIG_MODE = 0x00
 ACCONLY_MODE = 0x01
 MAGONLY_MODE = 0x02

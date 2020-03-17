@@ -1,4 +1,5 @@
-from move import Move
+from .move import Move
+
 class Kick(Move):
     def __init__(self):
         super().__init__()

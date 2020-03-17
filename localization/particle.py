@@ -1,10 +1,6 @@
-import sys
-
-sys.path.append('localization')
-from robot import Robot
-sys.path.append('localization/tools')
-from random import Random
 import math
+from .robot import Robot
+from .tools import Random
 
 class Particle(Robot):
       #def __init__(self, x = 0, y = 0, yaw = 0):
@@ -36,7 +32,7 @@ class Particle(Robot):
                         #print('x_posts, y_posts, observation[0], observation[1]', x_posts, y_posts, observation[0], observation[1])
                         #print('dist', dist)
                 if (dists!=[]):
-                    prob *= Random.gaussian(min(dists), sense_noise)
+                    prob *= Random().gaussian(min(dists), sense_noise)
         #print('prob, x, y, yaw',prob,self.x,self.y,self.yaw*180/math.pi )
         return prob
 
