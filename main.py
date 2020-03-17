@@ -3,23 +3,14 @@ import sensor, image
 import time, math, json
 import os
 import pyb
-from pyb import Pin
-from pyb import LED
+from pyb import Pin, LED
 
-sys.path.append('model')
-from model import Model
-sys.path.append('localization')
+from model import KondoMV
 from localization import Localization
-sys.path.append('motion')
 from motion import Motion
-sys.path.append('strategy')
 from strategy import Strategy
-sys.path.append('lowlevel')
-#from lowlevel import *
-sys.path.append('vision')
-from vision import Vision
-sys.path.append('imu')
-from imu import IMU
+from vision import Vision, VisionPostProcessing
+from lowlevel import IMU
 
 #robotHeight = 0.37 #[m]
 robotHeight = 0.42 #[m]
@@ -48,7 +39,7 @@ sensor.skip_frames(time = 2000)
 sensor.set_auto_gain(False, gain_db = 0)
 sensor.set_auto_whitebal(False, (-6.02073, -5.11, 1.002))
 sensor.set_auto_exposure(False, 1800)
-vision = Vision.Vision ({})
+vision = Vision({})
 vision.load_detectors("vision/detectors_config1.json")
 
 ala = 0
@@ -69,13 +60,13 @@ while(ala==0):
 
 
 loc = Localization(0.0, -1.3, math.pi/2, side)
-strat = Strategy.Strategy()
+strat = Strategy()
 with open('strategy/strat_conf.json') as f:
     conf = json.loads(f.read())
     strat.strat_set_conf(conf)
-motion = Motion.Motion()
-model = Model()
-imu = IMU.IMU(0.0)
+motion = Motion()
+model = KondoMV()
+imu = IMU(0.0)
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:
@@ -91,7 +82,7 @@ model.setParams(calib["cam_col"], robotHeight,mass1, mass2)
 #motion.move_head()
 #model.updateCameraPanTilt(0, -3.1415/6)
 
-vision_postprocessing = Vision.Vision_postprocessing ()
+vision_postprocessing = VisionPostProcessing()
 t = 0
 
 # main loop
