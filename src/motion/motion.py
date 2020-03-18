@@ -1,13 +1,12 @@
 import json
 import math
 import time
-from ..odometry import Odometry
 
 from .moves import Head, Walk, Kick
 from .move_scheduler import MoveScheduler
 
 class Motion:
-    def __init__(self, model, unix=False, controller=True, imu=True):
+    def __init__(self, model, unix=False, controller=None, imu=None, odometry=None):
         self.unix = unix
         
         # RCB4 controller init
@@ -16,22 +15,21 @@ class Motion:
             self.controller_manager = ControllerManager()
         else:
             self.cm = None
-            print('no controller mode')
+            print('No controller mode')
 
         # imu init
-        if imu:
-            from ..lowlevel import IMU
-            self.imu = IMU()
-        else:
-            self.imu = None
-            print('no imu mode')
+        self.imu = imu
+        if self.imu is None:
+            print('No imu mode')
         self.model = model
         self.move_scheduler = MoveScheduler(self.model)
         self.walk = Walk(True, self.model)
         self.head = Head()
         self.kick = Kick()
         self.head.enabled = True
-        self.odometry = Odometry(self.imu)
+        self.odometry = odometry
+        if self.odometry is None:
+            print('No odometry mode. Kondo motions are not availible')
     
     def apply(self, action):
         if action['name'] == 'walk':

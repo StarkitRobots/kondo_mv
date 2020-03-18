@@ -21,8 +21,8 @@ class Head(Move):
             self.enabled = True
             #self.state = ['enter', (self.state[1] + 1) % state_num]
             for state in self.head_motion_states['enter'].values():
-                self.servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
-                self.servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
+                self.pan = self.servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
+                self.tilt = self.servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
                 data.append(self.servos)
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
             self.frames_to_process = data
@@ -36,8 +36,8 @@ class Head(Move):
             #self.state = ['enter', (self.state[1] + 1) % state_num]
             for state in self.head_motion_states['tick'].values():
                 servos = {}
-                servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
-                servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
+                self.pan = servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
+                self.tilt = servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
                 data.append(servos)
                 
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
@@ -50,8 +50,8 @@ class Head(Move):
         if self.enabled:
             #self.state = ['enter', (self.state[1] + 1) % state_num]
             for state in self.head_motion_states['exit'].values():
-                self.servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
-                self.servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
+                self.pan = self.servos['head_yaw'] = state['head_yaw'] * math.pi / 180.
+                self.tilt = self.servos['head_pitch'] = state['head_pitch'] * math.pi / 180.
                 data.append(self.servos)
             #print("pitch " + str(self.kondo.getSinglePos(1)[1] + " yaw " + self.kondo.getSinglePos(1)[1])
             self.frames_to_process = data
