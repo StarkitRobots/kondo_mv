@@ -1,19 +1,23 @@
-import sys
-import sensor, image
-import time, math, json
+import time
+import math
+import json
 import os
-import pyb
-from pyb import Pin, LED
+try:
+    import sensor, image
+    import pyb
+    from pyb import Pin, LED
+except Exception:
+    pass
 
-from model import KondoMV
-from localization import Localization
-from motion import Motion
-from strategy import Strategy
-from vision import Vision, VisionPostProcessing
-from lowlevel import IMU
+from src.model import KondoMV
+from src.localization import Localization
+from src.motion import Motion
+from src.strategy import Strategy
+from src.vision import Vision, VisionPostProcessing
+from src.lowlevel import IMU
 
 #robotHeight = 0.37 #[m]
-robotHeight = 0.42 #[m]
+robotHeight = 0.42 #[mfrom .odometry import Odometry]
 # init code
 #sensor.reset()
 #sensor.set_pixformat(sensor.RGB565)
@@ -64,9 +68,10 @@ strat = Strategy()
 with open('strategy/strat_conf.json') as f:
     conf = json.loads(f.read())
     strat.strat_set_conf(conf)
-motion = Motion()
 model = KondoMV()
-imu = IMU(0.0)
+motion = Motion(model)
+
+imu = IMU()
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 with open("calibration/cam_col.json") as f:

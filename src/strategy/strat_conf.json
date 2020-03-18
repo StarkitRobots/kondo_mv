@@ -1,0 +1,16 @@
+{
+
+    "max_step": 0.086,
+    "min_step": 0.03,
+    "turn_step": 0.21,
+    "min_dist": 0.15,
+    "ang_thres1": 0.15,
+    "ang_thres2": 0.2,
+    "CIRCLE_RADIUS": 0.05,
+    "GOAL_LEN": 1.1,
+    "WIND_X": 1.8,
+    "GOAL_POS": -0.55,
+    "step_before_strike": 0.1,
+    "medium_dist": 0.5,
+    "critical_lateral_step": 0.2
+}
