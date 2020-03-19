@@ -39,7 +39,7 @@ class ParticleFilter():
         self.con_threshold = constants['consistency']['con_threshold']
         self.spec_threshold = constants['consistency']['spec_threshold']
 
-        self.token = str(Random.random()*10000)
+        self.token = str(Random.random() * 10000)
         self.logs = open("localization/logs/logs" + self.token + '.txt', "w")
         self.gen_particles()
         self.logs.close()
@@ -141,19 +141,6 @@ class ParticleFilter():
         #print('|', file = self.logs)
         self.count += 1
         self.logs.close()
-
-    def gen_n_particles_robot(self, n):
-        p = []
-        for i in range(n):
-            x_coord = self.myrobot.x + Random.gauss(0, self.sense_noise*3)
-            y_coord = self.myrobot.y + Random.gauss(0, self.sense_noise*3)
-            yaw = self.myrobot.yaw + Random.gauss(0, self.yaw_noise)*math.pi
-            if yaw < 0:
-                yaw = 2*math.pi + yaw
-            if yaw > 2*math.pi:
-                yaw %= (2 * math.pi)
-            p.append([Particle(x_coord, y_coord, yaw), 0])
-        return p
 
     def gen_n_particles(self, n):
         tmp = []
@@ -270,8 +257,6 @@ class ParticleFilter():
         self.myrobot.y = y
         self.myrobot.yaw = orientation % (2 * math.pi)
 
-    def return_coord(self):
-        return self.myrobot.x, self.myrobot.y, self.myrobot.yaw
 
 
 def updatePF(pf, measurement):
