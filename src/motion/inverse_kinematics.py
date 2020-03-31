@@ -236,5 +236,5 @@ def compute_leg_ik(foot_target, foot_orientation, model):
 
 if __name__ == "__main__":
     from .geometry import Vector, Quaternion
-    from ..model import KondoMVModel
+    from KondoMVModel import KondoMVModel
     print(compute_leg_ik(Vector(0, -0.054200000000000005, -0.22085), Quaternion(0,0,-1.0000000001, 0), KondoMVModel()))

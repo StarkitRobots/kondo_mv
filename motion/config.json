@@ -1,7 +1,0 @@
-{
-    "walk_threshold": 1.0,
-    "max_blind_distance": 0.4,
-    "step_len": 0.086,
-    "angle_error_treshold": 10.0
-
-}

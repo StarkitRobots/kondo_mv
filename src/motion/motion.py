@@ -47,6 +47,7 @@ class Motion:
                                     cycle=self.walk.cycle, 
                                     cycles_num=cycles_num)
                 self.walk.cycle += 1
+                
         elif action['name'] == 'kick':
             if self.move_scheduler.has_active_move('walk'):
                 self.move_scheduler.stop_move(self.walk)

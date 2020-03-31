@@ -21,7 +21,7 @@ class MoveScheduler:
             return False
 
     def has_active_move(self, move_name):
-        return any([move_name == move.name for move in self.active_moves])
+        return any(move_name == move.name in self.active_moves)
             
     def add_zeros(self, frame):
         for servo in frame:

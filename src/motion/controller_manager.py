@@ -1,7 +1,7 @@
 import json
 import time
 import math
-from ..lowlevel import KondoController
+from lowlevel import KondoController
 try:
     from pyb import UART
 except Exception:
