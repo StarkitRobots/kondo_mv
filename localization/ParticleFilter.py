@@ -8,8 +8,7 @@ sys.path.append('localization/tools/')
 sys.path.append('localization')
 
 from Random import Random
-from particle import Particle
-from robot import Robot
+from item import Item
 import random #временно
 
 class ParticleFilter():
@@ -62,7 +61,7 @@ class ParticleFilter():
                 yaw = 2*math.pi + yaw
             if yaw > 2*math.pi:
                 yaw %= (2 * math.pi)
-            self.particles.append([Particle(x_coord, y_coord, yaw), 0])
+            self.particles.append([Item(x_coord, y_coord, yaw), 0])
             print(x_coord, ' ', y_coord, ' ', yaw, file=self.logs)
         self.count += 1
 
@@ -76,7 +75,7 @@ class ParticleFilter():
                 yaw = 2 * math.pi + yaw
             if yaw > 2 * math.pi:
                 yaw %= (2 * math.pi)
-            particles.append([Particle(x_coord, y_coord, yaw), 0])
+            particles.append([Item(x_coord, y_coord, yaw), 0])
         return particles
 
     def uniform_reset(self):
@@ -194,16 +193,16 @@ class ParticleFilter():
         print('$', self.observation_to_predict(
             observations), '$', file=self.logs)
         res_particles = []
-        w = []
+        weights = []
         S = 0
         for i in range(self.number_of_particles):
-            w.append(self.particles[i][0].observation_score(
+            weights.append(self.particles[i][0].observation_score(
                 observations, self.landmarks, self.gauss_noise)*self.particles[i][0].calc_lines_score(
                 observations['lines'], self.landmarks['lines'], self.line_gauss_noise))
-            S += (w[i])
+            S += (weights[i])
         for i in range(self.number_of_particles):
-            w[i] = w[i]/S
-        self.resampling_wheel(w, res_particles)
+            weights[i] = weights[i]/S
+        self.resampling_wheel(weights, res_particles)
         S = 0
         for i in range(len(res_particles)):
             S += res_particles[i][1]

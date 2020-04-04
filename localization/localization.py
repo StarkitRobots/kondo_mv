@@ -7,7 +7,7 @@ import utime
 sys.path.append('/Localization')
 sys.path.append('/tools')
 
-from robot import Robot
+from item import Item
 from field import Field
 from median import median
 from ParticleFilter import updatePF, ParticleFilter
@@ -70,7 +70,7 @@ class Localization:
             landmarks[colors[1]] = neutral
         if button:
             x, y, yaw = self.robot_position
-        self.pf = ParticleFilter(Robot(x, y, yaw), Field("localization/parfield.json"), landmarks)
+        self.pf = ParticleFilter(Item(x, y, yaw), Field("localization/parfield.json"), landmarks)
 
     def update(self, data):
         self.robot_position = updatePF(self.pf, data)
