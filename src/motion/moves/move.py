@@ -39,4 +39,5 @@ class Move(object):
         self.enabled = False
         return data
 
-    def read_state_from_json(self):
+    def read_state_from_json(self, state, state_num):
+        return self.states[state][state_num]
