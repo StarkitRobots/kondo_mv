@@ -9,6 +9,8 @@ class KondoMV(Model):
         with open("model/kal.json") as f:
             self.servos = ServoDict(json.loads(f.read()))
         
+        self.robot_height = 0.42
+
         self.sizes = {
         "a5": 0.0215,  # m distance from symmetry axis to servo 5
         "b5": 0.0185,  # м расстояние от оси сервы 5 до оси сервы 6 по горизонтали
@@ -23,5 +25,5 @@ class KondoMV(Model):
         }
 
 if __name__ == "__main__":
-    kondo = KondoMVModel()
+    kondo = KondoMV()
     print(kondo.servos['torso'])

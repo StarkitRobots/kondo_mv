@@ -24,11 +24,13 @@ class WalkEngine:
         self.right_first = True
         self._init_poses = 20
 
+        # step parameters
         self.walk_step = 0
         self.lateral_step = 0
         self.walk_turn = 0
         self.cycle = 0
         self.cycles_num = 0
+
         self.right_foot_target_point = Vector(0, -0.0534, -self.gait_height)
         self.right_foot_orientation = Quaternion(0, 0, -1, 0)
 
@@ -58,7 +60,6 @@ class WalkEngine:
         left_leg_solutions = compute_leg_ik(left_foot_target_point, 
                                 left_foot_orientation, self._model)
 
-        #print('time elapsed in compute_Alpha:', clock1.avg())
         if len(right_leg_solutions) == 2:
             if right_leg_solutions[0]['8'] < right_leg_solutions[1]['8']: 
                 right_leg_angles = right_leg_solutions[0]

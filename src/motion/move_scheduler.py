@@ -1,7 +1,7 @@
 from .moves import Move
 
 class MoveScheduler:
-    def __init__(self, model):
+    def __init__(self, model, odometry):
         self.active_moves = []
         self._model = model
         self.servos = {}
@@ -10,6 +10,8 @@ class MoveScheduler:
         self.kondo_motions_to_apply = []
         for servo in self._model.servos:
             self.servos[servo] = self.servos_zero[servo] = model.servos[servo]['zero']
+
+        self.odometry = odometry
 
     def _is_motion(self, data):
         if data is dict:
@@ -21,7 +23,7 @@ class MoveScheduler:
             return False
 
     def has_active_move(self, move_name):
-        return any(move_name == move.name in self.active_moves)
+        return any([move_name == move.name for move in self.active_moves])
             
     def add_zeros(self, frame):
         for servo in frame:

@@ -1,10 +1,12 @@
+import json
+
 class Move(object):
-    def __init__(self):
+    def __init__(self, config_file):
         self.servos = {}
         self.name = ''
         self.enabled = False
-        self.is_kondo_motion = False
         self.frames_to_process = []
+        self.states = json.loads(config_file)
 
     def get_frame(self):
         if self.frames_to_process != []:
@@ -36,3 +38,5 @@ class Move(object):
         self.frames_to_process += data
         self.enabled = False
         return data
+
+    def read_state_from_json(self):

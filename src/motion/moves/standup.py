@@ -3,7 +3,7 @@ from .move import Move
 class Standup(Move):
     def __init__(self):
         super().__init__()
-        self.name = 'Standup'
+        self.name = 'standup'
         self.side = 0
     def enter(self):
         pass

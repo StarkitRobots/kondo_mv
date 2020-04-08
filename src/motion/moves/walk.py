@@ -5,7 +5,7 @@ from .move import Move
 
 
 class Walk(Move):
-    def __init__(self, use_engine=False, model=None):
+    def __init__(self, use_engine=True, model=None):
         super().__init__()
         self.enabled = False
         self.name = 'walk'

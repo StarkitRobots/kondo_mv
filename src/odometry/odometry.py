@@ -7,6 +7,9 @@ class Odometry:
         else:
             self.imu = imu
         self.imu_yaw_pos = None
+        self.shift_x = 0
+        self.shift_y = 0
+        self.shift_yaw = 0
         self.motions = {
             "Soccer_WALK_FF" : {
                 "id"        : 8,
@@ -149,23 +152,32 @@ class Odometry:
                 }
             }
 
-    def get_shift_x(self, motion, c1, u1):
+    def get_motion_shift_x(self, motion, c1, u1):
         return self.motions['motion']['shift_x'](c1, u1)
 
-    def get_shift_y(self, motion, c1, u1):
+    def get_motion_shift_y(self, motion, c1, u1):
         return self.motions['motion']['shift_y'](c1, u1)
 
-    def get_shift_yaw(self, motion):
+    def get_shift_x(self):
+        return self.shift_x
+
+    def get_shift_y(self):
+        return self.shift_y
+
+    def get_shift_yaw(self, motion=None):
         if self.imu_yaw_pos is None:
-            print('IMU was not set before the motion {0}. 0 is returned'.format(motion))
+            if motion is not None:
+                print('IMU was not set before the motion {0}. 0 is returned'.format(motion))
+            else:
+                print('IMU was not set')
             return 0
         else:
-            yaw_diff = self.imu.get_yaw - self.imu_yaw_pos
-            if yaw_diff > 180:
-                yaw_diff -= 360
-            if yaw_diff < -180:
-                yaw_diff += 360
-        return yaw_diff
+            self.shift_yaw = self.imu.get_yaw - self.imu_yaw_pos
+            if self.shift_yaw > 180:
+                self.shift_yaw -= 360
+            if self.shift_yaw < -180:
+                self.shift_yaw += 360
+        return self.shift_yaw
 
     def get_motion_id(self, motion):
         return self.motions[motion]['id']
@@ -176,8 +188,13 @@ class Odometry:
     def set_imu_yaw(self):
         self.imu_yaw_pos = self.imu.get_yaw()
 
-    def get_odometry(self, motion, c1, u1):
+    def get_motion_odometry(self, motion, c1, u1):
 
-            return {'shift_x': self.get_shift_x(motion, c1, u1), 
-                'shift_y': self.get_shift_y(motion, c1, u1), 
-                'shift_yaw': self.get_shift_yaw}
+            return {'shift_x': self.get_motion_shift_x(motion, c1, u1), 
+                'shift_y': self.get_motion_shift_y(motion, c1, u1), 
+                'shift_yaw': self.get_shift_yaw()}
+
+    def get_shifts(self):
+        return {'shift_x': self.get_shift_x(), 
+                'shift_y': self.get_shift_y(), 
+                'shift_yaw': self.get_shift_yaw()}
