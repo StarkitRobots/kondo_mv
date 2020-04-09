@@ -9,6 +9,7 @@ sys.path.append('localization')
 
 from Random import Random
 from item import Item
+from pf_logger import PFlogger
 import random #временно
 
 class ParticleFilter():
@@ -17,8 +18,8 @@ class ParticleFilter():
         self.number_of_particles = n
         self.robot = robot
         self.landmarks = landmarks
-        self.count = 0
         self.particles = []
+        self.logger = PFlogger("localization/logs/logs.json")
 
         with open('localization/pf_constants.json', 'r') as constants:
             constants = json.load(constants)
@@ -39,19 +40,12 @@ class ParticleFilter():
         self.con_threshold = constants['consistency']['con_threshold']
         self.spec_threshold = constants['consistency']['spec_threshold']
 
-        self.token = str(random.random() * 10000)
-        self.logs = open("localization/logs/logs" + '.txt', "w")
         self.gen_particles()
-        self.logs.close()
 
     def return_coord(self):
         return self.robot.x, self.robot.y, self.robot.yaw
 
     def gen_particles(self):
-        print('initial,step ', self.count, file=self.logs)
-        print("$$", file=self.logs)
-        print("position ", self.robot.x, ' ',
-              self.robot.y, ' ', self.robot.yaw, '|', file=self.logs)
         self.particles = []
         for i in range(self.number_of_particles):
             x_coord = self.robot.x + random.gauss(0, self.sense_noise)
@@ -62,8 +56,7 @@ class ParticleFilter():
             if yaw > 2*math.pi:
                 yaw %= (2 * math.pi)
             self.particles.append([Item(x_coord, y_coord, yaw), 0])
-            print(x_coord, ' ', y_coord, ' ', yaw, file=self.logs)
-        self.count += 1
+        self.logger.step("initial", self.return_coord(), self.paricles)
 
     def gen_n_particles_robot(self, n):
         particles = []
@@ -121,25 +114,14 @@ class ParticleFilter():
         print('consistency', self.consistency)
 
     def particles_move(self, coord):
-        self.logs = open('localization/logs/logs'+self.token+'.txt', "a")
         self.robot.move(coord['shift_x'],
-                          coord['shift_y'], coord['shift_yaw'])
-        print('eto coord after mooving', self.return_coord(),
-              self.robot.yaw*180/math.pi)
-        print('|moving,step ', self.count, file=self.logs)
-        print('$$', file=self.logs)
-        print("position ", self.robot.x, ' ',
-              self.robot.y, ' ', self.robot.yaw, '|', file=self.logs)
+                          coord['shift_y'], coord['shift_yaw'])    
         # now we simulate a robot motion for each of
         # these particles
         for particle in self.particles:
             particle[0].move(coord['shift_x'], coord['shift_y'],
                            coord['shift_yaw'])
-            print(particle[0].x, ' ',
-                  particle[0].y, ' ', particle[0].yaw, file=self.logs)
-        #print('|', file = self.logs)
-        self.count += 1
-        self.logs.close()
+        self.logger.step("move", self.return_coord(), self.particles)
 
     def gen_n_particles(self, n):
         tmp = []
@@ -188,10 +170,6 @@ class ParticleFilter():
         return res_particles
 
     def resampling(self, observations):
-        self.logs = open('localization/logs/logs'+self.token+'.txt', "a")
-        print('|resempling,step ', self.count, file=self.logs)
-        print('$', self.observation_to_predict(
-            observations), '$', file=self.logs)
         res_particles = []
         weights = []
         S = 0
@@ -210,19 +188,12 @@ class ParticleFilter():
             res_particles[i][1] /= S
         self.update_coord(res_particles)
         self.update_consistency(observations)
-        print("position ", self.robot.x, ' ',
-              self.robot.y, ' ', self.robot.yaw, '|', file=self.logs)
         new_particles = self.gen_n_particles_robot(self.number_of_particles - len(res_particles))
-
         res_particles.extend(new_particles)
         self.particles = res_particles
-        for particle in res_particles:
-            print(particle[0].x, ' ',
-                  particle[0].y, ' ', particle[0].yaw, file=self.logs)
-        #print('|', file = self.logs)
-        self.count += 1
         self.update_consistency(observations)
-        self.logs.close()
+        self.logger.step("resempling", self.return_coord(), self.particles)
+ 
 
     def custom_reset(self, x, y, yaw):
         self.robot.x = x
@@ -263,7 +234,7 @@ class ParticleFilter():
 
 
 
-def updatePF(pf, measurement):
+def UpdatePF(pf, measurement):
     for i in range(pf.number_of_res):
         pf.resampling(measurement)
     print('eto coord', pf.return_coord(), pf.robot.yaw*180/math.pi)

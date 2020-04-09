@@ -10,7 +10,7 @@ sys.path.append('/tools')
 from item import Item
 from field import Field
 from median import median
-from ParticleFilter import updatePF, ParticleFilter
+from particle_filter import UpdatePF, ParticleFilter
 
 pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
