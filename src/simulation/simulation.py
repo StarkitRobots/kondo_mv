@@ -8,6 +8,7 @@ class Simulation:
         self.use_physics = use_physics
 
         self.real_time = False
+        self.t = 0.0
         self.dt = 0.02
 
         self.players = {}
@@ -48,11 +49,19 @@ class Simulation:
         pos = self.ball.get_position(self.field)
         self.ball.set_position(self.field, (new_pos[0], new_pos[1], pos[2]))
 
-    def tick(self):
-        pass
+    @staticmethod
+    def show_fake_vision(robot):
+        robot.show_fake_vision = True
+
+    def tick(self):        
+            self.robot.update(self.field)
+            self.ball.update(self.field)
+            self.t += self.dt
+            vrep.simxSynchronousTrigger(self.client_id)
 
     def stop(self):
-        pass
-    
+        vrep.simxStopSimulation(self.client_id, vrep_consts.simx_opmode_oneshot)
+
     def __del__(self):
-        pass
+        time.sleep(0.2)
+        vrep.simxFinish(self.client_id)
