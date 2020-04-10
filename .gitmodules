@@ -1,0 +1,3 @@
+[submodule "mv_vision_reload"]
+	path = mv_vision_reload
+	url = https://github.com/kefir8888/mv_vision_reload
