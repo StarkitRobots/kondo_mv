@@ -1,0 +1,156 @@
+#need to check ============
+{
+    "enter": 
+    {
+        "0":
+        {
+            "head_pitch": -30,
+            "head_yaw": 0
+        }
+    },
+    "tick": 
+    {
+        "0":
+        {
+            "right_shoulder_pitch" :-51,
+            "right_shoulder_roll"  :-34,
+            "right_elbow_pitch"    :128,
+            "left_shoulder_pitch"  :51,
+            "left_shoulder_roll"   :34,
+            "left_elbow_pitch"     :-128,
+            "right_hip_pitch"      :27,
+            "right_knee"           :-34,
+            "right_ankle_pitch"    :20,
+            "left_hip_pitch"       :-27,
+            "left_knee"            :34,
+            "left_ankle_pitch"     :-20 
+            
+        },
+        "1":
+        {
+            
+            "right_shoulder_roll"  :0,
+            "right_elbow_pitch"    :118,
+            "left_shoulder_roll"   :0,
+            "left_elbow_pitch"     :-118        
+                      
+        },
+
+        "2":
+        {
+            "right_shoulder_pitch" :-91,
+            "right_elbow_pitch"    :0,
+            "left_shoulder_pitch"  :91,
+            "left_elbow_pitch"     :0,
+            "right_hip_pitch"      :-40,
+            "right_knee"           :0,
+            "right_ankle_pitch"    :40,
+            "left_hip_pitch"       :40,
+            "left_knee"            :0,
+            "left_ankle_pitch"     :-40
+            
+        },
+        "3":
+        {
+            "right_shoulder_roll"  :-7,
+            "left_shoulder_roll"   :7,
+            "right_hip_pitch"      :-111,
+            "right_ankle_pitch"    :-10,
+            "left_hip_pitch"      :111,
+            "left_ankle_pitch"    :10,
+          
+        },
+        "4":
+        {
+            "right_shoulder_roll"  :-7,
+            "left_shoulder_roll"   :7,
+            "right_hip_pitch"      :-111,
+            "right_ankle_pitch"    :-10,
+            "left_hip_pitch"      :111,
+            "left_ankle_pitch"    :10,
+           
+        },
+        "5": #пометка для Володи, тут два движения похожих!!! 4 и 5 
+        {
+            "right_shoulder_roll"  :-7,
+            "left_shoulder_roll"   :7,
+            "right_hip_pitch"      :-111,
+            "right_ankle_pitch"    :-10,
+            "left_hip_pitch"      :111,
+            "left_ankle_pitch"    :10,
+           
+        },
+        "6":
+        {
+            "right_shoulder_pitch"  :-37,
+            "left_shoulder_pitch"   :37,
+            "right_hip_pitch"      :-71,
+            "right_ankle_pitch"    :-40,
+            "left_hip_pitch"      :71,
+            "left_ankle_pitch"    :40,
+           
+        },
+        "7":
+        {
+            "head_yaw"              :0,
+            "head_pitch"            :2,
+            "right_shoulder_pitch"  :2,
+            "right_shoulder_roll"   :2,
+            "right_elbow_roll"      :2,
+            "right_elbow_pitch"     :2,
+            "left_shoulder_pitch"   :2,
+            "left_shoulder_roll"    :2,
+            "left_elbow_roll"       :2,
+            "left_elbow_pitch"      :2,
+            "torso"                 :2,
+            "right_hip_yaw"         :2,
+            "right_hip_roll"        :2,
+            "right_hip_pitch"       :2,
+            "right_knee"            :2,
+            "right_ankle_pitch"     :2,
+            "right_ankle_roll"      :2,
+            "left_hip_yaw"          :2,
+            "left_hip_roll"         :2,
+            "left_hip_pitch"        :2,
+            "left_knee"             :2,
+            "left_ankle_pitch"      :2,
+            "left_ankle_roll"       :2
+        },
+
+        "8":
+        {
+            "head_yaw"              :0,
+            "head_pitch"            :0,
+            "right_shoulder_pitch"  :27,
+            "right_shoulder_roll"   :-7,
+            "right_elbow_roll"      :0,
+            "right_elbow_pitch"     :67,
+            "left_shoulder_pitch"   :-27,
+            "left_shoulder_roll"    :7,
+            "left_elbow_roll"       :0,
+            "left_elbow_pitch"      :-67,
+            "torso"                 :0,
+            "right_hip_yaw"         :0,
+            "right_hip_roll"        :0,
+            "right_hip_pitch"       :-17,
+            "right_knee"            :-34,
+            "right_ankle_pitch"     :20,
+            "right_ankle_roll"      :0,
+            "left_hip_yaw"          :0,
+            "left_hip_roll"         :0,
+            "left_hip_pitch"        :17,
+            "left_knee"             :34,
+            "left_ankle_pitch"      :-20,
+            "left_ankle_roll"       :0
+        }      
+        
+    },
+    "exit":
+    {
+        "0": 
+        {
+            "head_pitch": 0,
+            "head_yaw": 0
+        }
+    }
+}

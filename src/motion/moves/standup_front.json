@@ -1,3 +1,4 @@
+#need to check ++++++
 {
     "enter": 
     {
@@ -11,65 +12,77 @@
     {
         "0":
         {
-            "head_pitch": -30,
-            "head_yaw": 0
+            "right_shoulder_pitch" :-27,
+            "right_shoulder_roll"  :-7,
+            "right_elbow_pitch"    :17,
+            "left_shoulder_pitch"  :27,
+            "left_shoulder_roll"   :7,
+            "left_elbow_pitch"     :-17,
+            "right_hip_pitch"      :-118,
+            "right_knee"           :41,
+            "right_ankle_pitch"    :-81,
+            "left_hip_pitch"     :118,
+            "left_knee"            :-41,
+            "left_ankle_pitch"     :81 
+            
         },
         "1":
         {
-            "head_pitch": -30,
-            "head_yaw": 0
+            "right_shoulder_pitch" : 27,
+            "right_shoulder_roll"  :-34,
+            "right_elbow_pitch"    :118,
+            "left_shoulder_pitch"  :-27,
+            "left_shoulder_roll"   :34,
+            "left_elbow_pitch"     :-118        
+                      
         },
 
         "2":
         {
-            "head_pitch": -30,
-            "head_yaw": -30
+            "right_knee"        :15,           
+            "left_knee"         :-14
+            
         },
         "3":
         {
-            "head_pitch": -30,
-            "head_yaw": -60
+            "right_shoulder_roll": -7,
+            "right_elbow_pitch"  : 67,
+            "left_shoulder_roll" : 7,
+            "left_elbow_pitch"   :7,
+            "right_hip_pitch"    :-17,
+            "right_knee"         :-34, 
+            "right_ankle_pitch"  :20,
+            "left_hip_pitch"     :17,        
+            "left_knee"          :-34,
+            "left_ankle_pitch"   :-20
         },
         "4":
         {
-            "head_pitch": -60,
-            "head_yaw": -60
-        },
-        "5":
-        {
-            "head_pitch": -60,
-            "head_yaw": -30
-        },
-        "6":
-        {
-            "head_pitch": -60,
-            "head_yaw": 0
-        },
-        "7":
-        {
-            "head_pitch": -60,
-            "head_yaw": 30
-        },
-        "8":
-        {
-            "head_pitch": -60,
-            "head_yaw": 60
-        },
-        "9":
-        {
-            "head_pitch": -30,
-            "head_yaw": 60
-        },
-        "10":
-        {
-            "head_pitch": -30,
-            "head_yaw": 30
-        },
-        "11":
-        {
-            "head_pitch": -30,
-            "head_yaw": 0
+            "head_yaw"              :0,
+            "head_pitch"            :2,
+            "right_shoulder_pitch"  :2,
+            "right_shoulder_roll"   :2,
+            "right_elbow_roll"      :2,
+            "right_elbow_pitch"     :2,
+            "left_shoulder_pitch"   :2,
+            "left_shoulder_roll"    :2,
+            "left_elbow_roll"       :2,
+            "left_elbow_pitch"      :2,
+            "torso"                 :2,
+            "right_hip_yaw"         :2,
+            "right_hip_roll"        :2,
+            "right_hip_pitch"       :2,
+            "right_knee"            :2,
+            "right_ankle_pitch"     :2,
+            "right_ankle_roll"      :2,
+            "left_hip_yaw"          :2,
+            "left_hip_roll"         :2,
+            "left_hip_pitch"        :2,
+            "left_knee"             :2,
+            "left_ankle_pitch"      :2,
+            "left_ankle_roll"       :2
         }
+        
     },
     "exit":
     {
