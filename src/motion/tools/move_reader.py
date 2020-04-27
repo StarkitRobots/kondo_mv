@@ -82,31 +82,27 @@ class MoveReader:
         
        # Returns:
         #    pose {dict} -- pose with servos to change. Format of pose: {"servo_name": servo_pos_in_rad}
-        
+               
+        if self.current_pose  == collections.deque(self.move_config, maxlen=1):
+            print(" is last pose")
+        else:
+            self.next_pose = self.current_pose.index() + 1
+            return self.next_pose
+                
+        #pose = {}
+        #return pose
 
-
-
-        
-       # if self.current_pose  = collections.deque(self.move_config, maxlen=1):
-        #    print(" is last pose")
-       # else:
-      #      rerurn self.next_pose = self.current_pose.index() + 1
-        
-
-        
-        pose = {}
-        return pose
 
     
-    def count_interm_andle(self, current_pose,next_pose):
+    def count_intermediate_angle(self, current_pose,next_pose):
         return fabs(self.current_pose.get(key, default=None) - self.next_pose.get(key, default=None)/self.frames_num)
 
 
-    def  exception_read_next_pose():
+    def  exception_read_next_pose(self, next_pose):
         if self.next_pose:
             print("we have next_pose")
         else:
-            return read_next_pose()
+            return self.read_next_pose()
        
 
     def calculate_frame_list(self, current_pose=None, next_pose=None):
@@ -120,18 +116,16 @@ class MoveReader:
         
       #  Returns:
       #      frames_list [list] -- list of frames. Each frame is a dict of servos and its positions
-      #  """
-       
-       
+      #  """     
        
         exception_read_next_pose()
 
-        self.current_angle = self.current_pose.get(key, default=None)     
-        self.interm_andle  = count_interm_andle()
+        current_angle = self.current_pose.get(key, default=None)     
+        intermediate_angle  = count_intermediate_angle()
 
-        for self.interm_angle in range(self.current_pose.get(key, default=None),self.next_pose.get(key, default=None)):
-            self.interm_pose = self.current_pose.get(key, default=None) + self.interm_andle
-            self.frames_list.update(self.interm_pose)
+        #for self.interm_angle in range(self.current_pose.get(key, default=None),self.next_pose.get(key, default=None)):
+         #   self.interm_pose = self.current_pose.get(key, default=None) + self.interm_andle
+          #  self.frames_list.update(self.interm_pose)
               
         
         
@@ -157,11 +151,11 @@ class MoveReader:
 
         if self.frames_list:
             print("frame_list has data")
-            return self.frames_list.items()
-
+            #return self.frames_list.items()
+            print(self.frames_list)
         else:
             print("Frame_list empty")
-            return calculate_frame_list() 
+            return calculate_frame_list(self, current_pose=None, next_pose=None) 
        
 
        
