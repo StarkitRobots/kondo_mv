@@ -8,7 +8,7 @@ sys.path.append('localization/tools/')
 sys.path.append('localization')
 
 from Random import Random
-from item import Item
+from entity import Entity
 from pf_logger import PFlogger
 import random #временно
 
@@ -55,8 +55,8 @@ class ParticleFilter():
                 yaw = 2*math.pi + yaw
             if yaw > 2*math.pi:
                 yaw %= (2 * math.pi)
-            self.particles.append([Item(x_coord, y_coord, yaw), 0])
-        self.logger.step("initial", self.return_coord(), self.paricles)
+            self.particles.append([Entity(x_coord, y_coord, yaw), 0])
+        self.logger.step("initial", self.return_coord(), self.particles)
 
     def gen_n_particles_robot(self, n):
         particles = []
@@ -68,19 +68,8 @@ class ParticleFilter():
                 yaw = 2 * math.pi + yaw
             if yaw > 2 * math.pi:
                 yaw %= (2 * math.pi)
-            particles.append([Item(x_coord, y_coord, yaw), 0])
+            particles.append([Entity(x_coord, y_coord, yaw), 0])
         return particles
-
-    def uniform_reset(self):
-        self.particles = []
-        #
-        #need to redo
-        #
-        #for i in range(self.number_of_particles):
-        #    x = Robot((random.random()-0.5) * field.w_width, (random.random()-0.5)
-        #              * field.w_length, random.random()*math.pi * 2)
-        #    self.particles.append([x, 0])
-        self.robot.update_coord(self.particles)
 
     def update_consistency(self, observations):
         stepConsistency = 0
@@ -92,10 +81,7 @@ class ParticleFilter():
                     dists = []
                     for landmark in self.landmarks[color_landmarks]:
                         # calc posts coords in field for every mesurement
-                        x_posts = (self.robot.x + observation[0] * math.cos(self.robot.yaw)
-                                   - observation[1] * math.sin(self.robot.yaw))
-                        y_posts = (self.robot.y + observation[0] * math.sin(self.robot.yaw)
-                                   + observation[1] * math.cos(self.robot.yaw))
+                        x_posts, y_posts = self.robot.local_to_global_coord(observation)
                         dist = math.sqrt(
                             (x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
                         dists.append(dist)
@@ -133,23 +119,6 @@ class ParticleFilter():
         #              * field.w_length, random.random() * math.pi*2)
          #   tmp.append([x, 0])
         return tmp
-
-    def observation_to_predict(self, observations):
-        predicts = []
-        for color_landmarks in observations:
-            if (color_landmarks not in self.landmarks):
-                continue
-            for landmark in self.landmarks[color_landmarks]:
-                if len(observations[color_landmarks]) != 0:
-                    for obs in observations[color_landmarks]:
-                        y_posts = self.robot.x + \
-                            obs[0] * math.sin(-self.robot.yaw) + \
-                            obs[1] * math.cos(-self.robot.yaw)
-                        x_posts = self.robot.y + \
-                            obs[0] * math.cos(-self.robot.yaw) - \
-                            obs[1] * math.sin(-self.robot.yaw)
-                        predicts.append([x_posts, y_posts])
-        return predicts
 
     def resampling_wheel(self, weights, res_particles):
         new_particles = {}
@@ -194,16 +163,11 @@ class ParticleFilter():
         self.update_consistency(observations)
         self.logger.step("resempling", self.return_coord(), self.particles)
  
-
     def custom_reset(self, x, y, yaw):
         self.robot.x = x
         self.robot.y = y
         self.robot.yaw = yaw
         self.p = self.gen_n_particles_robot(self.number_of_particles)
-
-    # ------------------------------
-    # need to add to handle the fall
-    # ------------------------------
 
     def fall_reset(self, observations):
         self.custom_reset(self.robot.x + random.gauss(0, self.sense_noise),
@@ -232,10 +196,10 @@ class ParticleFilter():
         self.robot.y = y
         self.robot.yaw = orientation % (2 * math.pi)
 
+    def update(self, observations):
+        for i in range(self.number_of_res):
+            self.resampling(observations)
+        print('eto coord', self.return_coord(), self.robot.yaw*180/math.pi)
+        return self.return_coord()
 
 
-def UpdatePF(pf, measurement):
-    for i in range(pf.number_of_res):
-        pf.resampling(measurement)
-    print('eto coord', pf.return_coord(), pf.robot.yaw*180/math.pi)
-    return pf.return_coord()
