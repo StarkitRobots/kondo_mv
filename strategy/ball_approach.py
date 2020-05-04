@@ -8,12 +8,13 @@ class BallApproach:
     turn_ang = 0.1 * math.pi
 
     def get_data(self, xr, yr, xb, yb, yaw):
+        # xr, yr, yaw - coords of the robot in global system
+        # xb, yb - coords of the ball in global system
         self.xr = xr
         self.yr = yr
         self.xb = xb
         self.yb = yb
         self.yaw = yaw
-
 
     def set_constants(self, consts):
         self.max_step = consts["max_step"]
@@ -28,16 +29,15 @@ class BallApproach:
         self.medium_dist = consts["medium_dist"]
         self.critical_lateral_step = consts["critical_lateral_step"]
 
-
     def get_diff(self):
         return self.xr - self.xb
 
-    def find_trajectory (self):
+    def find_trajectory(self):
         xr = self.xr
         yr = self.yr
         xb = self.xb
         yb = self.yb
-        #max_step = self.max_step
+
         CIRCLE_RADIUS = self.CIRCLE_RADIUS
         GOAL_LEN = self.GOAL_LEN
         WIND_X = self.WIND_X
@@ -45,72 +45,39 @@ class BallApproach:
 
         traj = []
 
-        traj.append ((xr, yr))
+        traj.append((xr, yr))
 
-        #-----------------------------------------------------------
-        #find starting point on the circle
+        xbr = xb - xr  # x ball relative
+        ybr = yb - yr  # y ball relative
 
-        xbr = xb - xr #x ball relative
-        ybr = yb - yr #y ball relative
+        r = CIRCLE_RADIUS
+        leng = math.sqrt(xbr**2 + ybr**2)
 
-        r    = CIRCLE_RADIUS
-        leng = math.sqrt (xbr**2 + ybr**2)
+        # find kick point on the circle
+        gbx = xb - WIND_X                        # goal-ball x
+        gby = yb - GOAL_POS - int(GOAL_LEN / 2)  # goal-ball y
 
-        #beta  = math.asin (ybr / leng)
-        #alpha = math.asin (r / leng)
+        length_gb = math.sqrt(gbx**2 + gby**2)
 
-        #if (xb < xr):# + CIRCLE_RADIUS):
-        #   sx = 0
-        #   sy = 0
+        kpx = xb + CIRCLE_RADIUS * gbx / length_gb  # kick point x
+        kpy = yb + CIRCLE_RADIUS * gby / length_gb  # kick point y
 
-        #   if (yr + (yr - GOAL_POS - int (GOAL_LEN / 2)) * (xr - xb) / (WIND_X - xb) > yb):
-        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
+        traj.append((kpx, kpy))
+        traj.append((WIND_X, GOAL_POS + GOAL_LEN / 2))
 
-        #   else:
-        #       alpha = - alpha
-        #
-        #       sx = - leng * math.cos (alpha + beta) * math.cos (alpha) + xr
-        #       sy = leng * math.sin (alpha + beta) * math.cos (- alpha) + yr
-
-        #   traj.append ((sx, sy))
-
-        #-----------------------------------------------------------
-        #find kick point on the circle
-        gbx = xb - WIND_X                        #goal-ball x
-        gby = yb - GOAL_POS - int (GOAL_LEN / 2) #goal-ball y
-
-        length_gb =  math.sqrt (gbx**2 + gby**2)
-
-        kpx = xb + CIRCLE_RADIUS * gbx / length_gb #kick point x
-        kpy = yb + CIRCLE_RADIUS * gby / length_gb #kick point y
-
-        traj.append ((kpx, kpy))
-
-        #move with proper steps on the circle
-
-        #if (xr < xb):
-        #    traj.append ((xr, yr))
-        #    traj.append ((xb - CIRCLE_RADIUS, yb))
-
-        #else:
-        #    if (yr < yb):
-        #    else:
-
-        traj.append ((WIND_X, GOAL_POS + GOAL_LEN / 2))
-
-        traj[1] = (xb, yb )
+        traj[1] = (xb, yb)
 
         self.wtraj = traj
 
         return traj
 
+    # linear tranformation
     def lin_trans(self, W, shift, vec):
         res = [vec[i] - shift[i] for i in range(2)]
         res = [W[i][0] * res[0] + W[i][1] * res[1] for i in range(2)]
         return res
 
-
+    # finding trajectory in local robot coords
     def convert_trajectory(self):
         traj = self.wtraj
         yaw = -self.yaw
@@ -123,14 +90,13 @@ class BallApproach:
         self.rtraj = rtraj
         return rtraj
 
-
     def make_decision(self):
 
         rtraj = self.rtraj
         traj = self.wtraj
         min_dist = self.min_dist
-        ang_thres1 = self.ang_thres1 # - minimum allowed angle between robot walk direction and robot-to-ball direction
-        ang_thres2 = self.ang_thres2 # - minimum allowed angle between the parts of the trajectory
+        ang_thres1 = self.ang_thres1  # minimum allowed angle between robot walk direction and robot-to-ball direction
+        ang_thres2 = self.ang_thres2  # minimum allowed angle between the parts of the trajectory
         yaw = -self.yaw
 
         # targvec - the vector from  center of the goal to the ball
@@ -151,6 +117,7 @@ class BallApproach:
 
         # ang1 - angle between robot walk direction and robot-to-ball direction
         # ang2 - angle between the two parts of the trajectory
+        # vec_prod - shows the orientation of the parts of the trajectory
         ang1 = math.acos(path[0] / pth_ln)
         ang2 = math.acos((targvec[0] * path[0] + targvec[1] * path[1]) / tv_ln / pth_ln)
         self.ang2 = ang2
@@ -166,7 +133,7 @@ class BallApproach:
         elif vec_prod > 0:
             self.circle_center = (traj[1][0] + wnorm[0] * R, -traj[1][1] + wnorm[1] * R)
 
-        # calculating the current point on the circle the robot should go towards
+        # calculating the current point (move_point_loc) on the circle the robot should go towards
         vec_shift = R - R * math.cos(ang2)
         sup_point = (traj[0][0] / 2 + traj[1][0] / 2, -traj[0][1] / 2 + -traj[1][1] / 2)
         s_c = self.circle_center
@@ -182,11 +149,11 @@ class BallApproach:
         self.move_p = move_point_w
         shift = traj[0]
         rotmat = [[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]]
+        
         move_point_loc = self.lin_trans(rotmat, shift, move_point_w)
         move_p_dist = math.sqrt(move_point_loc[0] ** 2 + move_point_loc[1] ** 2)
 
         ang3 = math.acos(move_point_loc[0] / move_p_dist)
-
 
         # making the decision, based on the distance and angles
         ball_dist = math.sqrt((self.xb-self.xr)**2 + (self.yb-self.yr)**2)
