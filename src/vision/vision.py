@@ -1,10 +1,5 @@
 import math
 import json
-try:
-    import sensor
-    import image
-except Exception:
-    raise Exception("Try to import OpenMV library using Python3")
 from .detectors import SurroundedObjectDetector, blob_area, blob_width
 
 
