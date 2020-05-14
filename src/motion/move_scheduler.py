@@ -1,26 +1,14 @@
 from .moves import Move
 
 class MoveScheduler:
-    def __init__(self, model, odometry):
+    def __init__(self, model):
         self.active_moves = []
         self._model = model
         self.servos = {}
         self.servos_zero = {}
         self.status = ''
-        self.kondo_motions_to_apply = []
         for servo in self._model.servos:
             self.servos[servo] = self.servos_zero[servo] = model.servos[servo]['zero']
-
-        self.odometry = odometry
-
-    def _is_motion(self, data):
-        if data is dict:
-            if 'motion' in data.keys:
-                return True
-            else:
-                return False
-        else:
-            return False
 
     def has_active_move(self, move_name):
         return any([move_name == move.name for move in self.active_moves])
@@ -29,27 +17,6 @@ class MoveScheduler:
         for servo in frame:
             frame[servo] += self.servos_zero[servo]
         return frame
-
-    def combine_moves(self, *args):
-        new_move = Move()
-        moves = []
-        args_without_moves = list(args)
-        for arg in args_without_moves:
-            if isinstance(arg, Move):
-                moves.append(arg)
-                args_without_moves.pop(arg)
-        new_move.enter = \
-            lambda *args_without_moves: \
-                self._combine_frames_lists([move.enter(*args_without_moves) for move in moves])
-        new_move.tick = \
-            lambda *args_without_moves: \
-                self._combine_frames_lists([move.tick(*args_without_moves) for move in moves])
-        new_move.exit = \
-            lambda *args_without_moves: \
-                self._combine_frames_lists([move.exit(*args_without_moves) for move in moves])
-        new_move.name = sum([move.name + '+' for move in moves])
-        new_move.name = new_move.name[:len(new_move.name) - 1]
-        return new_move
 
     def _combine_frames_lists(self, frames_lists):
         servos = {}
@@ -94,12 +61,6 @@ class MoveScheduler:
             if servos[servo] is not None:
                 new_frame[servo] = servos[servo]
         return new_frame
-        
-    def get_kondo_motion(self):
-        if self.kondo_motions_to_apply != []:
-            return self.kondo_motions_to_apply.pop(0)
-        else:
-            return {}
 
     def start_move(self, move):
         if self.has_active_move(move.name):
@@ -116,25 +77,19 @@ class MoveScheduler:
     def tick(self):
         if self.active_moves != []:
             frames = []
-            if any([move.is_kondo_motion for move in self.active_moves]):
-                for move in self.active_moves:
-                    if not move.is_kondo_motion:
-                        self.stop_move(move)
+            for move in self.active_moves:
+                if move.frames_to_process != []:
+                    frames.append(move.get_frame())
+                else:
+                    if move.enabled:
+                        move.tick()
             
-            if all([move.is_kondo_motion for move in self.active_moves]):
-                self.kondo_motions_to_apply = [move.tick() for move in self.active_moves]
-            if self.kondo_motions_to_apply == []:
-                for move in self.active_moves:
-                    if move.frames_to_process != []:
-                        frames.append(move.get_frame())
-                    else:
-                        if move.enabled:
-                            move.tick()
-                if frames != []:
-                    frame_to_update = self._combine_frames(frames)
-                    
-                    frame_to_update = self.add_zeros(frame_to_update)
-                    self.update_servos(frame_to_update)
+            if frames != []:
+                frame_to_update = self._combine_frames(frames)
+                
+                frame_to_update = self.add_zeros(frame_to_update)
+                self.update_servos(frame_to_update)
+            
             for move in self.active_moves:
                 if not move.enabled and move.frames_to_process == []:
                     self.active_moves.pop(self.active_moves.index(move))

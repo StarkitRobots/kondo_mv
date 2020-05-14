@@ -23,7 +23,8 @@ class Motion:
         if self.imu is None:
             print('No imu mode')
         self.model = model
-        self.move_scheduler = MoveScheduler(self.model, Odometry(self.imu))
+        self.odometry = Odometry(self.imu)
+        self.move_scheduler = MoveScheduler(self.model, self.odometry)
         self.walk = Walk(model=self.model)
         self.head = Head()
         self.kick = Kick()

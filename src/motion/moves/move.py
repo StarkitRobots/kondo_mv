@@ -1,12 +1,12 @@
 import json
 
 class Move(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file=None):
         self.servos = {}
         self.name = ''
         self.enabled = False
         self.frames_to_process = []
-        self.states = json.loads(config_file)
+        self.states = json.loads(config_file) if config_file is not None else None
 
     def get_frame(self):
         if self.frames_to_process != []:
@@ -40,4 +40,8 @@ class Move(object):
         return data
 
     def read_state_from_json(self, state, state_num):
-        return self.states[state][state_num]
+        if self.states is not None:
+            return self.states[state][state_num]
+        else:
+            print('No config file')
+            return
