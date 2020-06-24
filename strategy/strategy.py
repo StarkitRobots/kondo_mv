@@ -1,4 +1,3 @@
-import sys
 import math
 import json
 
@@ -7,27 +6,29 @@ from ball_approach import BallApproach
 
 class Strategy:
     def __init__(self):
-        self.turn_counterFF = 0  # counter for localized=False and seeBall=False 
-        self.turn_counterTF = 0  # counter for localized=True and seeBall=False 
+        # counter for localized=False and seeBall=False
+        self.turn_counter_ff = 0
+        # counter for localized=True and seeBall=False
+        self.turn_counter_tf = 0
 
         self.rtraj = []
 
     def searchball(self, loc):
         if not loc.localized:
-            self.turn_counterTF = 0
-            # this is the case when the robot turnes in order to find the ball or to localize
+            self.turn_counter_tf = 0
+            # the case when the robot turns to find the ball or to localize
 
             # checking if robot has already turned 3 times
-            if self.turn_counterFF < 3:
-                self.turn_counterFF += 1
+            if self.turn_counter_ff < 3:
+                self.turn_counter_ff += 1
                 return {"name": "turn", "args": (math.pi / 2)}
             else:
-                self.turn_counterFF = 0
+                self.turn_counter_ff = 0
                 return {"name": "walk", "args": (0.5, 0)}
 
         else:
             # this is the case when the robot goes to the center of the field
-            self.turn_counterFF = 0
+            self.turn_counter_ff = 0
 
             # x0,y0 - the position of the center of the field
             x0, y0 = (0.0, 0.0)
@@ -41,14 +42,14 @@ class Strategy:
 
             # checking if the robot is already at the center
             if dist < 0.07:
-                if self.turn_counterTF < 3:
-                    self.turn_counterTF += 1
+                if self.turn_counter_tf < 3:
+                    self.turn_counter_tf += 1
                     return {"name": "turn", "args": (math.pi / 2)}
                 else:
-                    self.turn_counterTF = 0
+                    self.turn_counter_tf = 0
                     return {"name": "walk", "args": (0.5, 0)}
 
-            # ang - the angle the robot needs to turn so as to walk to the center
+            # ang - the angle between robot's line of sight and the center
 
             ang = math.acos(dx / dist)
             if dy < 0:
@@ -60,8 +61,8 @@ class Strategy:
 
     def walkball(self, loc):
         # this is the case when robot is not localized but sees the ball
-        self.turn_counterFF = 0
-        self.turn_counterTF = 0
+        self.turn_counter_ff = 0
+        self.turn_counter_tf = 0
 
         # xb,yb - coords of the ball in the system of the robot
         xb = loc.ballPosSelf[0]
@@ -87,8 +88,8 @@ class Strategy:
 
     def apply_ball_approach(self, loc, img):
         # this is the case when the robot is localized and sees the ball
-        self.turn_counterFF = 0
-        self.turn_counterTF = 0
+        self.turn_counter_ff = 0
+        self.turn_counter_tf = 0
 
         ball_approach = BallApproach()
         xr, yr, yaw = loc.robot_position
@@ -129,7 +130,8 @@ class Strategy:
             raise Exception("apply_ball_approach got unknown command")
 
     # part where the trajectory is drawn
-    def draw_trajectory(self, img, model, draw=True, scale_factor=40, x0=160, y0=120,
+    def draw_trajectory(self, img, model, draw=True,
+                        scale_factor=40, x0=160, y0=120,
                         field_x_sz=2.6, field_y_sz=3.6):
         if (draw is False):
             return
@@ -164,7 +166,8 @@ class Strategy:
 
         traj = self.traj
 
-        img.draw_circle(int(traj[0][1] * scale_factor) + x0, int(traj[0][0] * scale_factor) + y0,
+        img.draw_circle(int(traj[0][1] * scale_factor) + x0,
+                        int(traj[0][0] * scale_factor) + y0,
                         5, (251, 10, 200), thickness=1, fill=True)
 
         for i in range(lin_num + 1):
@@ -175,9 +178,11 @@ class Strategy:
                 img.draw_line(x0 + int(traj[i][1] * scale_factor),
                               y0 + int(traj[i][0] * scale_factor),
                               x0 + int(traj[i+1][1] * scale_factor),
-                              y0 + int(traj[i+1][0] * scale_factor), color, thickness=3)
+                              y0 + int(traj[i+1][0] * scale_factor),
+                              color, thickness=3)
 
-            img.draw_circle(int(traj[i][1] * scale_factor) + x0, int(traj[i][0] * scale_factor) + y0,
+            img.draw_circle(int(traj[i][1] * scale_factor) + x0,
+                            int(traj[i][0] * scale_factor) + y0,
                             5, (190, 100, 20), thickness=1, fill=True)
 
     def generate_action(self, loc, img):
@@ -201,7 +206,7 @@ class Strategy:
 
 
 # basic goalkeeper strategy - NOT USED
-class gk_Strategy:
+class GKStrategy:
     def __init__(self):
         pass
 
@@ -221,11 +226,14 @@ class gk_Strategy:
     def gk_generate_action(self, loc):
         if loc.localized:
             if loc.seeBall:
-                return gk_ball_approach(loc)
+                # return gk_ball_approach(loc)
+                pass
             else:
-                return take_def_pos(loc)
+                # return take_def_pos(loc)
+                pass
         else:
             if loc.seeBall:
-                return gk_ball_approach(loc)
+                # return gk_ball_approach(loc)
+                pass
             else:
                 pass
