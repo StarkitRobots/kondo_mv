@@ -1,8 +1,9 @@
 """
-This is logger for particle filter. It saves positions of all particles and robot in every steps to log.json file
+This is logger for particle filter. It saves positions of
+all particles and robot in every steps to log.json file
 """
 import json
-import os 
+import os
 
 
 class PFlogger():
@@ -13,7 +14,6 @@ class PFlogger():
             self.comma = ''
         self.count = 0
 
-
     def step(self, name, robot, particles):
         with open(self.path, 'rb+') as filehandle:
             filehandle.seek(-1, os.SEEK_END)
@@ -21,11 +21,11 @@ class PFlogger():
         logs = []
         for particle in particles:
             logs.append([particle[0].x, particle[0].y, particle[0].yaw])
-        logs = {'name':name, 'position':robot, 'particles':logs}
+        logs = {'name': name, 'position': robot, 'particles': logs}
         with open(self.path, "a") as self.logs:
             self.logs.write(self.comma+'"'+str(self.count)+'"'+":")
         with open(self.path, "a") as self.logs:
             json.dump(logs, self.logs)
             self.logs.write("}")
         self.comma = ','
-        self.count +=1
+        self.count += 1

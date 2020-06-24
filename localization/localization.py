@@ -1,21 +1,14 @@
-import math
 import json
-import sys
-
-sys.path.append('/Localization')
-sys.path.append('/tools/')
-
 from entity import Entity
 from field import Field
-#from button import Button
+from button import Button
 from median import median
-from random_tools import Random
 from particle_filter import ParticleFilter
 
 
 class Localization:
 
-    def __init__(self, x, y, yaw, side = 'yellow', button = False):
+    def __init__(self, x, y, yaw, side='yellow', button=False):
         self.local_ball_coord = None
         self.global_ball_cord = None
         self.localized = False
@@ -33,10 +26,12 @@ class Localization:
         if button:
             self.robot_position = tuple(Button())
             x, y, yaw = self.robot_position
-        self.pf = ParticleFilter(Entity(x, y, yaw), Field("localization/parfield.json"), landmarks)
+        self.pf = ParticleFilter(Entity(x, y, yaw),
+                                 Field("localization/parfield.json"),
+                                 landmarks)
 
     def update(self, data):
-        #updating the filter based on data from vision
+        # updating the filter based on data from vision
         self.robot_position = self.pf.update(data)
         if self.pf.consistency > 0.5:
             self.localized = True
@@ -44,14 +39,14 @@ class Localization:
             self.localized = False
 
     def update_ball(self, data):
-        #updating global ball position, if the ball is found in the frame
+        # updating global ball position, if the ball is found in the frame
         if len(data['ball']) != 0:
             self.see_ball = True
             self.local_ball_coord = median(data["ball"])
-            self.global_ball_cord = self.pf.robot.local_to_global_coord(self.local_ball_coord)
+            self.global_ball_cord = \
+                self.pf.robot.local_to_global_coord(self.local_ball_coord)
         else:
             self.see_ball = False
 
     def move(self, odometry):
         self.pf.particles_move(odometry)
-

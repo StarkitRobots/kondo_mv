@@ -1,18 +1,15 @@
 """
-Class entiny for ball, robot and particles. This class contains fields with coordinates and angle of object and 
+Class entiny for ball, robot and particles.
+This class contains fields with coordinates and angle of object
+and
 """
 
 import math
-import sys
-
-sys.path.append('localization')
-sys.path.append('../tools/')
-
 from random_tools import Random
 
 
 class Entity():
-    def __init__(self, x = 0, y = 0, yaw = 0):
+    def __init__(self, x=0, y=0, yaw=0):
         self.x = x          # Object's x coordinate
         self.y = y          # Object's y coordinate
         self.yaw = yaw      # Object's angle
@@ -31,13 +28,12 @@ class Entity():
         self.x += x*math.cos(self.yaw)
         self.y += x*math.sin(self.yaw)
         self.yaw = orientation
-    
+
     def local_to_global_coord(self, observation):
-        
-        x_field= self.x + observation[0] * math.cos(self.yaw) - \
-                          observation[1] * math.sin(self.yaw)
+        x_field = self.x + observation[0] * math.cos(self.yaw) - \
+            observation[1] * math.sin(self.yaw)
         y_field = self.y + observation[0] * math.sin(self.yaw) + \
-                           observation[1] * math.cos(self.yaw)
+            observation[1] * math.cos(self.yaw)
         return (x_field, y_field)
 
     def observation_score(self, observations, landmarks, gauss_noise):
@@ -52,9 +48,11 @@ class Entity():
                 dists = []
                 if observations[color_landmarks]:
                     for observation in observations[color_landmarks]:
-                        x_posts, y_posts = self.local_to_global_coord(observation)
+                        x_posts, y_posts = \
+                            self.local_to_global_coord(observation)
                         dist = math.sqrt(
-                            (x_posts - landmark[0])**2 + (y_posts - landmark[1])**2)
+                            (x_posts - landmark[0])**2 +
+                            (y_posts - landmark[1])**2)
                         dists.append(dist)
                     prob *= Random.gaussian(min(dists), gauss_noise)
         return prob
@@ -66,12 +64,13 @@ class Entity():
             for line in lines:
                 for landmark_line in landmarks:
                     for coord in landmark_line:
-                #landmark_line_self = self.get_self_coords_from_field(landmark_line_field)
-                        yaw = (self.yaw + line[1])%(2*math.pi)
+                        yaw = (self.yaw + line[1]) % (2*math.pi)
                         if landmark_line == 'x':
-                            dist = math.fabs(coord - (self.x + line[0]*math.cos(yaw)))
+                            dist = math.fabs(coord - (self.x +
+                                             line[0]*math.cos(yaw)))
                         else:
-                            dist = math.fabs(coord - (self.y + line[0]*math.sin(yaw)))
+                            dist = math.fabs(coord - (self.y +
+                                             line[0]*math.sin(yaw)))
                         dists.append(dist)
             if (dists != []):
                 prob *= Random.gaussian(min(dists), gauss_noise)
