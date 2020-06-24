@@ -1,6 +1,24 @@
 import sensor, image
 import math, json
 
+#All the detection relies on the usage of the Blob analysis from the OpenMV SDK
+
+#Classes:
+
+#Detectors:
+# - Detector - basic visualization, placeholders for common methods
+# - ColoredObjectDetector [inherited from Detector] - blob analysis,
+#   particular filtration methods
+# - SurroundedObjectDetector [inherited from ColoredObjectDetector] - 
+#   takes surrounding pixels of the object into account to check if
+#   the detected object has proper background
+
+#Containers/other:
+# - Vision - container for the detectors
+# - VisionPostprocessing - mutual spatial relations of the detected objects
+
+#Implements basic visualization for the blobs and contains placeholders for the
+#common methods shared by all the detectors.
 class Detector:
     def __init__(self):
         self.blobs = []
@@ -30,6 +48,12 @@ def blob_area (blob):
 def blob_width (blob):
     return blob.w ()
 
+#Color-based detector with filtration by pixel area, bbox area and blob roundness.
+#Maximum objects number is regulated by objects_num_, passed into the constructor
+#and by default is set to 1. Blob merging is supported, but is disabled by default.
+#Draws the confirmed detections in a verbose manner and the rest of the candidates
+#with single bbox. Supports custom sorting criterion, set to be blob.area() by
+#default.
 class ColoredObjectDetector(Detector):
     def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1,
                  roundness_th_ = -1):
@@ -83,6 +107,13 @@ class ColoredObjectDetector(Detector):
         self._draw(img, self.result, True, True)
         self._draw(img, self.blobs)
 
+#Contains the surrounding color checking on the top of the ColoredObjectDetector
+#methods. Supports multiple filtering criterions (see constructor for the whole
+#list) and the following parameters of the surrounding check: sector for the
+#checking (detailed explanation below), points number.
+#Extends the detection to the "object + surrounding", which is practically the
+#case for robotic football. The number of the possible surrounding colors is 2
+#to handle both the field and the marking lines.
 class SurroundedObjectDetector(ColoredObjectDetector):
     def __init__(self, obj_th_, surr1_th_, surr2_th_, sector_rad_ = 50, wind_sz_ = 3,
             pixel_th_ = 300, area_th_ = 300, merge_ = True,
@@ -126,6 +157,17 @@ class SurroundedObjectDetector(ColoredObjectDetector):
 
             self.sector_points.append ((x, y))
 
+    #The surrounding color check is implemented in the following manner:
+    # - given number of points lying on the segment of the circle around
+    #   the object is generated, see _generate_encl_points()
+    # - the circle radius is chosen with respect to the object size
+    # - the color of the surrounding in those points is checked to fit
+    #   up to 2 possible color ranges
+    # - the fitness of the points is stored in boolean format
+    # - finally, the voting is performed with the threshold ratio of
+    #   the necessary points having chosen surrounding color
+    #Multiple filters are sequentially allpied, resulting in the dict
+    #of detected objects
     def detect(self, img):
         self.blobs = self._detect (img)
         self.result = []
@@ -264,6 +306,9 @@ class SurroundedObjectDetector(ColoredObjectDetector):
 
             i += 1
 
+#Simple container, loading config .json and performing
+#sequential processing of the input frame and returning
+#a list with named results of the detection.
 class Vision:
     def __init__(self, detectors_):
         self.detectors = detectors_
@@ -352,7 +397,13 @@ class Vision:
 
         return result
 
-class Vision_postprocessing:
+#Class VisionPostprocessing enables one to extract the spatial
+#properties of the found objects, i.e. mutual location of the
+#goal posts and another parts of the goal to filter out the
+#inconsistent measurements and extract additional information
+#from the scene, particularly to improve the one goal post case
+#handling.
+class VisionPostprocessing:
     def __init__(self):
         pass
 
