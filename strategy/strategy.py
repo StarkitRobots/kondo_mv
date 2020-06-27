@@ -65,8 +65,8 @@ class Strategy:
         self.turn_counter_tf = 0
 
         # xb,yb - coords of the ball in the system of the robot
-        xb = loc.ballPosSelf[0]
-        yb = -loc.ballPosSelf[1]
+        xb = loc.local_ball_coord[0]
+        yb = -loc.local_ball_coord[1]
         dist = math.sqrt(xb ** 2 + yb ** 2)
 
         # ang - the angle the robot needs to turn so as to walk to the ball
@@ -188,7 +188,7 @@ class Strategy:
     def generate_action(self, loc, img):
         # general strategy
         if loc.localized is True:
-            if loc.seeBall is True:
+            if loc.see_ball is True:
                 print('apply_ba')
                 return self.apply_ball_approach(loc, img)
             else:
@@ -196,7 +196,7 @@ class Strategy:
                 return self.searchball(loc)
 
         else:
-            if loc.seeBall is True:
+            if loc.see_ball is True:
                 print('wlkbl')
                 return self.walkball(loc)
 
@@ -211,9 +211,9 @@ class GKStrategy:
         pass
 
     def gk_ball_approach(self, loc):
-        if loc.seeBall:
-            xb = loc.ballPosSelf[0][0]
-            yb = loc.ballPosSelf[0][1]
+        if loc.see_ball:
+            xb = loc.local_ball_coord[0][0]
+            yb = loc.local_ball_coord[0][1]
             dist = math.sqrt(xb ** 2 + yb ** 2)
             if dist < 1:
                 return {"name": "twine", "args": (1)}
@@ -225,14 +225,14 @@ class GKStrategy:
 
     def gk_generate_action(self, loc):
         if loc.localized:
-            if loc.seeBall:
+            if loc.see_ball:
                 # return gk_ball_approach(loc)
                 pass
             else:
                 # return take_def_pos(loc)
                 pass
         else:
-            if loc.seeBall:
+            if loc.see_ball:
                 # return gk_ball_approach(loc)
                 pass
             else:
