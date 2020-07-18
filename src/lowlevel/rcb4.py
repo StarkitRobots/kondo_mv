@@ -6,9 +6,8 @@ import time
 import struct
 try:
     from pyb import UART
-except Exception:
-    print("Try to import MicroPython library using Python3")
-    exit()
+except ImportError:
+    raise Exception("Trying to import MicroPython library using Python3")
 
 
 # from micropython import const
@@ -26,7 +25,7 @@ class Serial:
     def read(self, rxLen):
         if openmv:
             msg = []
-            for i in range(rxLen):
+            for _ in range(rxLen):
                 msg.append(self.uart.readchar())
             #print("read ",msg)
             return bytes(bytearray(msg))
@@ -412,7 +411,7 @@ class Rcb4BaseLib:
 
     def setMotionNum(self, motionNum):
         if 0 < motionNum <= self.maxMotionCount:
-            rxSize, buf = self.callCmd(self.motionAddr2motionNum(motionNum))
+            _, buf = self.callCmd(self.motionAddr2motionNum(motionNum))
             return self.synchronizeAck(buf)
         else:
             return False
@@ -692,7 +691,7 @@ class Rcb4BaseLib:
         if not Rcb4BaseLib.checkSio(sio):
             print('Wrong Sio. 1 / 2 for left / right side')
             return False
-        rxSize,txbuf = self.runSingleServoCmd(id, sio, pos, frame)
+        _, txbuf = self.runSingleServoCmd(id, sio, pos, frame)
         if len(txbuf) == 0:
             return False
         return self.synchronizeAck(txbuf)
@@ -773,17 +772,17 @@ class Rcb4BaseLib:
         return self.moveComToRamCmdSynchronize(self.RamAddr.PioModeAddres, buf)
 
 
-    #sets potitions of several servos using ServoData class
+    # sets potitions of several servos using ServoData class
     def setServoPos (self,servoDatas,frame):
-        rxSize,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
+        _,txbuf = self.runConstFrameServoCmd(servoDatas,frame)
         return  self.synchronizeAck(txbuf)
 
     def setServoSpeed(self, servoDatas):
-        rxSize, txbuf = self.setSpeedCmd(servoDatas)
+        _, txbuf = self.setSpeedCmd(servoDatas)
         return self.synchronizeAck(txbuf)
 
     def setServoStretch(self, servoDatas):
-        rxSize, txbuf = self.setStretchCmd(servoDatas)
+        _, txbuf = self.setStretchCmd(servoDatas)
         return self.synchronizeAck(txbuf)
 
     

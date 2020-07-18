@@ -2,7 +2,7 @@ import time
 import math
 try:
     from pyb import UART
-except Exception:
+except ImportError:
     raise Exception("Try to import MicroPython library using Python3")
 from .rcb4 import Rcb4BaseLib
 
@@ -26,7 +26,10 @@ class KondoController:
 
     # False if controller is busy (playing motion).
     def _timer_permission_check(self):
-        timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
+        try:
+            timer_check = self._motion_start_time + self._motion_duration <= time.ticks()
+        except AttributeError:
+            raise Exception("Trying to run controller not on OpenMV")
         motion_finished = False
         while not (motion_finished and timer_check):
             try:
@@ -43,7 +46,10 @@ class KondoController:
 
     def _set_timer(self, duration):
         self._motion_duration = duration  
-        self._motion_start_time = time.ticks()
+        try:
+            self._motion_start_time = time.ticks()
+        except AttributeError:
+            raise Exception("Trying to run controller not on OpenMV")
         time.sleep(int(duration))
 
     # basic method of any motion appliance

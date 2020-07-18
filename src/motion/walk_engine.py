@@ -5,7 +5,14 @@ from .geometry import Vector, Quaternion
 
 
 class WalkEngine:
+    """[summary]
+    """
     def __init__(self, model):
+        """[summary]
+
+        Args:
+            model ([type]): [description]
+        """
         self._model = model
         self.arms_enabled = True
         # mm side amplitude 
@@ -38,6 +45,16 @@ class WalkEngine:
         self.left_foot_orientation = Quaternion(0, 0, -1, 0)
 
     def update(self, walk_step, lateral_step, walk_turn, cycle, cycles_num):
+        """[summary]
+
+        Args:
+            walk_step (float): [description]
+            lateral_step (float): [description]
+            walk_turn (float): [description]
+            cycle (int): [description]
+            cycles_num (int): [description]
+        """
+
         self.walk_step = walk_step
         self.lateral_step = lateral_step
         self.walk_turn = walk_turn
@@ -47,8 +64,8 @@ class WalkEngine:
     def compute_angles(self, right_foot_target_point, right_foot_orientation,
     left_foot_target_point, left_foot_orientation):
         data = {}
-        right_leg_angles=[]
-        left_leg_angles=[]
+        right_leg_angles = []
+        left_leg_angles = []
 
         # compute inversed kinematics
         right_leg_solutions = compute_leg_ik(right_foot_target_point, 
@@ -107,7 +124,7 @@ class WalkEngine:
         else:
             for servo in left_leg_angles:
                 data['left_'+servo] = left_leg_angles[servo]
-            data['torso'] = 0.0                                  # Tors
+            data['torso'] = 0.0
             for servo in left_leg_angles:
                 data['right_'+servo] = -right_leg_angles[servo]
             if self.arms_enabled:
@@ -132,6 +149,11 @@ class WalkEngine:
         return data
 
     def enter(self):
+        """Function that generates frames to move robot from Init pose to Walk pose
+
+        Returns:
+            data (list): List of frames. To see what Frame is, look at class description.
+        """
         #tmp1 = self.right_first
         #if self.walk_turn>0 or self.lateral_step>0:  self.right_first = False
         #else: self.right_first = True
@@ -141,19 +163,27 @@ class WalkEngine:
                 (0.223 - self.gait_height) / self._init_poses 
             self.left_foot_target_point.z = -0.223 + i * \
                 (0.223 - self.gait_height) / self._init_poses
+
             self.right_foot_target_point.y = -0.0534 - i * \
                 self.amplitude / 2 / self._init_poses
             self.left_foot_target_point.y =  0.0534 - i * \
                 self.amplitude / 2 / self._init_poses
+
             leg_angles_frame = self.compute_angles(
                 self.right_foot_target_point, 
                 self.right_foot_orientation,
                 self.left_foot_target_point, 
                 self.left_foot_orientation)
+
             data.append(leg_angles_frame)
         return data
 
     def tick(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         data = []
         #tmp1 = self.right_first
         #if walk_turn>0 or lateral_step>0:  self.right_first = False
@@ -172,7 +202,6 @@ class WalkEngine:
                 self.right_foot_target_point.z = -self.gait_height
                 if self.cycle == 0: 
                     continue
-                    #dx0 = 0
                 else: 
                     dx0 = self.walk_step / \
                         (2 * self._frame_stand_phase + self._frame_swing_phase + 4) * 2
@@ -236,7 +265,7 @@ class WalkEngine:
                 if self.cycle == self.cycles_num - 1:
                     dx0 = self.walk_step / \
                         (2 * self._frame_stand_phase + self._frame_swing_phase + 4) * 4 / \
-                        self._frame_swing_phase * 2     # 8.75/6
+                        self._frame_swing_phase * 2
                     dx = (self.walk_step * (self._frame_stand_phase + self._frame_swing_phase) / \
                         (4 * self._frame_stand_phase) + 2 * dx0) / (self._frame_swing_phase - 4) * 2
                     if frame == (2 * self._frame_stand_phase + 2 * self._frame_swing_phase - 2):
@@ -274,6 +303,11 @@ class WalkEngine:
         return data
 
     def exit(self):
+        """Function that generates frames to move robot from Walk pose to Init pose
+
+        Returns:
+            data (list): List of frames. To see what Frame is, look at class description.
+        """
         data = []
         for i in range(self._init_poses):
             self.right_foot_target_point.z = -self.gait_height - (i + 1) * \

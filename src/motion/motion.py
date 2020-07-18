@@ -24,7 +24,7 @@ class Motion:
             print('No imu mode')
         self.model = model
         self.odometry = Odometry(self.imu)
-        self.move_scheduler = MoveScheduler(self.model, self.odometry)
+        self.move_scheduler = MoveScheduler(self.model)
         self.walk = Walk(model=self.model)
         self.head = Head()
         self.kick = Kick()
@@ -70,6 +70,4 @@ if __name__ == "__main__":
     model = KondoMV()
     m = Motion(model, True, False, False)
     m.apply({'name': 'kick', 'args': -1})
-        
-        
-
+    

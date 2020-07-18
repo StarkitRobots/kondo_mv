@@ -93,7 +93,7 @@ class MoveScheduler:
             for move in self.active_moves:
                 if not move.enabled and move.frames_to_process == []:
                     self.active_moves.pop(self.active_moves.index(move))
-            
+
     def update_servos(self, frame):
         for servo in frame:
             self.servos[servo] = frame[servo]

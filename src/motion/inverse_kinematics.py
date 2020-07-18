@@ -2,6 +2,30 @@ import math
 import time
 
 def compute_leg_ik(foot_target, foot_orientation, model):
+    """Function that computes inverse kinematics for the leg.
+    It is specified for 6 DOF leg of KondoMV robot. Not compatible with other robot types.
+
+    Args:
+        foot_target (src.motion.geometry.Vector): Vector to the target point of the center of the foot.
+        foot_orientation (src.motion.geometry.Quaternion): Quaternion 
+            that defines the orientation of the foot relative to its center.
+        model (src.model.KondoMV): Model object 
+            containing robot geometry information such as distances between DOFs etc.
+
+    Returns:
+        solutions (list): List that contains 0, 1 or 2 dicts of DOFs positions. 
+            The dictionary of DOF angles target positions looks like this:
+            {
+                'hip_yaw': <hip_yaw_angle_position>,
+                'hip_roll': <hip_roll_angle_position>,
+                'hip_pitch': <hip_pitch_angle_position>,
+                'knee': <knee_angle_position>,
+                'ankle_pitch': <ankle_pitch_angle_position>,
+                'ankle_roll': <ankle_roll_angle_position>
+            }
+    """
+
+
     # get model leg sizes (distances between joints)
     a5 = model.sizes['a5']
     b5 = model.sizes['b5']

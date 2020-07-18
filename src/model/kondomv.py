@@ -1,10 +1,11 @@
 import sys
 import json
 from .model import Model
+from ..odometry import Odometry
 from .servo_dict import ServoDict
 
 class KondoMV(Model):
-    def __init__(self):
+    def __init__(self, imu=None):
         super().__init__()
         with open("model/kal.json") as f:
             self.servos = ServoDict(json.loads(f.read()))
@@ -23,6 +24,8 @@ class KondoMV(Model):
         "b10": 0.0164,  # м расстояние от оси сервы 10 до низа стопы
         "c10": 0.012   # м расстояние от оси сервы 6 до оси сервы 10 по горизонтали
         }
+
+        self.odometry = Odometry(imu)
 
 if __name__ == "__main__":
     kondo = KondoMV()
