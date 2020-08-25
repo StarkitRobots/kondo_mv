@@ -1,15 +1,25 @@
 import math
 import json
+import warnings
 try:
     import sensor
     import image
-except Exception:
-    raise Exception("Try to import OpenMV library using Python3")
-from .detector import Detector
+except ImportError:
+    from src.simulation import sensor
+    from src.simulation import image
+    warnings.warn("CV reload imported")
+from .detector import Detector, blob_area, blob_width
 
 class ColoredObjectDetector(Detector):
-    def __init__(self, th_, pixel_th_ = 300, area_th_ = 300, merge_ = False, objects_num_ = 1,
-                 roundness_th_ = -1):
+    """Color-based detector with filtration by pixel area, bbox area and blob roundness.
+Maximum objects number is regulated by objects_num_, passed into the constructor
+and by default is set to 1. Blob merging is supported, but is disabled by default.
+Draws the confirmed detections in a verbose manner and the rest of the candidates
+with single bbox. Supports custom sorting criterion, set to be blob.area() by
+default.
+    """
+    def __init__(self, th_, pixel_th_=300, area_th_=300, merge_=False, objects_num_=1,
+                 roundness_th_=-1):
         self.th       = th_
         self.pixel_th = pixel_th_
         self.area_th  = area_th_
@@ -36,7 +46,7 @@ class ColoredObjectDetector(Detector):
 
         return result
 
-    def get_k_first_sorted (self, blobs, sorting_func = blob_area, k=-1):
+    def get_k_first_sorted (self, blobs, sorting_func=blob_area, k=-1):
         if (k == -1):
             k = len (blobs)
 

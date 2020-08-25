@@ -3,15 +3,16 @@ import time
 import math
 import json
 import os
+import warnings
 try:
     import sensor
     import image
     import pyb
     from pyb import LED
 except ImportError:
-    raise ImportWarning("Running not on OpenMV")
     from src.simulation import sensor
     from src.simulation import image
+    warnings.warn("CV reload imported")
 
 from src.localization.tools import median
 from src.vision import Vision, VisionPostProcessing
@@ -25,10 +26,9 @@ class Server:
         self.no_vision = no_vision
         if not self.no_vision:
             try:
-                self.clock = time.clock()
-                self.sensor.reset()
-                self.sensor.set_pixformat(sensor.RGB565)
-                self.sensor.set_framesize(sensor.QVGA)
+                sensor.reset()
+                sensor.set_pixformat(sensor.RGB565)
+                sensor.set_framesize(sensor.QVGA)
                 sensor.set_auto_exposure(False)
                 sensor.set_auto_whitebal(False)
                 sensor.skip_frames(time=2000)
@@ -65,7 +65,8 @@ class Server:
     def run(self):
         while True:
             if not self.no_vision:
-                clock.tick()
+                self.clock = time.clock()
+                self.clock.tick()
                 curr_t = pyb.millis()
                 #print (curr_t - t)
                 t = curr_t

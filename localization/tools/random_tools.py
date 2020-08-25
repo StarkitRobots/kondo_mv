@@ -1,15 +1,10 @@
 #small custom random library for micropython and openmv
-from random import * #временно
+from random import * #need to use urandom on the openmv microcontroller
 import math
-<<<<<<< HEAD:src/localization/tools/random.py
-class Random:
-    def randrange(self, start, stop=None):
-=======
 
 class Random():
     
     def randrange(start, stop=None):
->>>>>>> localization_dev:localization/tools/Random.py
     #helper function for working with random bit sequence
         if stop is None:
             stop = start
@@ -26,18 +21,18 @@ class Random():
                 break
         return r + start
 
-    def random(self):
+    def random():
         #getting a random number from 0 to 1
-        return self.randrange(10000) / 10000
+        return randrange(10000) / 10000
 
-    def gauss(self, mu, sigma):
+    def gauss(mu, sigma):
         #getting a random number from Gaussian distribution
-        x2pi = self.random() * math.pi * 2
-        g2rad = math.sqrt(-2.0 * math.log(1.0 - self.random()))
+        x2pi = random() * math.pi * 2
+        g2rad = math.sqrt(-2.0 * math.log(1.0 - random()))
         z = math.cos(x2pi) * g2rad
         return mu + z * sigma
 
-    def gaussian(self, x, sigma):
+    def gaussian(x, sigma):
         # calculates the probability of x for 1-dim Gaussian with mean mu and var. sigma
         return math.exp(-(x ** 2) / 2*(sigma ** 2)) / math.sqrt(2.0 * math.pi * (sigma ** 2))
 

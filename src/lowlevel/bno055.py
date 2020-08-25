@@ -1,7 +1,7 @@
 import struct
 try:
     import pyb
-except Exception:
+except ImportError:
     raise Exception("Try to import MicroPython library using Python3")
 	
 CONFIG_MODE = 0x00

@@ -1,6 +1,16 @@
 # Untitled - By: Robocup - Пн янв 27 2020
 
-import sensor, image, time
+import time
+import warnings
+try:
+    import sensor
+    import image
+    import pyb
+    from pyb import LED
+except ImportError:
+    from src.simulation import sensor
+    from src.simulation import image
+    warnings.warn("CV reload imported")
 
 clock = time.clock()
 

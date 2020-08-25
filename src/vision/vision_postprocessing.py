@@ -1,12 +1,22 @@
 import math
 import json
+import warnings
 try:
     import sensor
     import image
-except Exception:
-    raise Exception("Try to import OpenMV library using Python3")
+except ImportError:
+    from src.simulation import sensor
+    from src.simulation import image
+    warnings.warn("CV reload imported")
 
 class VisionPostProcessing:
+    """Class VisionPostprocessing enables one to extract the spatial
+    properties of the found objects, i.e. mutual location of the
+    goal posts and another parts of the goal to filter out the
+    inconsistent measurements and extract additional information
+    from the scene, particularly to improve the one goal post case
+    handling.
+    """
     def __init__(self):
         pass
 

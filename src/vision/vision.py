@@ -4,22 +4,39 @@ from .detectors import SurroundedObjectDetector, blob_area, blob_width
 
 
 class Vision:
+    """All the detection relies on the usage of the Blob analysis from the OpenMV SDK
+
+Classes:
+
+Detectors:
+ - Detector - basic visualization, placeholders for common methods
+ - ColoredObjectDetector [inherited from Detector] - blob analysis,
+   particular filtration methods
+ - SurroundedObjectDetector [inherited from ColoredObjectDetector] - 
+   takes surrounding pixels of the object into account to check if
+   the detected object has proper background
+
+Containers/other:
+ - Vision - container for the detectors
+ - VisionPostprocessing - mutual spatial relations of the detected objects
+    """
+
     def __init__(self, detectors_):
         self.detectors = detectors_
 
     def load_detectors(self, settings_filename):
-        with open (settings_filename) as f:
+        with open(settings_filename) as f:
             data = json.load(f)
 
-            for detector in data ["detectors"]:
-                detector_name = detector ["name"]
-                detector_type = detector ["type"]
+            for detector in data["detectors"]:
+                detector_name = detector["name"]
+                detector_type = detector["type"]
                 print (detector_name, detector_type)
 
-                if (detector_type == "SurroundedObjectDetector"):
-                    obj_th = (int (detector ["othl1"]), int (detector ["othh1"]),
-                              int (detector ["othl2"]), int (detector ["othh2"]),
-                              int (detector ["othl3"]), int (detector ["othh3"]))
+                if detector_type == "SurroundedObjectDetector":
+                    obj_th = (int(detector["othl1"]), int(detector["othh1"]),
+                              int(detector["othl2"]), int(detector["othh2"]),
+                              int(detector["othl3"]), int(detector["othh3"]))
 
                     sur1_th = (int (detector ["sthl1"]), int (detector ["sthh1"]),
                               int (detector ["sthl2"]), int (detector ["sthh2"]),

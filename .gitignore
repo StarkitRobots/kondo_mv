@@ -3,7 +3,7 @@ logs/*
 src/localisation/logs/*
 src/localisation/__pycache__/*
 src/localisation/tools/__pycache__/*
-src/localisation/experiments/__pycache__/*
+src/localisation/experiments/*
 src/motion/__pycache__/*
 src/motion/moves/__pycache__/*
 src/motion/geometry/__pycache__/*
@@ -20,4 +20,3 @@ src/simulation/__pycache__/*
 calibration\images\*
 logs\*
 src\localization\logs\*
-.*

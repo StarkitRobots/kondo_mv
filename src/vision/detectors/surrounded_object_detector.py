@@ -1,14 +1,25 @@
 import math
 import json
+import warnings
 try:
     import sensor
     import image
-except Exception:
-    raise Exception("Try to import OpenMV library using Python3")
+except ImportError:
+    from src.simulation import sensor
+    from src.simulation import image
+    warnings.warn("CV reload imported")
 from .detector import blob_area, blob_width
 from .colored_object_detector import ColoredObjectDetector
 
 class SurroundedObjectDetector(ColoredObjectDetector):
+    """Contains the surrounding color checking on the top of the ColoredObjectDetector
+methods. Supports multiple filtering criterions (see constructor for the whole
+list) and the following parameters of the surrounding check: sector for the
+checking (detailed explanation below), points number.
+Extends the detection to the "object + surrounding", which is practically the
+case for robotic football. The number of the possible surrounding colors is 2
+to handle both the field and the marking lines.
+    """
     def __init__(self, obj_th_, surr1_th_, surr2_th_, sector_rad_ = 50, wind_sz_ = 3,
             pixel_th_ = 300, area_th_ = 300, merge_ = True,
             points_num_ = 10, min_ang_ = 0, max_ang_ = 2, objects_num_ = 1,
@@ -52,6 +63,24 @@ class SurroundedObjectDetector(ColoredObjectDetector):
             self.sector_points.append ((x, y))
 
     def detect(self, img):
+        """The surrounding color check is implemented in the following manner:
+        - given number of points lying on the segment of the circle around
+        the object is generated, see _generate_encl_points()
+        - the circle radius is chosen with respect to the object size
+        - the color of the surrounding in those points is checked to fit
+        up to 2 possible color ranges
+        - the fitness of the points is stored in boolean format
+        - finally, the voting is performed with the threshold ratio of
+        the necessary points having chosen surrounding color
+        Multiple filters are sequentially allpied, resulting in the dict
+        of detected objects
+
+        Args:
+            img ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         self.blobs = self._detect (img)
         self.result = []
         self.check_success = []

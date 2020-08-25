@@ -1,180 +1,239 @@
-import sys
 import math
 import json
+
 from .ball_approach import BallApproach
+
 
 class Strategy:
     def __init__(self):
-        self.turn_counter = 0
-        pass
-    
-    def strat_set_conf(self, d):
-        self.max_step = d["max_step"]
-        self.min_step = d["min_step"]
-        self.turn_step = d["turn_step"]
+        # counter for localized=False and seeBall=False
+        self.turn_counter_ff = 0
+        # counter for localized=True and seeBall=False
+        self.turn_counter_tf = 0
+
+        self.rtraj = []
 
     def searchball(self, loc):
         if not loc.localized:
-            if self.turn_counter < 3:
-                self.turn_counter += 1
-                
-                move_chain = []
-                for i in range(8):
-                    move_chain.append([0.0, 0.0, -0.21])
-                
+            self.turn_counter_tf = 0
+            # the case when the robot turns to find the ball or to localize
+
+            # checking if robot has already turned 3 times
+            if self.turn_counter_ff < 3:
+                self.turn_counter_ff += 1
+                return {"name": "turn", "args": (math.pi / 2)}
             else:
-                self.turn_counter = 0
-                
-                move_chain = []
-                for i in range(20):
-                    move_chain.append([0.05, 0.0, 0.0])
-                
-            return {"name" : "walk", "args" : move_chain}
+                self.turn_counter_ff = 0
+                return {"name": "walk", "args": (0.5, 0)}
 
         else:
+            # this is the case when the robot goes to the center of the field
+            self.turn_counter_ff = 0
 
-            self.turn_counter = 0
+            # x0,y0 - the position of the center of the field
+            x0, y0 = (0.0, 0.0)
 
-            x0, y0 = (0, 0)
-            xr0, yr0, yaw = loc.robot_position
-            xr = x0 - xr0
-            yr = y0 - yr0
-            dist = math.sqrt(xr ** 2 + yr ** 2)
-            if dist == 0:
-                return 0
-            ang = math.acos(xr / dist)
+            xr, yr, yaw = loc.robot_position
 
-            if yr > 0:
+            # dx,dy - vector connecting robot and center of the field
+            dx = x0 - xr
+            dy = y0 - yr
+            dist = math.sqrt(dx ** 2 + dy ** 2)
+
+            # checking if the robot is already at the center
+            if dist < 0.07:
+                if self.turn_counter_tf < 3:
+                    self.turn_counter_tf += 1
+                    return {"name": "turn", "args": (math.pi / 2)}
+                else:
+                    self.turn_counter_tf = 0
+                    return {"name": "walk", "args": (0.5, 0)}
+
+            # ang - the angle between robot's line of sight and the center
+
+            ang = math.acos(dx / dist)
+            if dy < 0:
                 ang = -ang
-            
-            res_ang = ang - yaw
-            res_ang %= (2 * math.pi)
+            res_ang = (ang - yaw) % (2 * math.pi)
             if res_ang > math.pi:
-                res_ang -= (2 * math.pi)
-                
-            if abs(res_ang) > self.turn_step:
-                num_turns = int(abs(res_ang) / self.turn_step)
-                if res_ang > 0:
-                    turn_ang = self.turn_step
-                else:
-                    turn_ang = -self.turn_step
-                move_chain = []
-                for i in range(num_turns):
-                    move_chain.append([0.0, 0.0, turn_ang])
-                
-            else:
-                if dist > 3 * self.max_step:
-                    step_l = self.max_step
-                    num_steps = int((dist - 2 * self.max_step) / step_l)
-                else:
-                    step_l = self.min_step
-                    num_steps = int(dist / step_l)
-                    
-                move_chain = []
-                for i in range(num_steps):
-                    move_chain.append([step_l, 0.0, 0.0])
-
-
-            return {"name" : "walk", "args" : move_chain}
-
+                res_ang -= (math.pi * 2)
+            return {"name": "walk", "args": (dist, res_ang)}
 
     def walkball(self, loc):
-        self.turn_counter = 0
-        xb = loc.ballPosSelf[0]
-        yb = -loc.ballPosSelf[1]
+        # this is the case when robot is not localized but sees the ball
+        self.turn_counter_ff = 0
+        self.turn_counter_tf = 0
 
+        # xb,yb - coords of the ball in the system of the robot
+        xb = loc.local_ball_coord[0]
+        yb = -loc.local_ball_coord[1]
         dist = math.sqrt(xb ** 2 + yb ** 2)
+
+        # ang - the angle the robot needs to turn so as to walk to the ball
         ang = math.acos(xb / dist)
-        
-        if ang > self.turn_step:
-            num_turns = int(ang / self.turn_step)
-            if yb < 0:
-                turn_ang = -self.turn_step
+
+        # making the choice according to the distance to the ball and the angle
+        if dist > 0.1:
+            if yb > 0:
+                return {"name": "walk", "args": (dist, -ang)}
             else:
-                turn_ang = self.turn_step
-            move_chain = []
-            for i in range(num_turns):
-                move_chain.append([0.0, 0.0, turn_ang])
-                
-        elif dist > 3 * self.max_step:
-            num_steps = int((dist - 2 * self.max_step) / self.max_step)
-            move_chain = []
-            for i in range(num_steps):
-                move_chain.append([self.max_step, 0.0, 0.0])
-        
+                return {"name": "walk", "args": (dist, ang)}
+        elif ang > 0.3:
+            if yb > 0:
+                return {"name": "turn", "args": (-ang)}
+            else:
+                return {"name": "turn", "args": (ang)}
         else:
-            turn_ang = self.turn_step
-            chain_elem = [dist * (1 - math.cos(turn_ang)), -dist * math.sin(turn_ang), turn_ang]
-            move_chain = [chain_elem]
-        
-        return {"name" : "walk", "args" : move_chain}
+            return {"name": "take_around_right", "args": (1)}
 
-    def apply_ball_approach(self, loc):
-        self.turn_counter = 0
-        ba = BallApproach()
-        r_pos = loc.robot_position
-        b_pos = loc.ball_position
+    def apply_ball_approach(self, loc, img):
+        # this is the case when the robot is localized and sees the ball
+        self.turn_counter_ff = 0
+        self.turn_counter_tf = 0
 
-        with open('strat_conf.json') as f:
+        ball_approach = BallApproach()
+        xr, yr, yaw = loc.robot_position
+        xb, yb = loc.ball_position
+
+        ball_approach.get_data(xr, yr, xb, yb, -yaw)
+
+        with open('strategy/data.json') as f:
             d = json.load(f)
 
+        ball_approach.set_constants(d)
 
-        ba.set_constants(d)
+        # traj - trajectory in the world coords
+        # rtraj - trajectory in the robot coords
+        # decision - action that BallApproach suggests
+        traj = ball_approach.find_trajectory()
+        self.traj = traj
+        rtraj = ball_approach.convert_trajectory()
+        self.rtraj = rtraj
+        decision = ball_approach.make_decision()
 
-        dec = ba.make_decision(r_pos, b_pos)
-        if dec[0] == "right kick":
-            return {"name" : "kick", "args" : 1}
-        elif dec[0] == "left kick":
-            return {"name" : "kick", "args" : -1}
+        # making the choice according to the decision of BallApproach
+        if decision[0] == "left kick":
+            return {"name": "kick", "args": -1}
+        elif decision[0] == "right kick":
+            return {"name": "kick", "args": 1}
+        elif decision[0] == "turn":
+            return {"name": "turn", "args": decision[1]}
+        elif decision[0] == "lateral step":
+            return {"name": "lateral step", "args": (decision[1])}
+        elif decision[0] == "take around right":
+            return {"name": "take_around_right", "args": (1)}
+        elif decision[0] == "take around left":
+            return {"name": "take_around_left", "args": (1)}
+        elif decision[0] == "walk":
+            return {"name": "walk", "args": (decision[1], decision[2])}
         else:
-            move_chain = ba.generate_chain(r_pos, b_pos)
-            return {"name" : "walk", "args" : move_chain}
+            raise Exception("apply_ball_approach got unknown command")
 
+    # part where the trajectory is drawn
+    def draw_trajectory(self, img, model, draw=True,
+                        scale_factor=40, x0=160, y0=120,
+                        field_x_sz=2.6, field_y_sz=3.6):
+        if (draw is False):
+            return
 
-    def generate_action(self, loc):
-        if loc.localized == True:
-            if loc.seeBall == True:
-                return self.apply_ball_approach(loc)
+        # camera view
+        rtraj = self.rtraj
+
+        if (len(rtraj) == 0):
+            return
+
+        ptraj = []
+        ptraj.append(model.r2pic(0.001, 0.001))
+
+        for el in rtraj[1:]:
+            ptraj.append(model.r2pic(el[0], el[1]))
+
+        lin_num = len(ptraj) - 1
+
+        for i in range(lin_num):
+            c = int(255.0 * i / lin_num)
+            color = (c, c, c)
+
+            img.draw_line(ptraj[i][0], ptraj[i][1], ptraj[i+1][0],
+                          ptraj[i+1][1], color, thickness=3)
+
+        # bird view
+        pix_x_sz = int(field_x_sz * scale_factor)
+        pix_y_sz = int(field_y_sz * scale_factor)
+        img.draw_rectangle(x0 - pix_x_sz // 2, y0 - pix_y_sz // 2,
+                           pix_x_sz, pix_y_sz, (20, 10, 140), thickness=3)
+        # goals
+
+        traj = self.traj
+
+        img.draw_circle(int(traj[0][1] * scale_factor) + x0,
+                        int(traj[0][0] * scale_factor) + y0,
+                        5, (251, 10, 200), thickness=1, fill=True)
+
+        for i in range(lin_num + 1):
+            c = int(255.0 * i / lin_num)
+            color = (c, c, c)
+
+            if (i + 1 < len(traj)):
+                img.draw_line(x0 + int(traj[i][1] * scale_factor),
+                              y0 + int(traj[i][0] * scale_factor),
+                              x0 + int(traj[i+1][1] * scale_factor),
+                              y0 + int(traj[i+1][0] * scale_factor),
+                              color, thickness=3)
+
+            img.draw_circle(int(traj[i][1] * scale_factor) + x0,
+                            int(traj[i][0] * scale_factor) + y0,
+                            5, (190, 100, 20), thickness=1, fill=True)
+
+    def generate_action(self, loc, img):
+        # general strategy
+        if loc.localized is True:
+            if loc.see_ball is True:
+                print('apply_ba')
+                return self.apply_ball_approach(loc, img)
             else:
+                print('search1')
                 return self.searchball(loc)
 
         else:
-            if loc.seeBall == True:
+            if loc.see_ball is True:
+                print('wlkbl')
                 return self.walkball(loc)
 
             else:
+                print('search2')
                 return self.searchball(loc)
 
-        return 0
 
-
-class gk_Strategy:
+# basic goalkeeper strategy - NOT USED
+class GKStrategy:
     def __init__(self):
         pass
 
     def gk_ball_approach(self, loc):
-        if loc.seeBall:
-            xb = loc.ballPosSelf[0][0]
-            yb = loc.ballPosSelf[0][1]
+        if loc.see_ball:
+            xb = loc.local_ball_coord[0][0]
+            yb = loc.local_ball_coord[0][1]
             dist = math.sqrt(xb ** 2 + yb ** 2)
             if dist < 1:
-                return {"name" : "twine", "args" : (1)}
+                return {"name": "twine", "args": (1)}
             else:
-                return {"name" : "lateral_step", "args" : yb}
-
+                return {"name": "lateral_step", "args": yb}
 
     def take_def_pos(self, loc):
         pass
 
-
     def gk_generate_action(self, loc):
         if loc.localized:
-            if loc.seeBall:
-                return self.gk_ball_approach(loc)
+            if loc.see_ball:
+                # return gk_ball_approach(loc)
+                pass
             else:
-                return self.take_def_pos(loc)
+                # return take_def_pos(loc)
+                pass
         else:
-            if loc.seeBall:
-                return self.gk_ball_approach(loc)
+            if loc.see_ball:
+                # return gk_ball_approach(loc)
+                pass
             else:
                 pass
