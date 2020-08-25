@@ -3,7 +3,12 @@ import time
 import math
 import json
 import os
-import uio
+import warnings
+try:
+    import uio
+except ImportError:
+    import io
+    warnings.warn("Running not on OpenMV")
 from .field import Field
 from .tools import Random
 from .robot import Robot
@@ -53,7 +58,7 @@ class ParticleFilter():
         print("position ", self.myrobot.x, ' ',
               self.myrobot.y, ' ', self.myrobot.yaw, '|', file=self.logs)
         self.p = []
-        for i in range(self.n):
+        for _ in range(self.n):
             x_coord = self.myrobot.x + Random().gauss(0, self.sense_noise)
             y_coord = self.myrobot.y + Random().gauss(0, self.sense_noise)
             yaw = self.myrobot.yaw + Random().gauss(0, self.yaw_noise)*math.pi
@@ -71,7 +76,7 @@ class ParticleFilter():
 
     def gen_n_particles_robot(self, n):
         p = []
-        for i in range(n):
+        for _ in range(n):
             x_coord = self.myrobot.x + Random().gauss(0, self.sense_noise*3)
             y_coord = self.myrobot.y + Random().gauss(0, self.sense_noise*3)
             yaw = self.myrobot.yaw + Random().gauss(0, self.yaw_noise)*math.pi

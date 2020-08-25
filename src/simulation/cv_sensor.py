@@ -1,4 +1,9 @@
-import cv2.cv2 as cv2
+# Bug that sometimes appears on several computers
+try:
+    import cv2
+except ImportError:
+    import cv2.cv2 as cv2
+    
 import math
 import time
 import numpy as np
