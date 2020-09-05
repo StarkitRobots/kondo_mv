@@ -75,7 +75,7 @@ class Server:
                 # motion part. Head movement.
                 self.motion.apply({'name': 'head'})
                 if not self.no_vision:
-                    self.model.updateCameraPanTilt(self.motion.head.pan, self.motion.head.tilt)
+                    self.model.update_camera_pan_tilt(self.motion.head.pan, self.motion.head.tilt)
                     # vision part. Taking picture.
                     img = sensor.snapshot().lens_corr(strength=1.2, zoom=1.0)
 
