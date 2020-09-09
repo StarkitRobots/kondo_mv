@@ -9,6 +9,7 @@ pin9 = Pin('P9', Pin.IN, Pin.PULL_UP)
 pin3 = Pin('P3', Pin.IN, Pin.PULL_UP)
 pin2 = Pin('P2', Pin.IN, Pin.PULL_UP)
 
+
 class Button:
     def __init__(self):
         b_time = utime.ticks_ms()
@@ -43,4 +44,4 @@ class Button:
                 break
         with open("start_coord.json", "r") as f:
             start_coord = json.loads(f.read())
-        # return start_coord[str(s_coord)]
+        return start_coord[str(s_coord)]
