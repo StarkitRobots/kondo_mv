@@ -1,3 +1,3 @@
 from .common import median, dist
-from .random import Random
+from .mvrandom import Random
 __all__ = ["Random", "median", "dist"]
