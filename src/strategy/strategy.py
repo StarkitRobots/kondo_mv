@@ -86,7 +86,11 @@ class Strategy:
         else:
             return {"name": "take_around_right", "args": (1)}
 
-    def apply_ball_approach(self, loc, img):
+    def apply_ball_approach(self, loc, img=None):
+
+        if(img):
+            print('DEBUGGING STRATEGY')
+
         # this is the case when the robot is localized and sees the ball
         self.turn_counter_ff = 0
         self.turn_counter_tf = 0
@@ -185,7 +189,7 @@ class Strategy:
                             int(traj[i][0] * scale_factor) + y0,
                             5, (190, 100, 20), thickness=1, fill=True)
 
-    def generate_action(self, loc, img):
+    def generate_action(self, loc, img=None):
         # general strategy
         if loc.localized is True:
             if loc.see_ball is True:
