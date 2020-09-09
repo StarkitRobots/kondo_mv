@@ -1,13 +1,5 @@
 import math
 import json
-import warnings
-try:
-    import sensor
-    import image
-except ImportError:
-    from src.simulation import sensor
-    from src.simulation import image
-    warnings.warn("CV reload imported")
 	
 
 def blob_area(blob):
