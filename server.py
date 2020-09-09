@@ -149,6 +149,4 @@ class Server:
 
             self.motion.apply(action)
 
-            self.localization.move(self.motion.odometry.get_shift_x(),
-                                    self.motion.odometry.get_shift_y(),
-                                    self.motion.odometry.get_shift_yaw())
+            self.localization.move(self.motion.odometry.get_shifts())
