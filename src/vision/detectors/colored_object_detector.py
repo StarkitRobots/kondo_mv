@@ -1,13 +1,6 @@
 import math
 import json
-import warnings
-try:
-    import sensor
-    import image
-except ImportError:
-    from src.simulation import sensor
-    from src.simulation import image
-    warnings.warn("CV reload imported")
+
 from .detector import Detector, blob_area, blob_width
 
 class ColoredObjectDetector(Detector):
