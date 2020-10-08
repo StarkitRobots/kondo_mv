@@ -1,5 +1,6 @@
 import math
 import json
+import uio
 from .detectors import SurroundedObjectDetector, blob_area, blob_width
 
 
@@ -12,7 +13,7 @@ Detectors:
  - Detector - basic visualization, placeholders for common methods
  - ColoredObjectDetector [inherited from Detector] - blob analysis,
    particular filtration methods
- - SurroundedObjectDetector [inherited from ColoredObjectDetector] - 
+ - SurroundedObjectDetector [inherited from ColoredObjectDetector] -
    takes surrounding pixels of the object into account to check if
    the detected object has proper background
 
@@ -25,7 +26,7 @@ Containers/other:
         self.detectors = detectors_
 
     def load_detectors(self, settings_filename):
-        with open(settings_filename) as f:
+        with open(settings_filename, 'r') as f:
             data = json.load(f)
 
             for detector in data["detectors"]:

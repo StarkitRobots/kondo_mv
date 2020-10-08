@@ -3,16 +3,10 @@ import time
 import math
 import json
 import os
-import warnings
-try:
-    import sensor
-    import image
-    import pyb
-    from pyb import LED
-except ImportError:
-    from src.simulation import sensor
-    from src.simulation import image
-    warnings.warn("CV reload imported")
+import sensor
+#    import image
+import pyb
+from pyb import LED
 
 from src.localization.tools import median
 from src.vision import Vision, VisionPostProcessing
@@ -40,7 +34,7 @@ class Server:
 
             self.vision = Vision({})
             self.vision_postprocessing = VisionPostProcessing()
-            self.vision.load_detectors("vision/detectors_config.json")
+            self.vision.load_detectors('src/vision/detectors_config.json')
             with open("calibration/cam_col.json") as f:
                 calib = json.load(f)
 
@@ -51,7 +45,7 @@ class Server:
         self.strategy = Strategy()
         self.model = KondoMV()
         self.motion = Motion(self.model)
-        
+
 
         # setting model parametrs
         mass1 = [0, 0, 0, 0, 0, 0]
@@ -61,7 +55,7 @@ class Server:
 
 
 
-    
+
     def run(self):
         while True:
             if not self.no_vision:

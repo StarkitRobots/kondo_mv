@@ -1,6 +1,6 @@
 import json
 from ..lowlevel import Button
-from .tools import median, Random
+from .tools import median, Mrandom
 from .particle_filter import ParticleFilter
 from .field import Field
 from .entity import Entity
@@ -14,7 +14,7 @@ class Localization:
         self.global_ball_cord = None
         self.localized = False
         self.see_ball = False
-        with open("localization/landmarks.json", "r") as f:
+        with open("src/localization/landmarks.json", "r") as f:
             landmarks = json.loads(f.read())
         # choice side
         if side == 'blue':
@@ -28,7 +28,7 @@ class Localization:
             self.robot_position = tuple(Button())
             x, y, yaw = self.robot_position
         self.pf = ParticleFilter(Entity(x, y, yaw),
-                                 Field("localization/parfield.json"),
+                                 Field("src/localization/parfield.json"),
                                  landmarks)
 
     def update(self, data):
